@@ -1,0 +1,18 @@
+[config]
+
+# The following sections describe the individual plugins and their configuration
+[command]
+load = TRUE
+module = command
+
+[fgfs]
+load = TRUE
+module = fgfs
+xml_file = fix_fgfs.xml
+
+[canfix]
+load = yes
+module = fg_canfix
+map_file = confix_map.xml
+
+[error]
