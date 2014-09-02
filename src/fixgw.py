@@ -19,6 +19,7 @@
 import database
 import ConfigParser
 import time
+import importlib
 
 config_file = "config"
 
@@ -37,7 +38,8 @@ def load_plugin(name, module, config):
     # strings here remove the options from the list before it is
     # sent to the plugin.
     exclude_options = ["load", "module"]
-    plugin_mods[name] = __import__(module)
+    plugin_mods[name] = importlib.import_module(module)
+    #plugin_mods[name] = __import__(module)
     items = [item for item in config.items(name) if item[0] not in exclude_options]
     plugins[name] = plugin_mods[name].Plugin(name,items)
 
@@ -72,7 +74,6 @@ def main():
  
     for each in plugins:
         plugins[each].stop()
-
 
 if __name__ == "__main__":
     main()

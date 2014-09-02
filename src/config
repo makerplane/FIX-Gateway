@@ -2,17 +2,19 @@
 
 # The following sections describe the individual plugins and their configuration
 [command]
-load = TRUE
-module = command
+load = yes
+module = plugins.command
 
 [fgfs]
-load = TRUE
-module = fgfs
+load = yes
+module = plugins.fgfs
 xml_file = fix_fgfs.xml
 
 [canfix]
 load = yes
-module = fg_canfix
+module = plugins.fg_canfix
 map_file = confix_map.xml
 
-[error]
+[test]
+load = yes
+module = plugins.test

@@ -24,4 +24,3 @@ class Plugin(plugin.PluginBase):
 
     def run(self):
         super(Plugin, self).run()
-        print self.config
