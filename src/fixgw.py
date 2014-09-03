@@ -35,7 +35,11 @@ def load_plugin(name, module, config):
     # strings here remove the options from the list before it is
     # sent to the plugin.
     exclude_options = ["load", "module"]
-    plugin_mods[name] = importlib.import_module(module)
+    try:
+        plugin_mods[name] = importlib.import_module(module)
+    except:
+        log.critical("Unable to load module - " + module)
+        return
     items = [item for item in config.items(name) if item[0] not in exclude_options]
     plugins[name] = plugin_mods[name].Plugin(name,items)
 
