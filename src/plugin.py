@@ -20,31 +20,22 @@
 
 # We have to do this because print is a statement not a function and we need
 # this as a callback later in the code.
-def logit(string):
-    print string
+
+import logging
 
 class PluginBase(object):
     def __init__(self, name, config):
         self.name = name
         self.config = config
-        self.__log = logit
-        self.log("Initializing Plugin")
+        self.log = logging.getLogger('plugin.'+name)
+        self.log.info("Initializing")
         self.running = False
 
-    def set_log(self, logfunc):
-        self.__log = logfunc
-
-    def log(self, string):
-        self.__log(self.name + ":" + " "*(10-len(self.name)) + string)
-
-    def error(self, string):
-        self.__log("Error " + string)
-
     def run(self):
-        self.log("Starting Plugin")
+        self.log.info("Starting")
         self.running = True        
     
     def stop(self):
-        self.log("Stopping Plugin")
+        self.log.info("Stopping")
         self.running = False
 

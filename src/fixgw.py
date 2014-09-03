@@ -20,6 +20,7 @@ import database
 import ConfigParser
 import time
 import importlib
+import logging as log
 
 config_file = "main.cfg"
 
@@ -31,8 +32,6 @@ plugins = {}
 # List of configuration file sections that DO NOT represent plugins
 exclude_sections = ["config"]
 
-def log(string):
-    print string
 
 def load_plugin(name, module, config):
     # strings here remove the options from the list before it is
@@ -44,7 +43,9 @@ def load_plugin(name, module, config):
     plugins[name] = plugin_mods[name].Plugin(name,items)
 
 def main():
-    log("Starting FIX Gateway")
+    # TODO: Use command line arguments or config file for this
+    log.basicConfig(format='%(levelname)s:%(asctime)s:%(name)s - %(message)s',datefmt='%Y%m%d-%H:%M:%S', level=log.DEBUG)
+    log.info("Starting FIX Gateway")
 
     config = ConfigParser.ConfigParser()
     config.read(config_file)
@@ -60,14 +61,19 @@ def main():
                     module = config.get(each, "module")
                     load_plugin(each, module, config)
     except ConfigParser.NoOptionError:
-        log("Unable to find option for "+each)
+        log.warning("Unable to find option for "+each)
     except ConfigParser.NoSectionError:
-        log("No plugin found in configuration file with name "+each)
+        log.warning("No plugin found in configuration file with name "+each)
 
     for each in plugins:
         plugins[each].run()
 
-    #TODO: Should do something here to pass the time.
+    while True:
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            log.info("Termination from keybaord received")
+            break
  
     for each in plugins:
         plugins[each].stop()
