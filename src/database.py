@@ -16,3 +16,24 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+__database = {}
+
+class db_item:
+    def __init__(self, value = None):
+        self.value = value
+        self.quality = False
+        self.max = None
+        self.min = None
+        self.callbacks = {}
+
+def write(index, value):
+    if index in __database:
+        __database[index].value = value
+    else:
+        __database[index] = db_item(value)
+
+def read(index):
+    try:
+        return __database[index].value
+    except KeyError:
+        return None

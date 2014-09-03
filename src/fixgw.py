@@ -21,7 +21,7 @@ import ConfigParser
 import time
 import importlib
 
-config_file = "config"
+config_file = "main.cfg"
 
 # This dictionary holds the modules for each plugin that we load
 plugin_mods = {}
@@ -67,10 +67,7 @@ def main():
     for each in plugins:
         plugins[each].run()
 
-    # Testing Testing Testing
-    for i in range(10):
-        print "Do something"
-        time.sleep(0.1)
+    #TODO: Should do something here to pass the time.
  
     for each in plugins:
         plugins[each].stop()
