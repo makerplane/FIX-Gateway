@@ -24,4 +24,4 @@ class Plugin(plugin.PluginBase):
 
     def run(self):
         super(Plugin, self).run()
-        self.log.debug("Config = " + str(self.config))
+        self.log.debug("We Be Running")

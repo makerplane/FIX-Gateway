@@ -29,6 +29,7 @@ class PluginBase(object):
         self.config = config
         self.log = logging.getLogger('plugin.'+name)
         self.log.info("Initializing")
+        self.log.debug("Config: " + str(config))
         self.running = False
 
     def run(self):

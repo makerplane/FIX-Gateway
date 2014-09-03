@@ -21,30 +21,26 @@ import ConfigParser
 import time
 import importlib
 import logging as log
+import logging.config
 
 config_file = "main.cfg"
+logconfig_file = config_file
 
 # This dictionary holds the modules for each plugin that we load
 plugin_mods = {}
 # This holds the instantiated object of each plugin that we load
 plugins = {}
 
-# List of configuration file sections that DO NOT represent plugins
-exclude_sections = ["config"]
-
-
 def load_plugin(name, module, config):
     # strings here remove the options from the list before it is
     # sent to the plugin.
     exclude_options = ["load", "module"]
     plugin_mods[name] = importlib.import_module(module)
-    #plugin_mods[name] = __import__(module)
     items = [item for item in config.items(name) if item[0] not in exclude_options]
     plugins[name] = plugin_mods[name].Plugin(name,items)
 
 def main():
-    # TODO: Use command line arguments or config file for this
-    log.basicConfig(format='%(levelname)s:%(asctime)s:%(name)s - %(message)s',datefmt='%Y%m%d-%H:%M:%S', level=log.DEBUG)
+    logging.config.fileConfig(logconfig_file)
     log.info("Starting FIX Gateway")
 
     config = ConfigParser.ConfigParser()
@@ -55,11 +51,10 @@ def main():
     # run through the plugin_list dict and find all the plugins that are configured
     # to be loaded and load them.
     try:
-        for each in config.sections():
-            if each not in exclude_sections:
-                if config.getboolean(each, "load"):
-                    module = config.get(each, "module")
-                    load_plugin(each, module, config)
+        for each in config.get("config", "plugins").split(","):
+            if config.getboolean(each, "load"):
+                module = config.get(each, "module")
+                load_plugin(each, module, config)
     except ConfigParser.NoOptionError:
         log.warning("Unable to find option for "+each)
     except ConfigParser.NoSectionError:
@@ -71,12 +66,15 @@ def main():
     while True:
         try:
             time.sleep(1)
+            #TODO Do some house keeping here
         except KeyboardInterrupt:
             log.info("Termination from keybaord received")
             break
  
     for each in plugins:
         plugins[each].stop()
+
+    log.info("FIX Gateway Exiting Normally")
 
 if __name__ == "__main__":
     main()
