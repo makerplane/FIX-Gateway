@@ -21,17 +21,22 @@
 # We have to do this because print is a statement not a function and we need
 # this as a callback later in the code.
 
+import database
 import logging
 
 class PluginBase(object):
     def __init__(self, name, config):
         self.name = name
-        self.config = config
         self.log = logging.getLogger('plugin.'+name)
         self.log.info("Initializing")
-        self.log.debug("Config: " + str(config))
+        
+        self.config = {}
+        for each in config:
+            self.config[each[0]] = each[1]
+        self.log.debug("Config: " + str(self.config))
+        
         self.running = False
-
+        
     def run(self):
         self.log.info("Starting")
         self.running = True        
@@ -40,3 +45,14 @@ class PluginBase(object):
         self.log.info("Stopping")
         self.running = False
 
+    def db_read(self, key):
+        return database.read(key)
+    
+    def db_write(self, key, value):
+        database.write(key, value)
+    
+    def db_callback_add(self, key, function, udata=None):
+        database.callback_add(self.name, key, function, udata)
+
+    def db_callback_del(self, key):
+        database.callback_del(self.name, key)

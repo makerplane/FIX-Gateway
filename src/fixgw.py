@@ -20,8 +20,9 @@ import database
 import ConfigParser
 import time
 import importlib
-import logging as log
+import logging
 import logging.config
+import argparse
 
 config_file = "main.cfg"
 logconfig_file = config_file
@@ -37,14 +38,23 @@ def load_plugin(name, module, config):
     exclude_options = ["load", "module"]
     try:
         plugin_mods[name] = importlib.import_module(module)
-    except:
-        log.critical("Unable to load module - " + module)
+    except Exception, e:
+        logging.critical("Unable to load module - " + module + ": " + str(e))
         return
     items = [item for item in config.items(name) if item[0] not in exclude_options]
     plugins[name] = plugin_mods[name].Plugin(name,items)
 
 def main():
+    parser = argparse.ArgumentParser(description='FIX Gateway')
+    parser.add_argument('--debug', action='store_true', help='Run in debug mode')
+    parser.add_argument('--config-file', type=file, help='Alternate configuration file')
+    parser.add_argument('--log-config', type=file, help='Alternate logger configuration file')
+
+    args = parser.parse_args()
+    
     logging.config.fileConfig(logconfig_file)
+    log = logging.getLogger()
+    if args.debug: log.setLevel(logging.DEBUG)
     log.info("Starting FIX Gateway")
 
     config = ConfigParser.ConfigParser()

@@ -1,4 +1,8 @@
-FIX Gateway - Copyright (c) 2014 Phil Birkelbach
+============
+FIX Gateway 
+============
+
+Copyright (c) 2014 Phil Birkelbach
 
 FIX stands for Flight Information eXchange.  It is a set of specifications, protocols and
 documentation that is helps users exchange flight related information easily and
