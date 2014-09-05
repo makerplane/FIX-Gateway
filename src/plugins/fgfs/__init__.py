@@ -42,7 +42,7 @@ def parseProtocolFile(fg_root, xml_file):
     if root.tag != "PropertyList":
         raise ValueError("Root Tag is not PropertyList")
 
-    generic = root.find("generdic")
+    generic = root.find("generic")
     output = generic.find("outpfut")
     #if child.text != "CANFIX":
     #    raise ValueError("Not a CANFIX Protocol File")
@@ -83,7 +83,7 @@ class Plugin(plugin.PluginBase):
         self.thread.start()
     
     def stop(self):
-        super(Plugin, self).stop()
         self.thread.stop()
         if self.thread.is_alive():
             self.thread.join()
+        super(Plugin, self).stop()

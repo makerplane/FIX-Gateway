@@ -59,5 +59,5 @@ class Plugin(plugin.PluginBase):
         self.t.start()
         
     def stop(self):
-        super(Plugin, self).stop()
         self.t.join() # Wait for the thread to stop
+        super(Plugin, self).stop()

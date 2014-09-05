@@ -20,6 +20,7 @@
 #  plugin where the main Plugin class creates a thread and starts the thread
 #  when the plugin's run() function is called.
 
+import plugin
 import threading
 import time
 
@@ -67,7 +68,7 @@ class Plugin(plugin.PluginBase):
     """ The stop method should not return until the plugin has completely
         stopped.  This generally means a .join() on a thread.  It should
         also undo any callbacks that were set up in the run() method"""
-        super(Plugin, self).stop()
         self.thread.stop()
         if self.thread.is_alive():
             self.thread.join()
+        super(Plugin, self).stop()
