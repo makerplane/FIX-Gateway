@@ -23,6 +23,8 @@ import importlib
 import logging
 import logging.config
 import argparse
+import plugin
+import Queue
 
 config_file = "main.cfg"
 logconfig_file = config_file
@@ -77,13 +79,28 @@ def main():
     for each in plugins:
         plugins[each].run()
 
+    iteration = 0
     while True:
         try:
-            time.sleep(1)
-            #TODO Do some house keeping here
+            job = plugin.jobQueue.get(timeout = 1.0)
+            if job=="QUIT":
+                break
         except KeyboardInterrupt:
             log.info("Termination from keybaord received")
             break
+        except Queue.Empty:
+            pass
+        iteration += 1
+        # Every four times through the loop we do some stuff
+        if iteration % 4 == 0:
+            # check how many plugins are running and exit if zero
+            running_count = 0
+            for each in plugins:
+                if plugins[each].is_running():
+                    running_count += 1
+            if running_count == 0:
+                log.info("No plugins running, quitting")
+                break
  
     for each in plugins:
         plugins[each].stop()

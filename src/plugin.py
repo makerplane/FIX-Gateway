@@ -23,6 +23,9 @@
 
 import database
 import logging
+import Queue
+
+jobQueue = Queue.Queue()
 
 class PluginBase(object):
     def __init__(self, name, config):
@@ -44,6 +47,13 @@ class PluginBase(object):
     def stop(self):
         self.log.info("Stopping")
         self.running = False
+        
+    def quit(self):
+        """ Sends a job back to the main program to quit program """
+        jobQueue.put("QUIT")
+    
+    def is_running(self):
+        return self.running
 
     def db_read(self, key):
         return database.read(key)
