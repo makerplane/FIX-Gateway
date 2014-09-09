@@ -14,56 +14,15 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.import plugin
+
+#  This file serves as a starting point for a plugin.  This is a Thread based
+#  plugin where the main Plugin class creates a thread and starts the thread
+#  when the plugin's run() function is called.
 
 import plugin
-import cmd
 import threading
 import time
-
-class Command(cmd.Cmd):
-    def setplugin(self, p):
-        self.plugin = p
-        
-    def do_read(self, line):
-        """read key\nRead the value from the database given the key"""
-        args = line.split(" ")
-        x = self.plugin.db_read(args[0].upper())
-        if x:
-            print(x)
-        else:
-            print("Unknown Key " + args[0])
-
-    def do_write(self, line):
-        """write key value\nWrite Value into Database with given key"""
-        args = line.split(" ")
-        if len(args) < 2:
-            print("Missing Argument")
-        else:
-            #TODO: Should do more error checking here
-            self.plugin.db_write(args[0].upper(), args[1])
-
-    def do_list(self, line):
-        """list\nList Database Keys"""
-        x = self.plugin.db_list()
-        if x:
-            for each in x:
-                print(each)
-
-    def do_quit(self, line):
-        """quit\nExit Plugin"""
-        return True
-    
-    def do_exit(self, line):
-        """exit\nExit Plugin"""
-        return self.do_quit(line)
-    
-#    def do_help(self, line):
-#        print("Helping...")
-
-    def do_EOF(self, line):
-        return True
-    
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
@@ -74,34 +33,42 @@ class MainThread(threading.Thread):
         self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log # simplifies logging
-        self.cmd = Command()
-        self.cmd.setplugin(self.parent)
-        self.cmd.prompt = self.parent.config.get("prompt", "FIX>")
-        
+    
     def run(self):
-        self.cmd.cmdloop()
-        quit = self.parent.config.get("quit", "yes")
-        if quit.lower() in ["yes", "true", "1"]:
-            self.parent.quit()
+        while True:
+            if self.getout:
+                break
+            time.sleep(1)
+            self.log.debug("Yep") # Do something more useful here
         
     def stop(self):
         self.getout = True
     
 
 class Plugin(plugin.PluginBase):
+""" All plugins for FIX Gateway should implement at least the class
+    named 'Plugin.'  They should be derived from the base class in 
+    the plugin module.
+   
+    The run and stop methods of the plugin should be overridden but the
+    base module functions should be called first."""
     def __init__(self, name, config):
         super(Plugin, self).__init__(name,config)
         self.thread = MainThread(self)
 
     def run(self):
+    """ The run method should return immediately.  The main routine will block
+        when calling this function.  If the plugin is simply a collection of
+        callback functions, those can be setup here and no thread will be
+        necessary"""
         super(Plugin, self).run()
         self.thread.start()
     
     def stop(self):
+    """ The stop method should not return until the plugin has completely
+        stopped.  This generally means a .join() on a thread.  It should
+        also undo any callbacks that were set up in the run() method"""
         self.thread.stop()
         if self.thread.is_alive():
             self.thread.join()
         super(Plugin, self).stop()
-    
-    def is_running(self):
-        return self.thread.is_alive()

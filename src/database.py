@@ -16,7 +16,12 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+import logging
+
 __database = {}
+
+log = logging.getLogger('database')
+log.info("Initializing")
 
 class db_item:
     def __init__(self, value = None):
@@ -37,3 +42,12 @@ def read(index):
         return __database[index].value
     except KeyError:
         return None
+
+def listkeys():
+    return list(__database.keys())
+
+def callback_add(name, key, function, udata):
+    log.debug("Adding callback function for %s on key %s" % (name, key))
+
+def callback_del(name, key):
+    log.debug("Deleting callback function for %s on key %s" % (name, key))
