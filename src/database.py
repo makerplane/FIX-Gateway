@@ -31,17 +31,39 @@ class db_item:
         self.min = None
         self.callbacks = {}
 
+__database["IAS"] = db_item(0.0)
+__database["ALT"] = db_item(0.0)
+__database["TALT"] = db_item(0.0)
+__database["OAT"] = db_item(0.0)
+__database["BARO"] = db_item(29.92)
+__database["ROLL"] = db_item(0.0)
+__database["PITCH"] = db_item(0.0)
+__database["YAW"] = db_item(0.0)
+__database["AOA"] = db_item(0.0)
+__database["CTLPTCH"] = db_item(0.0)
+__database["CTLROLL"] = db_item(0.0)
+__database["CTLYAW"] = db_item(0.0)
+__database["CTLFLAP"] = db_item(0.0)
+__database["CTLLBRK"] = db_item(0.0)
+__database["CTLRBRK"] = db_item(0.0)
+__database["THR1"] = db_item(0.0)
+__database["THR2"] = db_item(0.0)
+__database["PROP1"] = db_item(0.0)
+__database["PROP2"] = db_item(0.0)
+__database["MIX1"] = db_item(0.0)
+__database["MIX2"] = db_item(0.0)
+
 def write(index, value):
     if index in __database:
         __database[index].value = value
     else:
-        __database[index] = db_item(value)
+        raise KeyError
 
 def read(index):
-    try:
+    #try:
         return __database[index].value
-    except KeyError:
-        return None
+    #except KeyError:
+    #    return None
 
 def listkeys():
     return list(__database.keys())

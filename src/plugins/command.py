@@ -28,10 +28,10 @@ class Command(cmd.Cmd):
     def do_read(self, line):
         """read key\nRead the value from the database given the key"""
         args = line.split(" ")
-        x = self.plugin.db_read(args[0].upper())
-        if x:
+        try:
+            x = self.plugin.db_read(args[0].upper())
             print(x)
-        else:
+        except KeyError:
             print("Unknown Key " + args[0])
 
     def do_write(self, line):
@@ -40,13 +40,17 @@ class Command(cmd.Cmd):
         if len(args) < 2:
             print("Missing Argument")
         else:
-            #TODO: Should do more error checking here
-            self.plugin.db_write(args[0].upper(), args[1])
+            try:
+                #TODO: Should do more error checking here
+                self.plugin.db_write(args[0].upper(), args[1])
+            except KeyError:
+                print("Unknown Key " + args[0])
 
     def do_list(self, line):
         """list\nList Database Keys"""
         x = self.plugin.db_list()
         if x:
+            x.sort()
             for each in x:
                 print(each)
 
