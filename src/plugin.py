@@ -57,10 +57,13 @@ class PluginBase(object):
 
     def db_read(self, key):
         return database.read(key)
-    
+
     def db_write(self, key, value):
         database.write(key, value)
     
+    def db_list(self):
+        return database.listkeys()
+
     def db_callback_add(self, key, function, udata=None):
         database.callback_add(self.name, key, function, udata)
 

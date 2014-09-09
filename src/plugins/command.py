@@ -26,16 +26,41 @@ class Command(cmd.Cmd):
         self.plugin = p
         
     def do_read(self, line):
-        """read index"""
-        print "read" + str(line)
-        
+        """read key\nRead the value from the database given the key"""
+        args = line.split(" ")
+        x = self.plugin.db_read(args[0].upper())
+        if x:
+            print(x)
+        else:
+            print("Unknown Key " + args[0])
+
     def do_write(self, line):
-        """write index value"""
-        print "write" + str(line)
-    
+        """write key value\nWrite Value into Database with given key"""
+        args = line.split(" ")
+        if len(args) < 2:
+            print("Missing Argument")
+        else:
+            #TODO: Should do more error checking here
+            self.plugin.db_write(args[0].upper(), args[1])
+
+    def do_list(self, line):
+        """list\nList Database Keys"""
+        x = self.plugin.db_list()
+        if x:
+            for each in x:
+                print(each)
+
     def do_quit(self, line):
+        """quit\nExit Plugin"""
         return True
     
+    def do_exit(self, line):
+        """exit\nExit Plugin"""
+        return self.do_quit(line)
+    
+#    def do_help(self, line):
+#        print("Helping...")
+
     def do_EOF(self, line):
         return True
     

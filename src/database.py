@@ -42,7 +42,10 @@ def read(index):
         return __database[index].value
     except KeyError:
         return None
-        
+
+def listkeys():
+    return list(__database.keys())
+
 def callback_add(name, key, function, udata):
     log.debug("Adding callback function for %s on key %s" % (name, key))
 
