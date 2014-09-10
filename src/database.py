@@ -32,6 +32,7 @@ class db_item:
         self.callbacks = {}
 
 __database["IAS"] = db_item(0.0)
+__database["TAS"] = db_item(0.0)
 __database["ALT"] = db_item(0.0)
 __database["TALT"] = db_item(0.0)
 __database["OAT"] = db_item(0.0)
@@ -40,6 +41,8 @@ __database["ROLL"] = db_item(0.0)
 __database["PITCH"] = db_item(0.0)
 __database["YAW"] = db_item(0.0)
 __database["AOA"] = db_item(0.0)
+__database["LAT"] = db_item(0.0)
+__database["LONG"] = db_item(0.0)
 __database["CTLPTCH"] = db_item(0.0)
 __database["CTLROLL"] = db_item(0.0)
 __database["CTLYAW"] = db_item(0.0)

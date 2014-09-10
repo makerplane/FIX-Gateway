@@ -21,6 +21,13 @@
 import plugin
 import threading
 import time
+import socket
+import struct
+
+#TODO Replace with configuration
+UDP_IP = "127.0.0.1"
+UDP_PORT = 49203
+
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
@@ -28,13 +35,50 @@ class MainThread(threading.Thread):
         self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log # simplifies logging
+ 
+        self.sock = socket.socket(socket.AF_INET, # Internet
+                                  socket.SOCK_DGRAM) # UDP
+        self.sock.bind((UDP_IP, UDP_PORT))
     
+    def writedata(self, index, data):
+        if index == 3:
+            self.parent.db_write("IAS",data[0])
+            self.parent.db_write("TAS",data[2])
+        elif index == 20:
+            self.parent.db_write("ALT",data[2])
+            self.parent.db_write("LAT",data[0])
+            self.parent.db_write("LONG",data[1])
+            #self.parent.db_write("",data[0])
+            
     def run(self):
         while True:
             if self.getout:
                 break
-            time.sleep(1)
-            self.log.debug("Yep") # Do something more useful here
+            data, addr = self.sock.recvfrom(2048)
+            if len(data) == 2048:
+                while True:
+                    newdata, addr = sock.recvfrom(2048)
+                    data.extend(newdata)
+                    if len(newdata) < 2048:
+                        break
+            #print data
+            header = data[:4]
+            if header != "DATA": 
+                self.parent.log.error("Bad data packet")
+                continue
+            if (len(data)-5) % 36 != 0:
+                self.parent.log.error("Bad packet length")
+                continue
+            for x in range( (len(data)-5)/36 ):
+                start = x*36 + 5
+                #index = struct.unpack("i",data[start:start+4])[0]
+                index =  ord(data[start])
+                udata = []
+                for i in range(8):
+                    y = start + i*4 +4
+                    udata.append(struct.unpack("f", data[y:y+4])[0])
+                self.writedata(index, udata)
+                #print "index:", index, "Data: ", udata
         
     def stop(self):
         self.getout = True
