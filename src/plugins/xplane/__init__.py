@@ -22,6 +22,7 @@ import plugin
 import threading
 import time
 import socket
+import select
 import struct
 
 #TODO Replace with configuration
@@ -39,6 +40,7 @@ class MainThread(threading.Thread):
         self.sock = socket.socket(socket.AF_INET, # Internet
                                   socket.SOCK_DGRAM) # UDP
         self.sock.bind((UDP_IP, UDP_PORT))
+        self.sock.setblocking(0)
     
     def writedata(self, index, data):
         if index == 3:
@@ -48,38 +50,47 @@ class MainThread(threading.Thread):
             self.parent.db_write("ALT",data[2])
             self.parent.db_write("LAT",data[0])
             self.parent.db_write("LONG",data[1])
-            #self.parent.db_write("",data[0])
-            
+        else:
+            self.parent.log.debug("Dunno Index:" + str(index))
+        #self.parent.db_write("",data[0])
+    
+    def senddata(self):
+        """Function that sends data to X-Plane"""
+        values = [float(self.parent.db_read("THR1")), float(self.parent.db_read("THR2")), 0.0,0.0,0.0,0.0,0.0,0.0]
+        data = "DATA" + chr(0)
+        data += struct.pack("i", 25)
+        for x in range(8):
+            data += struct.pack("f", values[x])
+        #for each in data:
+        #    print hex(ord(each)),
+        self.sock.sendto(data, (UDP_IP, 49200))
+        
     def run(self):
         while True:
             if self.getout:
                 break
-            data, addr = self.sock.recvfrom(2048)
-            if len(data) == 2048:
-                while True:
-                    newdata, addr = sock.recvfrom(2048)
-                    data.extend(newdata)
-                    if len(newdata) < 2048:
-                        break
-            #print data
-            header = data[:4]
-            if header != "DATA": 
-                self.parent.log.error("Bad data packet")
-                continue
-            if (len(data)-5) % 36 != 0:
-                self.parent.log.error("Bad packet length")
-                continue
-            for x in range( (len(data)-5)/36 ):
-                start = x*36 + 5
-                #index = struct.unpack("i",data[start:start+4])[0]
-                index =  ord(data[start])
-                udata = []
-                for i in range(8):
-                    y = start + i*4 +4
-                    udata.append(struct.unpack("f", data[y:y+4])[0])
-                self.writedata(index, udata)
-                #print "index:", index, "Data: ", udata
-        
+            ready = select.select([self.sock], [], [], 0.1)
+            if ready[0]:
+                data, addr = self.sock.recvfrom(4096)
+                #print data
+                header = data[:4]
+                if header != "DATA": 
+                    self.parent.log.error("Bad data packet")
+                    continue
+                if (len(data)-5) % 36 != 0:
+                    self.parent.log.error("Bad packet length")
+                    continue
+                for x in range( (len(data)-5)/36 ):
+                    start = x*36 + 5
+                    #index = struct.unpack("i",data[start:start+4])[0]
+                    index =  ord(data[start])
+                    udata = []
+                    for i in range(8):
+                        y = start + i*4 +4
+                        udata.append(struct.unpack("f", data[y:y+4])[0])
+                    self.writedata(index, udata)
+                    #print "index:", index, "Data: ", udata
+            self.senddata()
     def stop(self):
         self.getout = True
 
