@@ -16,7 +16,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-#  This class is the base class that should be used for all plugins in the system
+#  This class is the base class that should be used for all plugins in the
+#  system
 
 # We have to do this because print is a statement not a function and we need
 # this as a callback later in the code.
@@ -27,31 +28,32 @@ import Queue
 
 jobQueue = Queue.Queue()
 
+
 class PluginBase(object):
     def __init__(self, name, config):
         self.name = name
-        self.log = logging.getLogger('plugin.'+name)
+        self.log = logging.getLogger('plugin.' + name)
         self.log.info("Initializing")
-        
+
         self.config = {}
         for each in config:
             self.config[each[0]] = each[1]
         self.log.debug("Config: " + str(self.config))
-        
+
         self.running = False
-        
+
     def run(self):
         self.log.info("Starting")
-        self.running = True        
-    
+        self.running = True
+
     def stop(self):
         self.log.info("Stopping")
         self.running = False
-        
+
     def quit(self):
         """ Sends a job back to the main program to quit program """
         jobQueue.put("QUIT")
-    
+
     def is_running(self):
         return self.running
 
@@ -60,7 +62,7 @@ class PluginBase(object):
 
     def db_write(self, key, value):
         database.write(key, value)
-    
+
     def db_list(self):
         return database.listkeys()
 
