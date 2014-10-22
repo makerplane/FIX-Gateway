@@ -18,9 +18,10 @@
 
 import plugin
 
+
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
-        super(Plugin, self).__init__(name,config)
+        super(Plugin, self).__init__(name, config)
 
     def run(self):
         super(Plugin, self).run()
