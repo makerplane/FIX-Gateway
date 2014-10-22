@@ -18,17 +18,49 @@
 
 import plugin
 import threading
-import time
 import os
 import xml.etree.ElementTree as ET
+import socket
+import Queue
+
+
+class UDP_Process(threading.Thread):
+
+    def __init__(self, conn):
+        threading.Thread.__init__(self)
+        self.queue = conn
+        UDP_IP = ""
+        UDP_PORT = 34200
+
+        self.sock = socket.socket(socket.AF_INET,  # Internet
+                             socket.SOCK_DGRAM)  # UDP
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.sock.bind((UDP_IP, UDP_PORT))
+        self.running = 1
+
+    def run(self):
+        while self.running:
+            #Reads the UDP packet splits then sends it to the Queue
+            data, addr = self.sock.recvfrom(1024)  # buffer size is 1024 bytes
+            data_test = data
+            if (data_test):
+                self.queue.put(data_test)
+            else:
+                pass
+
+    def stop(self):
+        self.running = 0
+
 
 def parseProtocolFile(fg_root, xml_file):
     # First we build a list with the possible locations of the file
     # We look in the FG_ROOT/Protocols directory as well as the
     # directory where our module is located.  May add others if they
     # make sense.
-    filelist = [os.path.join(fg_root,"Protocols", xml_file),
-                os.path.join(os.path.dirname(__file__), xml_file)]
+
+    filelist = [os.path.join(fg_root, xml_file)]  # "Protocols", xml_file)]
+                #os.path.join(os.path.dirname(__file__), xml_file)]
     # Now loop through the files and use the first one we find
     found = False
     for each in filelist:
@@ -38,17 +70,25 @@ def parseProtocolFile(fg_root, xml_file):
             break
     if not found:
         raise RuntimeError("XML file not found")
-    root = tree.getroot()            
+    root = tree.getroot()
     if root.tag != "PropertyList":
         raise ValueError("Root Tag is not PropertyList")
 
-    generic = root.find("generic")
-    output = generic.find("outpfut")
+    Name_List = []
+
+    global Name_List
+
+    for node in tree.findall('.//key'):
+        Name_List.append(node.text)
+
+    #generic = root.find("generic")
+    #output = generic.find("output")
     #if child.text != "CANFIX":
     #    raise ValueError("Not a CANFIX Protocol File")
 
     #child = root.find("version")
     #version = child.text
+
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
@@ -56,32 +96,48 @@ class MainThread(threading.Thread):
         self.getout = False
         self.parent = parent
         self.log = parent.log
-    
+
     def run(self):
+        q = Queue.Queue()
+        t = UDP_Process(q)
+        t.start()
         while True:
             if self.getout:
                 break
-            time.sleep(1)
+            try:
+                data_test = q.get(0)
+                data_test = data_test.decode().rstrip()
+                data_test = data_test.split(',')
+                if data_test != ['']:
+                    for data in data_test:
+                        for l, d in zip(Name_List, data_test):
+                            try:
+                                self.parent.db_write(l.upper(), float(d))
+                            except ValueError:
+                                self.parent.db_write(l, d)
+            except Queue.Empty:
+                pass
             self.log.debug("Yep")
-        
+        t.stop()
+
     def stop(self):
         self.getout = True
-    
+
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
-        super(Plugin, self).__init__(name,config)
+        super(Plugin, self).__init__(name, config)
         self.thread = MainThread(self)
 
     def run(self):
         super(Plugin, self).run()
         try:
-            parseProtocolFile(self.config['fg_root'],self.config['xml_file'])
-        except Exception, e:
+            parseProtocolFile(self.config['fg_root'], self.config['xml_file'])
+        except Exception as e:
             self.log.critical(e)
             return
         self.thread.start()
-    
+
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
