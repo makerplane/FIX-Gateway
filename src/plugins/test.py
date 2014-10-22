@@ -24,11 +24,12 @@ import string
 
 random.seed(123456)
 
+
 class TestThread(threading.Thread):
     def __init__(self, parent):
         super(TestThread, self).__init__()
         self.parent = parent
-        
+
     def run(self):
         starttime = time.time()
         self.parent.log.debug("Starting Thread")
@@ -43,9 +44,10 @@ class TestThread(threading.Thread):
                 self.parent.log.debug("READ  " + key + " " + str(x))
         self.parent.log.debug("Stopping Thread " + str(time.time() - starttime))
 
+
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
-        super(Plugin, self).__init__(name,config)
+        super(Plugin, self).__init__(name, config)
         self.t = TestThread(self)
         self.keylist = []
         for each in range(100):
@@ -53,11 +55,11 @@ class Plugin(plugin.PluginBase):
             for i in range(5):
                 s = s + random.choice(string.ascii_uppercase + string.digits)
             self.keylist.append(s)
-    
+
     def run(self):
         super(Plugin, self).run()
         self.t.start()
-        
+
     def stop(self):
-        self.t.join() # Wait for the thread to stop
+        self.t.join()  # Wait for the thread to stop
         super(Plugin, self).stop()
