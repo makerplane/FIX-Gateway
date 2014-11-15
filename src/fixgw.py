@@ -23,6 +23,7 @@ import logging.config
 import argparse
 import plugin
 import Queue
+import sys
 
 config_file = "main.cfg"
 logconfig_file = config_file
@@ -31,7 +32,6 @@ logconfig_file = config_file
 plugin_mods = {}
 # This holds the instantiated object of each plugin that we load
 plugins = {}
-
 
 def load_plugin(name, module, config):
     # strings here remove the options from the list before it is
@@ -42,10 +42,15 @@ def load_plugin(name, module, config):
     except Exception as e:
         logging.critical("Unable to load module - " + module + ": " + str(e))
         return
-    items = [item for item in config.items(name)
-             if item[0] not in exclude_options]
-    plugins[name] = plugin_mods[name].Plugin(name, items)
-
+    # Here items winds up being a list of tuples [('key', 'value'),...]
+    items = [item for item in config.items(name) if item[0] not in exclude_options]
+    # Append the command line arguments to the items list as a tuple
+    items.append(('argv',sys.argv))
+    # Convert this to a dictionary before passing to the plugin
+    cfg = {}
+    for each in items:
+        cfg[each[0]] = each[1]
+    plugins[name] = plugin_mods[name].Plugin(name, cfg)
 
 def main():
     parser = argparse.ArgumentParser(description='FIX Gateway')
@@ -56,7 +61,7 @@ def main():
     parser.add_argument('--log-config', type=file,
                         help='Alternate logger configuration file')
 
-    args = parser.parse_args()
+    args, unknown_args = parser.parse_known_args()
 
     logging.config.fileConfig(logconfig_file)
     log = logging.getLogger()

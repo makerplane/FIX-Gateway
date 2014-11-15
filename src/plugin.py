@@ -34,10 +34,7 @@ class PluginBase(object):
         self.name = name
         self.log = logging.getLogger('plugin.' + name)
         self.log.info("Initializing")
-
-        self.config = {}
-        for each in config:
-            self.config[each[0]] = each[1]
+        self.config = config
         self.log.debug("Config: " + str(self.config))
 
         self.running = False
