@@ -16,9 +16,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import database
 import ConfigParser
-import time
 import importlib
 import logging
 import logging.config
@@ -41,14 +39,14 @@ def load_plugin(name, module, config):
     exclude_options = ["load", "module"]
     try:
         plugin_mods[name] = importlib.import_module(module)
-    except Exception, e:
+    except Exception as e:
         logging.critical("Unable to load module - " + module + ": " + str(e))
         return
     # Here items winds up being a list of tuples [('key', 'value'),...]
     items = [item for item in config.items(name) if item[0] not in exclude_options]
     # Append the command line arguments to the items list as a tuple
     items.append(('argv',sys.argv))
-    # Convert this to a dictionary before passing to the plugin    
+    # Convert this to a dictionary before passing to the plugin
     cfg = {}
     for each in items:
         cfg[each[0]] = each[1]
@@ -56,33 +54,38 @@ def load_plugin(name, module, config):
 
 def main():
     parser = argparse.ArgumentParser(description='FIX Gateway')
-    parser.add_argument('--debug', action='store_true', help='Run in debug mode')
-    parser.add_argument('--config-file', type=file, help='Alternate configuration file')
-    parser.add_argument('--log-config', type=file, help='Alternate logger configuration file')
+    parser.add_argument('--debug', action='store_true',
+                        help='Run in debug mode')
+    parser.add_argument('--config-file', type=file,
+                        help='Alternate configuration file')
+    parser.add_argument('--log-config', type=file,
+                        help='Alternate logger configuration file')
 
     args, unknown_args = parser.parse_known_args()
-    
+
     logging.config.fileConfig(logconfig_file)
     log = logging.getLogger()
-    if args.debug: log.setLevel(logging.DEBUG)
+    if args.debug:
+        log.setLevel(logging.DEBUG)
     log.info("Starting FIX Gateway")
 
     config = ConfigParser.ConfigParser()
     config.read(config_file)
 
     #TODO: Need to do some more thorough error checking here
-    
-    # run through the plugin_list dict and find all the plugins that are configured
-    # to be loaded and load them.
+
+    # run through the plugin_list dict and find all the plugins that are
+    # configured to be loaded and load them.
+
     try:
         for each in config.get("config", "plugins").split(","):
             if config.getboolean(each, "load"):
                 module = config.get(each, "module")
                 load_plugin(each, module, config)
     except ConfigParser.NoOptionError:
-        log.warning("Unable to find option for "+each)
+        log.warning("Unable to find option for " + each)
     except ConfigParser.NoSectionError:
-        log.warning("No plugin found in configuration file with name "+each)
+        log.warning("No plugin found in configuration file with name " + each)
 
     for each in plugins:
         plugins[each].run()
@@ -90,8 +93,8 @@ def main():
     iteration = 0
     while True:
         try:
-            job = plugin.jobQueue.get(timeout = 1.0)
-            if job=="QUIT":
+            job = plugin.jobQueue.get(timeout=1.0)
+            if job == "QUIT":
                 break
         except KeyboardInterrupt:
             log.info("Termination from keybaord received")
@@ -109,7 +112,7 @@ def main():
             if running_count == 0:
                 log.info("No plugins running, quitting")
                 break
- 
+
     for each in plugins:
         plugins[each].stop()
 

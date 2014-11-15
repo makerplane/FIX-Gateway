@@ -1,169 +1,147 @@
 <?xml version="1.0"?>
-<!--
-Copyright (c) 2014 Phil Birkelbach
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
--->
 
 <PropertyList>
-    <generic>
-        <output>
-            <line_separator>newline</line_separator>
-            <var_separator>,</var_separator>
-            <chunk>
-                <name>IAS</name>
-                <type>float</type>
-                <format>%.1f</format>
-                <node>/instrumentation/airspeed-indicator/indicated-speed-kt</node>
-            </chunk>
-            <chunk>
-                <name>PITCH</name>
-                <type>float</type>
-                <format>%.1f</format>
-                <node>/orientation/pitch-deg</node>
-            </chunk>
-            <chunk>
-                <name>ROLL</name>
-                <type>float</type>
-                <format>%.1f</format>
-                <node>/orientation/roll-deg</node>
-            </chunk>
-            <chunk>
-                <name>HDG</name>
-                <type>float</type>
-                <format>%.1f</format>
-                <node>/orientation/heading-magnetic-deg</node>
-            </chunk>
-            <chunk>
-                <name>ALT</name>
-                <type>ing</type>
-                <format>%d</format>
-                <node>/instrumentation/altimeter/pressure-alt-ft</node>
-            </chunk>
-            <chunk>
-                <name>TIME</name>
-                <type>string</type>
-                <format>%s</format>
-                <node>/instrumentation/clock/indicated-string</node>
-            </chunk>
-            <chunk>
-                <name>VOLT</name>
-                <type>float</type>
-                <format>%.4e</format>
-                <node>/systems/electrical/volts</node>
-            </chunk>
-            <chunk>
-                <name>RPM</name>
-                <type>int</type>
-                <format>%d</format>
-                <node>/engines/engine/rpm</node>
-            </chunk>
-            <chunk>
-                <name>MAP</name>
-                <type>float</type>
-                <format>%.1f</format>
-                <node>/engines/engine/mp-inhg</node>
-            </chunk>
-            <chunk>
-                <name>OILT</name>
-                <type>float</type>
-                <format>%.1f</format>
-                <node>/engines/engine[0]/oil-temperature-degf</node>
-            </chunk>
-            <chunk>
-                <name>OILP</name>
-                <type>float</type>
-                <format>%.1f</format>
-                <node>/engines/engine[0]/oil-pressure-psi</node>
-            </chunk>
-            <chunk>
-                <name>EGT</name>
-                <type>double</type>
-                <format>%.4e</format>
-                <node>/engines/engine/egt-degf-fix</node>
-            </chunk>
-            <chunk>
-                <name>FFLOW</name>
-                <type>double</type>
-                <format>%.4e</format>
-                <node>/engines/engine/fuel-flow-gph</node>
-            </chunk>
-            <chunk>
-                <name>FUEL0</name>
-                <type>float</type>
-                <format>%.2f</format>
-                <node>/consumables/fuel/tank[0]/level-gal_us</node>
-            </chunk>
-            <chunk>
-                <name>FUEL1</name>
-                <type>float</type>
-                <format>%.2f</format>
-                <node>/consumables/fuel/tank[1]/level-gal_us</node>
-            </chunk>
-            <chunk>
-                <name>LAT</name>
-                <type>float</type>
-                <format>%.4e</format>
-                <node>/instrumentation/gps/indicated-latitude-deg</node>
-            </chunk>
-            <chunk>
-                <name>LONG</name>
-                <type>float</type>
-                <format>%.4e</format>
-                <node>/instrumentation/gps/indicated-longitude-deg</node>
-            </chunk>
-            <chunk>
-                <name>OAT</name>
-                <type>float</type>
-                <format>%.1f</format>
-                <node>/environment/temperature-degc</node>
-            </chunk>
-        </output>
-        <input>
-            <line_separator>newline</line_separator>
-            <var_separator>,</var_separator>
-            <chunk>
-                <name>ELEV</name>
-                <type>double</type>
-                <format>%.4f</format>
-                <node>/controls/flight/elevator</node>
-            </chunk>
-            <chunk>
-                <name>AILR</name>
-                <type>double</type>
-                <format>%.4f</format>
-                <node>/controls/flight/aileron</node>
-            </chunk>
-            <chunk>
-                <name>RUD</name>
-                <type>double</type>
-                <format>%.4f</format>
-                <node>/controls/flight/rudder</node>
-            </chunk>
-            <chunk>
-                <name>FLAPS</name>
-                <type>double</type>
-                <format>%.4f</format>
-                <node>/controls/flight/flaps</node>
-            </chunk>
-            <chunk>
-                <name>THR</name>
-                <type>double</type>
-                <format>%.4f</format>
-                <node>/controls/engines/engine/throttle</node>
-            </chunk>
-        </input>
-    </generic>
+
+ <generic>
+
+  <output>
+   <line_separator>newline</line_separator>
+   <var_separator>,</var_separator>
+
+   <chunk>
+    <name>Indicated-speed-kt</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/instrumentation/airspeed-indicator/indicated-speed-kt</node>
+   </chunk>
+
+   <chunk>
+    <name>pitch att (deg)</name>
+    <type>float</type>
+    <format>%.1f</format>
+    <node>/orientation/pitch-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>Roll att (deg)</name>
+    <type>float</type>
+    <format>%.1f</format>
+    <node>/orientation/roll-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>magnetic heading (deg)</name>
+    <type>float</type>
+    <format>%.1f</format>
+    <node>/orientation/heading-magnetic-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>Altitude</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/instrumentation/altimeter/pressure-alt-ft</node>
+   </chunk>
+
+   <chunk>
+    <name>clock</name>
+    <type>string</type>
+    <format>%s</format>
+    <node>/instrumentation/clock/indicated-string</node>
+   </chunk>
+
+   <chunk>
+    <name>Voltage</name>
+    <type>float</type>
+    <format>%.4e</format>
+    <node>/systems/electrical/volts</node>
+   </chunk>
+
+   <chunk>
+    <name>RPM</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/engines/engine/rpm</node>
+   </chunk>
+
+   <chunk>
+    <name>MP</name>
+    <type>float</type>
+    <format>%.4e</format>
+    <node>/engines/engine/mp-inhg</node>
+   </chunk>
+
+   <chunk>
+    <name>Oil Temp F</name>
+    <type>float</type>
+    <format>%.4e</format>
+    <node>/engines/engine[0]/oil-temperature-degf</node>
+   </chunk>
+
+   <chunk>
+    <name>Oil Pressure</name>
+    <type>float</type>
+    <format>%.1f</format>
+    <node>/engines/engine[0]/oil-pressure-psi</node>
+   </chunk>
+
+   <chunk>
+    <name>EGT</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/engines/engine/egt-degf-fix</node>
+   </chunk>
+
+   <chunk>
+    <name>Fuel Flow</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/engines/engine/fuel-flow-gph</node>
+   </chunk>
+
+   <chunk>
+    <name>Fuel Tank 0</name>
+    <type>float</type>
+    <format>%.4e</format>
+    <node>/consumables/fuel/tank[0]/level-gal_us</node>
+   </chunk>
+
+   <chunk>
+    <name>Fuel Tank 1</name>
+    <type>float</type>
+    <format>%.4e</format>
+    <node>/consumables/fuel/tank[1]/level-gal_us</node>
+   </chunk>
+
+   <chunk>
+    <name>Ground Speed</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/instrumentation/gps/indicated-ground-speed-kt</node>
+   </chunk>
+
+   <chunk>
+    <name>Latitude</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/instrumentation/gps/indicated-latitude-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>Longitude</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/instrumentation/gps/indicated-longitude-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>OAT</name>
+    <type>double</type>
+    <format>%.4e</format>
+    <node>/environment/temperature-degc</node>
+   </chunk>
+  </output>
+
+ </generic>
+
 </PropertyList>
