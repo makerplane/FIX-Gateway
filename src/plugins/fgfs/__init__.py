@@ -21,11 +21,10 @@ import threading
 import os
 import xml.etree.ElementTree as ET
 import socket
-import Queue
+import queue
 
 
 class UDP_Process(threading.Thread):
-
     def __init__(self, conn, host, port):
         threading.Thread.__init__(self)
         self.queue = conn
@@ -98,7 +97,7 @@ class MainThread(threading.Thread):
         self.config = parent.config
 
     def run(self):
-        q = Queue.Queue()
+        q = queue.Queue()
         t = UDP_Process(q, self.config['host'], self.config['port'])
         t.setDaemon(True)
         t.start()
@@ -116,7 +115,7 @@ class MainThread(threading.Thread):
                                 self.parent.db_write(l.upper(), float(d))
                             except ValueError:
                                 self.parent.db_write(l, d)
-            except Queue.Empty:
+            except queue.Empty:
                 pass
             self.log.debug("Yep")
         t.stop()
