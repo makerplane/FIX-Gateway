@@ -46,19 +46,20 @@ class clientthread(threading.Thread):
 
     def choice(self, in_data):
         data = self.conn.recv(1024)
+        data = data.decode('utf-8')
         data = data.strip('\r\n')
         args = data.split(" ")
-        if args[0].decode('utf-8') == "list":
+        if args[0] == "list":
             self.do_list(data)
-        elif args[0].decode('utf-8') == "read":
+        elif args[0] == "read":
             self.do_read(data)
-        elif args[0].decode('utf-8') == "write":
+        elif args[0] == "write":
             self.do_write(data)
-        elif args[0].decode('utf-8') == "poll":
+        elif args[0] == "poll":
             self.do_poll()
-        elif args[0].decode('utf-8') == "stop":
+        elif args[0] == "stop":
             self.stop_poll()
-        elif args[0].decode('utf-8') == "quit":
+        elif args[0] == "quit":
             self.do_quit()
         else:
             pass
@@ -159,6 +160,8 @@ class MainThread(threading.Thread):
                 self.thread1.setDaemon(True)
                 #start new thread
                 self.thread1.start()
+            else:
+                pass
         #Close Socket
         self.s.close()
 
@@ -168,6 +171,7 @@ class MainThread(threading.Thread):
         except:
             pass
         self.getout = True
+        self.s.close()
 
 
 class Plugin(plugin.PluginBase):

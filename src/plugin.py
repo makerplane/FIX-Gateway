@@ -24,9 +24,9 @@
 
 import database
 import logging
-import Queue
+import queue
 
-jobQueue = Queue.Queue()
+jobQueue = queue.Queue()
 
 
 class PluginBase(object):

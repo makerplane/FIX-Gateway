@@ -32,7 +32,7 @@ class Command(cmd.Cmd):
             x = self.plugin.db_read(args[0].upper())
             print(x)
         except KeyError:
-            print("Unknown Key " + args[0])
+            print(("Unknown Key " + args[0]))
 
     def do_write(self, line):
         """write key value\nWrite Value into Database with given key"""
@@ -44,7 +44,7 @@ class Command(cmd.Cmd):
                 #TODO: Should do more error checking here
                 self.plugin.db_write(args[0].upper(), args[1])
             except KeyError:
-                print("Unknown Key " + args[0])
+                print(("Unknown Key " + args[0]))
 
     def do_list(self, line):
         """list\nList Database Keys"""
@@ -84,8 +84,8 @@ class MainThread(threading.Thread):
 
     def run(self):
         self.cmd.cmdloop()
-        quit = self.parent.config.get("quit", "yes")
-        if quit.lower() in ["yes", "true", "1"]:
+        quit_ = self.parent.config.get("quit", "yes")
+        if quit_.lower() in ["yes", "true", "1"]:
             self.parent.quit()
 
     def stop(self):
