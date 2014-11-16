@@ -57,11 +57,13 @@ __database["PROP2"] = db_item(0.0)
 __database["MIX1"] = db_item(0.0)
 __database["MIX2"] = db_item(0.0)
 
+
 def write(index, value):
     if index in __database:
         __database[index].value = value
     else:
-        raise KeyError
+        pass
+        #raise KeyError
 
 
 def read(index):
