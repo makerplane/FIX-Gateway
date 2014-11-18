@@ -62,8 +62,7 @@ def write(index, value):
     if index in __database:
         __database[index].value = value
     else:
-        pass
-        #raise KeyError
+        raise KeyError
 
 
 def read(index):
