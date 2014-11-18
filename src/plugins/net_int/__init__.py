@@ -94,8 +94,12 @@ class clientthread(threading.Thread):
         if len(args) < 2:
             self.conn.sendall("Missing Argument\n".encode('utf-8'))
         else:
-            #TODO: Should do more error checking here
-            self.parent.db_write(args[1].upper(), args[2])
+            try:
+                #TODO: Should do more error checking here
+                self.parent.db_write(args[1].upper(), args[2])
+            except KeyError:
+                reply = args[1].upper() + " not in index.\n"
+                self.conn.sendall(reply.encode('utf-8'))
 
     def do_poll(self):
         self.poll = True
