@@ -112,9 +112,12 @@ class MainThread(threading.Thread):
                     for data in data_test:
                         for l, d in zip(self.parent.xml_list, data_test):
                             try:
-                                self.parent.db_write(l.upper(), float(d))
-                            except ValueError:
-                                self.parent.db_write(l, d)
+                                try:
+                                    self.parent.db_write(l.upper(), float(d))
+                                except ValueError:
+                                    self.parent.db_write(l, d)
+                            except KeyError:
+                                self.log.warning(l.upper() + " not in index")
             except queue.Empty:
                 pass
             self.log.debug("Yep")
