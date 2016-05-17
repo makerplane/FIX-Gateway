@@ -23,8 +23,9 @@ __database = {}
 log = logging.getLogger('database')
 log.info("Initializing")
 
+
 class db_item:
-    def __init__(self, value = None):
+    def __init__(self, value=None):
         self.value = value
         self.quality = False
         self.max = None
@@ -56,11 +57,13 @@ __database["PROP2"] = db_item(0.0)
 __database["MIX1"] = db_item(0.0)
 __database["MIX2"] = db_item(0.0)
 
+
 def write(index, value):
     if index in __database:
         __database[index].value = value
     else:
         raise KeyError
+
 
 def read(index):
     #try:
@@ -68,11 +71,14 @@ def read(index):
     #except KeyError:
     #    return None
 
+
 def listkeys():
     return list(__database.keys())
 
+
 def callback_add(name, key, function, udata):
     log.debug("Adding callback function for %s on key %s" % (name, key))
+
 
 def callback_del(name, key):
     log.debug("Deleting callback function for %s on key %s" % (name, key))

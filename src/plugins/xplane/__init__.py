@@ -20,7 +20,7 @@
 
 import plugin
 import threading
-import time
+import time  # <---Not used need to verify if it's needed?'
 import socket
 import select
 import struct
@@ -35,13 +35,12 @@ class MainThread(threading.Thread):
         super(MainThread, self).__init__()
         self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
-        self.log = parent.log # simplifies logging
- 
-        self.sock = socket.socket(socket.AF_INET, # Internet
-                                  socket.SOCK_DGRAM) # UDP
+        self.log = parent.log  # simplifies logging
+
+        self.sock = socket.socket(socket.AF_INET,  # Internet
+                                  socket.SOCK_DGRAM)  # UDP
         self.sock.bind((UDP_IP, UDP_PORT))
         self.sock.setblocking(0)
-        
         
         # inputkeys is a dictionary that holds the data out indexes from X-Plane
         # and the keys to use for that data in FixGW to know what to send.  It's
@@ -56,16 +55,16 @@ class MainThread(threading.Thread):
                 
     def writedata(self, index, data):
         if index == 3:
-            self.parent.db_write("IAS",data[0])
-            self.parent.db_write("TAS",data[2])
+            self.parent.db_write("IAS", data[0])
+            self.parent.db_write("TAS", data[2])
         elif index == 20:
-            self.parent.db_write("ALT",data[2])
-            self.parent.db_write("LAT",data[0])
-            self.parent.db_write("LONG",data[1])
+            self.parent.db_write("ALT", data[2])
+            self.parent.db_write("LAT", data[0])
+            self.parent.db_write("LONG", data[1])
         else:
             self.parent.log.debug("Dunno Index:" + str(index))
         #self.parent.db_write("",data[0])
-    
+
     def senddata(self):
         """Function that sends data to X-Plane"""
         for each in self.inputkeys:
@@ -92,36 +91,37 @@ class MainThread(threading.Thread):
                 data, addr = self.sock.recvfrom(4096)
                 #print data
                 header = data[:4]
-                if header != "DATA": 
+                if header != "DATA":
                     self.parent.log.error("Bad data packet")
                     continue
-                if (len(data)-5) % 36 != 0:
+                if (len(data) - 5) % 36 != 0:
                     self.parent.log.error("Bad packet length")
                     continue
-                for x in range( (len(data)-5)/36 ):
-                    start = x*36 + 5
+                for x in range((len(data) - 5) / 36):
+                    start = x * 36 + 5
                     #index = struct.unpack("i",data[start:start+4])[0]
-                    index =  ord(data[start])
+                    index = ord(data[start])
                     udata = []
                     for i in range(8):
-                        y = start + i*4 +4
-                        udata.append(struct.unpack("f", data[y:y+4])[0])
+                        y = start + i * 4 + 4
+                        udata.append(struct.unpack("f", data[y:y + 4])[0])
                     self.writedata(index, udata)
                     #print "index:", index, "Data: ", udata
             self.senddata()
+
     def stop(self):
         self.getout = True
 
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
-        super(Plugin, self).__init__(name,config)
+        super(Plugin, self).__init__(name, config)
         self.thread = MainThread(self)
 
     def run(self):
         super(Plugin, self).run()
         self.thread.start()
-    
+
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
