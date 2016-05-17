@@ -41,7 +41,19 @@ class MainThread(threading.Thread):
                                   socket.SOCK_DGRAM) # UDP
         self.sock.bind((UDP_IP, UDP_PORT))
         self.sock.setblocking(0)
-    
+        
+        
+        # inputkeys is a dictionary that holds the data out indexes from X-Plane
+        # and the keys to use for that data in FixGW to know what to send.  It's
+        # read from the config file.  Only data that is found in this config
+        # will be read from the database and sent to X-Plane
+        self.inputkeys = {}
+        for each in self.parent.config:
+            if each[:3].lower() == "idx":
+                index = int(each[3:])
+                l = self.parent.config[each].replace(" ", "").split(",")
+                self.inputkeys[index] = l
+                
     def writedata(self, index, data):
         if index == 3:
             self.parent.db_write("IAS",data[0])
@@ -56,14 +68,20 @@ class MainThread(threading.Thread):
     
     def senddata(self):
         """Function that sends data to X-Plane"""
-        values = [float(self.parent.db_read("THR1")), float(self.parent.db_read("THR2")), 0.0,0.0,0.0,0.0,0.0,0.0]
-        data = "DATA" + chr(0)
-        data += struct.pack("i", 25)
-        for x in range(8):
-            data += struct.pack("f", values[x])
-        #for each in data:
-        #    print hex(ord(each)),
-        self.sock.sendto(data, (UDP_IP, 49200))
+        for each in self.inputkeys:
+            data = "DATA" + chr(0)
+            data += struct.pack("i", int(each))
+        
+            for i in range(8):
+                if self.inputkeys[each][i].lower() == 'x':
+                    data += chr(0) + chr(192) + chr(121) + chr(196)
+                    #data += struct.pack("f", 0.0)
+                else:
+                    data += struct.pack("f", float(self.parent.db_read(self.inputkeys[each][i].upper())))
+            #for each in data:
+            #    print hex(ord(each)),
+            #print ""
+            self.sock.sendto(data, (UDP_IP,49200))
         
     def run(self):
         while True:
