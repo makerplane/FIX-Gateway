@@ -2,6 +2,9 @@
 FIX Gateway Database Key Definitions
 ====================================
 
+Lower case letters indicate where numbers would be.  For example
+EGTec  would look like EGT14 for the fourth EGT on engine 1.
+
 ======= ======================== ====== ============== =======
 Key     Description              Type   Range          Notes
 ======= ======================== ====== ============== =======
@@ -25,7 +28,7 @@ CTLATP  AntiTorque Pedal Ctrl    float  -1-1           %/100
 CTLFLAP Flap Control             float  -1-1           %/100
 CTLLBRK Left Brake Control       float   0-1           %/100
 CTLRBRK Right Brake Control      float   0-1           %/100
-THR#    Throttle Control         float   0-1           %/100
-PROP#   Prop Control             float   0-1           %/100
-MIX#    Mixture Control          float   0-1           %/100
+THRe    Throttle Control         float   0-1           %/100
+PROPe   Prop Control             float   0-1           %/100
+MIXe    Mixture Control          float   0-1           %/100
 ======= ======================== ====== ============== =======

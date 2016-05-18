@@ -19,8 +19,6 @@
 #  This class is the base class that should be used for all plugins in the
 #  system
 
-# We have to do this because print is a statement not a function and we need
-# this as a callback later in the code.
 
 import database
 import logging
