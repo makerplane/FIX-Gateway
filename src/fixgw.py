@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #  Copyright (c) 2014 Phil Birkelbach
 #
@@ -44,7 +44,7 @@ def load_plugin(name, module, config):
         logging.critical("Unable to load module - " + module + ": " + str(e))
         return
     # Here items winds up being a list of tuples [('key', 'value'),...]
-    items = [item for item in config.items(name)
+    items = [item for item in config.items("conn_" + name)
              if item[0] not in exclude_options]
     # Append the command line arguments to the items list as a tuple
     items.append(('argv', sys.argv))
@@ -79,16 +79,22 @@ def main():
 
     # run through the plugin_list dict and find all the plugins that are
     # configured to be loaded and load them.
-
-    try:
-        for each in config.get("config", "plugins").split(","):
+    
+    for each in config:
+        if each[:5] == "conn_":
             if config.getboolean(each, "load"):
                 module = config.get(each, "module")
-                load_plugin(each, module, config)
-    except configparser.NoOptionError:
-        log.warning("Unable to find option for " + each)
-    except configparser.NoSectionError:
-        log.warning("No plugin found in configuration file with name " + each)
+                load_plugin(each[5:], module, config)
+    
+    # try:
+    #     for each in config.get("config", "plugins").split(","):
+    #         if config.getboolean(each, "load"):
+    #             module = config.get(each, "module")
+    #             load_plugin(each, module, config)
+    # except configparser.NoOptionError:
+    #     log.warning("Unable to find option for " + each)
+    # except configparser.NoSectionError:
+    #     log.warning("No plugin found in configuration file with name " + each)
 
     for each in plugins:
         plugins[each].run()
