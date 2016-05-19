@@ -17,46 +17,165 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import logging
+from datetime import datetime
 
 __database = {}
 
-log = logging.getLogger('database')
-log.info("Initializing")
 
-
-class db_item:
-    def __init__(self, value=None):
-        self.value = value
-        self.quality = False
-        self.max = None
-        self.min = None
+class db_item(object):
+    def __init__(self, dtype='float'):
+        types = {'float':float, 'int':int, 'bool':bool, 'str':str}
+        try:
+            self.dtype = types[dtype]
+        except:
+            log.error("Unknown datatype - " + str(dtype))
+            raise
+        self._value = 0.0
+        self.description = ""
+        self.units = ""
+        self.bad = False
+        self.fail = False
+        self._max = None
+        self._min = None
+        self._tol = 100     # Time to live in milliseconds.  Any older and quality is bad
+        self.timestamp = datetime.utcnow()
+        self.aux = {}
         self.callbacks = {}
 
-__database["IAS"] = db_item(0.0)
-__database["TAS"] = db_item(0.0)
-__database["ALT"] = db_item(0.0)
-__database["TALT"] = db_item(0.0)
-__database["OAT"] = db_item(0.0)
-__database["BARO"] = db_item(29.92)
-__database["ROLL"] = db_item(0.0)
-__database["PITCH"] = db_item(0.0)
-__database["YAW"] = db_item(0.0)
-__database["AOA"] = db_item(0.0)
-__database["LAT"] = db_item(0.0)
-__database["LONG"] = db_item(0.0)
-__database["CTLPTCH"] = db_item(0.0)
-__database["CTLROLL"] = db_item(0.0)
-__database["CTLYAW"] = db_item(0.0)
-__database["CTLFLAP"] = db_item(0.0)
-__database["CTLLBRK"] = db_item(0.0)
-__database["CTLRBRK"] = db_item(0.0)
-__database["THR1"] = db_item(0.0)
-__database["THR2"] = db_item(0.0)
-__database["PROP1"] = db_item(0.0)
-__database["PROP2"] = db_item(0.0)
-__database["MIX1"] = db_item(0.0)
-__database["MIX2"] = db_item(0.0)
+    # initialize the auxiliary data dictionary.  aux should be a comma delimited
+    # string of the items to include.
+    def init_aux(self, aux):
+        l = aux.split(',')
+        for each in l:
+            self.aux[each.strip()] = None
 
+    def get_aux_list(self):
+        return list(self.aux.keys())
+
+    def set_aux_value(self, name, value):
+        try:
+            self.aux[name] = self.dtype(value)
+        except ValueError:
+            log.error("Bad Value for aux {0} {1}".format(name, value))
+            raise
+        except KeyError:
+            log.error("No aux {0} for {1}".format(name, self.description))
+            raise
+
+    def get_aux_value(self, name):
+        try:
+            return self.aux[name]
+        except KeyError:
+            log.error("No aux {0} for {1}".format(name, self.description))
+            raise
+
+
+    # return the age of the item in milliseconds
+    @property
+    def age(self):
+        d = datetime.utcnow() - self.timestamp
+        return d.total_seconds() * 1000 + d.microseconds / 1000
+
+    @property
+    def value(self):
+        if self.age > self.tol: self.bad = False
+        return (self._value, self.bad, self.fail)
+    
+    @value.setter
+    def value(self, x):
+        try:
+            self._value = self.dtype(x)
+        except ValueError:
+            log.error("Bad value '" + str(x) + "' given for " + self.description)
+        # bounds check and cap
+        try:
+            if self._value < self._min: self._value = self._min
+        except:  # Probably only fails if min has not been set
+            pass  # ignore at this point
+        try:
+            if self._value > self._max: self._value = self._max
+        except:  # Probably only fails if max has not been set
+            pass  # ignore at this point
+        # set the timestamp to right now
+        self.timestamp = datetime.utcnow()
+    
+    @property
+    def min(self):
+        return self._min
+
+    @min.setter
+    def min(self, x):
+        try:
+            self._min = self.dtype(x)
+        except ValueError:
+            log.error("Bad minimum value '" + str(x) + "' given for " + self.description)
+
+    @property
+    def max(self):
+        return self._max
+
+    @max.setter
+    def max(self, x):
+        try:
+            self._max = self.dtype(x)
+        except ValueError:
+            log.error("Bad maximum value '" + str(x) + "' given for " + self.description)
+
+    @property
+    def tol(self):
+        return self._tol
+
+    @tol.setter
+    def tol(self, x):
+        try:
+            self._tol = int(x)
+        except ValueError:
+            log.error("Time to live should be an integer for " + self.description)
+
+
+def init(config):
+    global log
+    global __database
+    __database = {}
+    log = logging.getLogger('database')
+    log.info("Initializing Database")
+    
+    ddfile = config.get("config", "db_file")
+    try:
+        f = open(ddfile,'r')
+    except:
+        log.critical("Unable to find database definition file - " + ddfile)
+        raise
+    
+    state = "var"
+    variables = {}
+    for line in f:
+        if line[0] != "#":
+            entry = line.split("\t")
+            if entry[0] == "---":
+                state = "db"
+                log.debug("Database Variables: " + str(variables))
+                continue
+            if state == "var":
+                v = entry[0].split('=')
+                variables[v[0].strip().lower()] = int(v[1].strip())
+            if state == "db":
+                log.debug("Adding - " + entry[1])
+                try:
+                    newitem = db_item(entry[2])
+                except:
+                    log.error("Failure to add entry - " + entry[0])
+                
+                newitem.description = entry[1]
+                newitem.min = entry[3]
+                newitem.max = entry[4]
+                newitem.units = entry[5]
+                newitem.tol = entry[7]
+                newitem.value = entry[6]
+                newitem.init_aux(entry[8])
+                __database[entry[0]] = newitem
+                
+            
 
 def write(index, value):
     if index in __database:

@@ -21,11 +21,12 @@ import importlib
 import logging
 import logging.config
 import argparse
+import database
 import plugin
 import queue
 import sys
 
-config_file = "main.cfg"
+config_file = "config/main.cfg"
 logconfig_file = config_file
 
 # This dictionary holds the modules for each plugin that we load
@@ -74,6 +75,11 @@ def main():
 
     config = configparser.ConfigParser()
     config.read(config_file)
+    try:
+        database.init(config)
+    except Exception as e:
+        log.error("Database failure, Exiting")
+        return
 
     #TODO: Need to do some more thorough error checking here
 

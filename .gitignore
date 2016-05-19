@@ -1,3 +1,5 @@
+.~lock*
+*.ods
 *.log
 .DS_Store
 *.pyc
