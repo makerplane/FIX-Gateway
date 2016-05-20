@@ -61,6 +61,9 @@ class PluginBase(object):
     def db_list(self):
         return database.listkeys()
 
+    def db_get_item(self, key):
+        return database.get_raw_item(key)
+
     def db_callback_add(self, key, function, udata=None):
         database.callback_add(self.name, key, function, udata)
 

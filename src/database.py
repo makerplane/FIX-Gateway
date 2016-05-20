@@ -27,6 +27,7 @@ class db_item(object):
         types = {'float':float, 'int':int, 'bool':bool, 'str':str}
         try:
             self.dtype = types[dtype]
+            self.typestring = dtype
         except:
             log.error("Unknown datatype - " + str(dtype))
             raise
@@ -223,12 +224,16 @@ def init(config):
                     add_item(entry)
 
 
-def write(index, value):
-    __database[index].value = value
+def write(key, value):
+    __database[key].value = value
     
 
-def read(index):
-    return __database[index].value
+def read(key):
+    return __database[key].value
+
+
+def get_raw_item(key):
+    return __database[key]
     
 
 def listkeys():

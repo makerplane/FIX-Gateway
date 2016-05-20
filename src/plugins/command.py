@@ -29,7 +29,7 @@ class Command(cmd.Cmd):
         """read key\nRead the value from the database given the key"""
         args = line.split(" ")
         try:
-            x = self.plugin.db_read(args[0].upper())
+            x = self.plugin.db_read(args[0])
             print(x)
         except KeyError:
             print(("Unknown Key " + args[0]))
@@ -42,7 +42,7 @@ class Command(cmd.Cmd):
         else:
             try:
                 #TODO: Should do more error checking here
-                self.plugin.db_write(args[0].upper(), args[1])
+                self.plugin.db_write(args[0], args[1])
             except KeyError:
                 print(("Unknown Key " + args[0]))
 
@@ -54,6 +54,25 @@ class Command(cmd.Cmd):
             for each in x:
                 print(each)
 
+    def do_report(self, line):
+        """Report\nDetailed ID Report"""
+        args = line.split(" ")
+        try:
+            x = self.plugin.db_get_item(args[0])
+            print(x.description)
+            print("Type:  {0}".format(x.typestring))
+            print("Value: {0}".format(str(x.value[0])))
+            print("Q:     {0}".format(str(x.value[1:])))
+            print("Min:   {0}".format(str(x.min)))
+            print("Max:   {0}".format(str(x.max)))
+            print("Units: {0}".format(x.units))
+            print("TOL:   {0}".format(str(x.tol)))
+            print("Auxillary Data:")
+            for each in x.aux:
+                print("  {0} = {1}".format(each,str(x.aux[each])))
+        except KeyError:
+            print(("Unknown Key " + args[0]))
+        
     def do_quit(self, line):
         """quit\nExit Plugin"""
         return True
@@ -61,10 +80,7 @@ class Command(cmd.Cmd):
     def do_exit(self, line):
         """exit\nExit Plugin"""
         return self.do_quit(line)
-
-#    def do_help(self, line):
-#        print("Helping...")
-
+    
     def do_EOF(self, line):
         return True
 
