@@ -33,6 +33,7 @@ class db_item(object):
         self._value = 0.0
         self.description = ""
         self.units = ""
+        self.old = False
         self.bad = False
         self.fail = False
         self._max = None
@@ -78,8 +79,11 @@ class db_item(object):
 
     @property
     def value(self):
-        if self.age > self.tol: self.bad = False
-        return (self._value, self.bad, self.fail)
+        if self.age > self.tol:
+            self.old = True
+        else:
+            self.old = False
+        return (self._value, self.old, self.bad, self.fail)
     
     @value.setter
     def value(self, x):
@@ -217,23 +221,15 @@ def init(config):
                         log.error("Variable {0} not set for {1}".format(ch, entry[1]))
                 else:
                     add_item(entry)
-                
-                
-            
+
 
 def write(index, value):
-    #if index in __database:
-        __database[index].value = value
-    #else:
-    #    raise KeyError
-
+    __database[index].value = value
+    
 
 def read(index):
-    #try:
-        return __database[index].value
-    #except KeyError:
-    #    return None
-
+    return __database[index].value
+    
 
 def listkeys():
     return list(__database.keys())
