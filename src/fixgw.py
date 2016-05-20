@@ -79,9 +79,13 @@ def main():
         database.init(config)
     except Exception as e:
         log.error("Database failure, Exiting")
-        return
+        print(e)
+        raise
+        return # we don't want to run with a screwed up database
 
-    #TODO: Need to do some more thorough error checking here
+    # TODO: Add a hook here for post database creation code
+
+    # TODO: Need to do some more thorough error checking here
 
     # run through the plugin_list dict and find all the plugins that are
     # configured to be loaded and load them.
@@ -92,15 +96,7 @@ def main():
                 module = config.get(each, "module")
                 load_plugin(each[5:], module, config)
     
-    # try:
-    #     for each in config.get("config", "plugins").split(","):
-    #         if config.getboolean(each, "load"):
-    #             module = config.get(each, "module")
-    #             load_plugin(each, module, config)
-    # except configparser.NoOptionError:
-    #     log.warning("Unable to find option for " + each)
-    # except configparser.NoSectionError:
-    #     log.warning("No plugin found in configuration file with name " + each)
+    # TODO add a hook here for pre module run code
 
     for each in plugins:
         plugins[each].run()

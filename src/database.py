@@ -132,11 +132,57 @@ class db_item(object):
         except ValueError:
             log.error("Time to live should be an integer for " + self.description)
 
+# cleans up the lines
+def clean_line(line):
+    while "\t\t" in line: line = line.replace("\t\t", "\t")
+    return line
+
+def check_for_variables(entry):
+    for ch in entry[0]:
+        if ch.islower(): return ch
+    return None
+
+
+# expand the line into a list of lines based on the variables.
+def expand_entry(entry, var, count):
+    l = []
+    for i in range(count):
+        newentry = entry.copy()
+        newentry[0] = newentry[0].replace(var, str(i+1))
+        newentry[1] = newentry[0].replace('%' + var, str(i+1))
+        ch = check_for_variables(newentry)
+        if ch:
+            l.extend(expand_entry(newentry,ch,variables[ch]))
+        else:
+            l.append(newentry)
+    return l
+
+def add_item(entry):
+    log.debug("Adding - " + entry[1])
+    try:
+        newitem = db_item(entry[2])
+    except:
+        log.error("Failure to add entry - " + entry[0])
+        return None
+    
+    newitem.description = entry[1]
+    newitem.min = entry[3]
+    newitem.max = entry[4]
+    newitem.units = entry[5]
+    newitem.tol = entry[7]
+    newitem.value = entry[6]
+    newitem.init_aux(entry[8])
+    __database[entry[0]] = newitem
+    return newitem
+                
+
 
 def init(config):
     global log
     global __database
+    global variables
     __database = {}
+    variables = {}
     log = logging.getLogger('database')
     log.info("Initializing Database")
     
@@ -148,9 +194,10 @@ def init(config):
         raise
     
     state = "var"
-    variables = {}
+    
     for line in f:
         if line[0] != "#":
+            line = clean_line(line)
             entry = line.split("\t")
             if entry[0] == "---":
                 state = "db"
@@ -160,28 +207,25 @@ def init(config):
                 v = entry[0].split('=')
                 variables[v[0].strip().lower()] = int(v[1].strip())
             if state == "db":
-                log.debug("Adding - " + entry[1])
-                try:
-                    newitem = db_item(entry[2])
-                except:
-                    log.error("Failure to add entry - " + entry[0])
+                ch = check_for_variables(entry)
+                if ch:
+                    try:
+                        entries = expand_entry(entry, ch, variables[ch])
+                        for each in entries:
+                            add_item(each)
+                    except KeyError:
+                        log.error("Variable {0} not set for {1}".format(ch, entry[1]))
+                else:
+                    add_item(entry)
                 
-                newitem.description = entry[1]
-                newitem.min = entry[3]
-                newitem.max = entry[4]
-                newitem.units = entry[5]
-                newitem.tol = entry[7]
-                newitem.value = entry[6]
-                newitem.init_aux(entry[8])
-                __database[entry[0]] = newitem
                 
             
 
 def write(index, value):
-    if index in __database:
+    #if index in __database:
         __database[index].value = value
-    else:
-        raise KeyError
+    #else:
+    #    raise KeyError
 
 
 def read(index):
