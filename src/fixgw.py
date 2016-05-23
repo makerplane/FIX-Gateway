@@ -39,11 +39,7 @@ def load_plugin(name, module, config):
     # strings here remove the options from the list before it is
     # sent to the plugin.
     exclude_options = ["load", "module"]
-    try:
-        plugin_mods[name] = importlib.import_module(module)
-    except Exception as e:
-        logging.critical("Unable to load module - " + module + ": " + str(e))
-        return
+    plugin_mods[name] = importlib.import_module(module)
     # Here items winds up being a list of tuples [('key', 'value'),...]
     items = [item for item in config.items("conn_" + name)
              if item[0] not in exclude_options]
@@ -89,13 +85,17 @@ def main():
 
     # run through the plugin_list dict and find all the plugins that are
     # configured to be loaded and load them.
-    
+
     for each in config:
         if each[:5] == "conn_":
             if config.getboolean(each, "load"):
                 module = config.get(each, "module")
-                load_plugin(each[5:], module, config)
-    
+                try:
+                    load_plugin(each[5:], module, config)
+                except Exception as e:
+                    logging.critical("Unable to load module - " + module + ": " + str(e))
+
+
     # TODO add a hook here for pre module run code
 
     for each in plugins:
@@ -131,4 +131,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

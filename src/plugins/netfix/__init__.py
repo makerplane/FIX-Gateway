@@ -32,6 +32,7 @@ class Connection(object):
         self.parent = parent # This should point to the plugin object
         self.conn = conn
         self.addr = addr
+        self.log = parent.log
         self.queue = queue.Queue()
 
     # This sends a standard Net-FIX value update message to the queue.
@@ -43,9 +44,12 @@ class Connection(object):
         self.queue.put(s.encode())
 
     def handle_request(self, data):
-        d = data.decode("utf-8")
+        try:
+            d = data.decode("utf-8")
+        except UnicodeDecodeError:
+            self.log.debug("Bad Message from {0}".format(self.addr[0]))
         if d[-1] != '\n':  # newline character
-            self.log.debug("Bad Frame")
+            self.log.debug("Bad Frame from {0}".format(self.addr[0]))
         elif d[0] == '@': # It's a command frame
             if d[1] == 'l':
                 print("List ID's")
@@ -55,22 +59,55 @@ class Connection(object):
             if d[1] == 'r':
                 try:
                     val = self.parent.db_read(id)
-                except Exception as e:
-                    print(e)
+                except KeyError:
+                    self.queue.put("@r{0}!001\n".format(id).encode())
                 else:
                     self.__send_value(id, val)
-                print("Read {0}".format(id))
             elif d[1] == 's':
                 self.parent.db_callback_add(id, self.subscription_handler)
             elif d[1] == 'u':
                 self.parent.db_callback_del(id)
-                print("Unsubscribe {0}".format(id))
             elif d[1] == 'q':
+                try:
+                    x = self.parent.db_get_item(id)
+                    a = ""
+                    for each in x.aux:
+                        if len(a) > 0:
+                            a = a + ","
+                        a = a + each
+                    s = "@q{0};{1};{2};{3};{4};{5};{6};{7}\n".format(id, x.description, x.typestring, x.min, x.max, x.units, x.tol,a)
+                    self.queue.put(s.encode())
+                except KeyError:
+                    print(("Unknown Key " + args[0]))
                 print("Report {0}".format(id))
+        else:  # If no '@' then it must be a value update
+            try:
+                x = d.strip().split(';')
+                if len(x) != 3:
+                    self.log.debug("Bad Frame {0} from {1}".format(d.strip(), self.addr[0]))
+                if x[2] != '000' or x[2] != '00':
+                    item = self.parent.db_get(x[0])
+                    b = x[2][0]
+                    f = x[2][1]
+                    if len(x[2]) == 3:
+                        s = x[2][2]
+                    if b and b == '1':
+                        item.bad = True
+                    elif b and b == '0':
+                        item.bad = False
+                    if f and f == '1':
+                        item.fail = True
+                    elif f and f == '0':
+                        item.fail = False
+                    # TODO Finish dealing with secondary quality flag
+                self.parent.db_write(x[0], x[1])
+            except Exception as e:
+                # We pretty much ignore this stuff for now
+                self.log.debug("Problem with input {0}: {1}".format(d.strip, e))
 
     def subscription_handler(self, id, value, udata):
         self.__send_value(id, value)
-        
+
 
 # Two threads are started for each connection.  This one is for receiving the data
 class ReceiveThread(threading.Thread):
@@ -122,7 +159,6 @@ class SendThread(threading.Thread):
             while True:
                 data = self.co.queue.get()
                 if data == 'exit': break
-                #print("Sending..." + str(data))
                 self.conn.sendall(data)
             self.running = False
 
@@ -210,7 +246,10 @@ class Plugin(plugin.PluginBase):
     base module functions should be called first."""
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
-        self.thread = ServerThread(self)
+        if config['type'] == 'server':
+            self.thread = ServerThread(self)
+        else:
+            raise ValueError("Only server type is implemented")
 
 
     def run(self):
