@@ -1,7 +1,7 @@
 Net-FIX ASCII Protocol Implementation
 
 [[[ Need to clean up this file and make it look like an intelligent
-[[[ person wrote it.  ]]]
+    person wrote it.  ]]]
 
 This is a description of the Net-FIX ASCII Protocol.  This is an
 implementation of FIX over a network using simple ASCII sentences.
