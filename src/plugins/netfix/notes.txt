@@ -11,7 +11,7 @@ with the FIX identifier and are followed by the data.
 
 The data sentence from the server to the client is formed like this...
 
-ID;xxxx.x;obfs\n
+ID;xxxx.x;aobfs\n
 
 Where the ID is the FIX ASCII identifier for the data point.  For
 example TAS = True Airspeed.  The xxxx.x represents the value. The
@@ -31,7 +31,7 @@ newline ('\n' or 0x0A) character.
 
 The sentence from the client to the server is similar...
 
-ID;xxxx.x;bfs\n
+ID;xxxx.x;abfs\n
 
 The difference is that the old flag is removed.  If the client
 determines that the data is old it should simply set the bad flag.
@@ -76,12 +76,12 @@ s = subscribe - subscribe to an ID to have the server send this data
 each time it's written.
 
 @sTAS would cause the server to send the True Airspeed each time it's
-written to the database.  The server would respond with the identical 
+written to the database.  The server would respond with the identical
 message, or the ! followed by an error code.
 
 @u = unsubscribe - unsubscribe from the data point.
 
-@uTAS would undo the above subscription.  The server would respond 
+@uTAS would undo the above subscription.  The server would respond
 with the identical message, or the ! followed by an error code.
 
 
@@ -89,8 +89,16 @@ l = List - used to list the Identifiers that the server is handling.
 
 @l would cause the server to send the entire list of IDs that are
 configured.  The list may be huge and as such may be returned in
-more than one response.  The client should be prepared for 
-multiple responses.  Identifiers would be separated with commas ','
+more than one response.  The client should be prepared for
+multiple responses.  The response will include the total number of
+Identifiers to expect then the current index.  The Identifiers will
+not be in any kind of order.  Identifiers would be separated with commas ','
+
+The response might look like this...
+
+@l234;12;ID1,ID2,ID3,ID4...
+
+Where 234 is the total and 12 is the starting index.
 
 q = Identifier Report - Used to cause the server to report all the
 data associated with a given ID.  Data such as the min and max

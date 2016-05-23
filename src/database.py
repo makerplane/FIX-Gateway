@@ -34,6 +34,7 @@ class db_item(object):
         self._value = 0.0
         self.description = ""
         self.units = ""
+        self.annunciate = False
         self.old = False
         self.bad = False
         self.fail = False
@@ -84,7 +85,7 @@ class db_item(object):
             self.old = True
         else:
             self.old = False
-        return (self._value, self.old, self.bad, self.fail)
+        return (self._value, self.annunciate, self.old, self.bad, self.fail)
 
     @value.setter
     def value(self, x):

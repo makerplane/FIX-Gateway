@@ -39,10 +39,11 @@ class Connection(object):
 
     # This sends a standard Net-FIX value update message to the queue.
     def __send_value(self, id, value):
-        o = "1" if value[1] else "0"
-        b = "1" if value[2] else "0"
-        f = "1" if value[3] else "0"
-        s = "{0};{1};{2}{3}{4}\n".format(id, value[0], o, b, f)
+        a = "1" if value[1] else "0"
+        o = "1" if value[2] else "0"
+        b = "1" if value[3] else "0"
+        f = "1" if value[4] else "0"
+        s = "{0};{1};{2}{3}{4}{5}\n".format(id, value[0],a, o, b, f)
         self.queue.put(s.encode())
 
     def __send_report(self, id):
@@ -85,7 +86,6 @@ class Connection(object):
             current += len(message.split(','))
 
 
-
     def handle_request(self, data):
         try:
             d = data.decode("utf-8")
@@ -118,12 +118,17 @@ class Connection(object):
                 x = d.strip().split(';')
                 if len(x) != 3:
                     self.log.debug("Bad Frame {0} from {1}".format(d.strip(), self.addr[0]))
-                if x[2] != '000' or x[2] != '00':
-                    item = self.parent.db_get(x[0])
-                    b = x[2][0]
-                    f = x[2][1]
-                    if len(x[2]) == 3:
-                        s = x[2][2]
+                if x[2] != '0000' or x[2] != '000':
+                    item = self.parent.db_get_item(x[0])
+                    a = x[2][0]
+                    b = x[2][1]
+                    f = x[2][2]
+                    if len(x[2]) == 4:
+                        s = x[2][3]
+                    if a and a == '1':
+                        item.annunciate = True
+                    elif a and a == '0':
+                        item.annunciate = False
                     if b and b == '1':
                         item.bad = True
                     elif b and b == '0':
