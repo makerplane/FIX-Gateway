@@ -34,11 +34,16 @@ class Connection(object):
         self.addr = addr
         self.queue = queue.Queue()
 
+    # This sends a standard Net-FIX value update message to the queue.
+    def __send_value(self, id, value):
+        o = "1" if value[1] else "0"
+        b = "1" if value[2] else "0"
+        f = "1" if value[3] else "0"
+        s = "{0};{1};{2}{3}{4}\n".format(id, value[0], o, b, f)
+        self.queue.put(s.encode())
 
     def handle_request(self, data):
-        print(data)
         d = data.decode("utf-8")
-        print(d)
         if d[-1] != '\n':  # newline character
             self.log.debug("Bad Frame")
         elif d[0] == '@': # It's a command frame
@@ -50,23 +55,22 @@ class Connection(object):
             if d[1] == 'r':
                 try:
                     val = self.parent.db_read(id)
-                    print(val)
                 except Exception as e:
                     print(e)
                 else:
-                    o = "1" if val[1] else "0"
-                    b = "1" if val[2] else "0"
-                    f = "1" if val[3] else "0"
-                    s = "{0};{1};{2}{3}{4}\n".format(id,val[0],o,b,f)
-                    self.queue.put(s.encode())
+                    self.__send_value(id, val)
                 print("Read {0}".format(id))
             elif d[1] == 's':
-                print("Subscribe {0}".format(id))
+                self.parent.db_callback_add(id, self.subscription_handler)
             elif d[1] == 'u':
+                self.parent.db_callback_del(id)
                 print("Unsubscribe {0}".format(id))
             elif d[1] == 'q':
                 print("Report {0}".format(id))
 
+    def subscription_handler(self, id, value, udata):
+        self.__send_value(id, value)
+        
 
 # Two threads are started for each connection.  This one is for receiving the data
 class ReceiveThread(threading.Thread):
@@ -118,7 +122,7 @@ class SendThread(threading.Thread):
             while True:
                 data = self.co.queue.get()
                 if data == 'exit': break
-                print("Sending..." + str(data))
+                #print("Sending..." + str(data))
                 self.conn.sendall(data)
             self.running = False
 
