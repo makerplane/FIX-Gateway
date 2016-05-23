@@ -34,6 +34,8 @@ class Connection(object):
         self.addr = addr
         self.log = parent.log
         self.queue = queue.Queue()
+        self.buffer_size = int(parent.config['buffer_size']) if ('buffer_size' in parent.config) and parent.config['buffer_size'] else 1024
+
 
     # This sends a standard Net-FIX value update message to the queue.
     def __send_value(self, id, value):
@@ -42,6 +44,47 @@ class Connection(object):
         f = "1" if value[3] else "0"
         s = "{0};{1};{2}{3}{4}\n".format(id, value[0], o, b, f)
         self.queue.put(s.encode())
+
+    def __send_report(self, id):
+        try:
+            x = self.parent.db_get_item(id)
+            a = ""
+            for each in x.aux:
+                if len(a) > 0:
+                    a = a + ","
+                a = a + each
+            s = "@q{0};{1};{2};{3};{4};{5};{6};{7}\n".format(id, x.description,
+                                                             x.typestring, x.min,
+                                                             x.max, x.units,
+                                                             x.tol,a)
+            self.queue.put(s.encode())
+        except KeyError:
+            self.queue.put("@q{0}!001\n".format(id).encode())
+
+
+    def __send_list(self):
+        keys = self.parent.db_list()
+        msgs = []
+        index = 0
+        s = ""
+
+        for each in keys:
+            # TODO Use Buffer size
+            if len(s) + len(each) > self.buffer_size-20:
+                msgs.append(s)
+                s = ""
+            if len(s) > 0:
+                s = s + ","
+            s = s + each
+        msgs.append(s)
+
+        count = len(keys)
+        current = 0
+        for message in msgs:
+            self.queue.put("@l{0};{1};{2}\n".format(count, current, message).encode())
+            current += len(message.split(','))
+
+
 
     def handle_request(self, data):
         try:
@@ -52,7 +95,8 @@ class Connection(object):
             self.log.debug("Bad Frame from {0}".format(self.addr[0]))
         elif d[0] == '@': # It's a command frame
             if d[1] == 'l':
-                print("List ID's")
+                self.__send_list()
+                #print("List ID's")
                 return
             else:
                 id = d[2:].strip()
@@ -68,18 +112,7 @@ class Connection(object):
             elif d[1] == 'u':
                 self.parent.db_callback_del(id)
             elif d[1] == 'q':
-                try:
-                    x = self.parent.db_get_item(id)
-                    a = ""
-                    for each in x.aux:
-                        if len(a) > 0:
-                            a = a + ","
-                        a = a + each
-                    s = "@q{0};{1};{2};{3};{4};{5};{6};{7}\n".format(id, x.description, x.typestring, x.min, x.max, x.units, x.tol,a)
-                    self.queue.put(s.encode())
-                except KeyError:
-                    print(("Unknown Key " + args[0]))
-                print("Report {0}".format(id))
+                self.__send_report(id)
         else:  # If no '@' then it must be a value update
             try:
                 x = d.strip().split(';')
