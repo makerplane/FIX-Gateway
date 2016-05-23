@@ -154,7 +154,7 @@ def expand_entry(entry, var, count):
     for i in range(count):
         newentry = entry.copy()
         newentry[0] = newentry[0].replace(var, str(i+1))
-        newentry[1] = newentry[0].replace('%' + var, str(i+1))
+        newentry[1] = newentry[1].replace('%' + var, str(i+1))
         ch = check_for_variables(newentry)
         if ch:
             l.extend(expand_entry(newentry,ch,variables[ch]))
