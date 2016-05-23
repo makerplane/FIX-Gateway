@@ -85,7 +85,7 @@ class db_item(object):
         else:
             self.old = False
         return (self._value, self.old, self.bad, self.fail)
-    
+
     @value.setter
     def value(self, x):
         try:
@@ -103,7 +103,7 @@ class db_item(object):
             pass  # ignore at this point
         # set the timestamp to right now
         self.timestamp = datetime.utcnow()
-    
+
     @property
     def min(self):
         return self._min
@@ -169,7 +169,7 @@ def add_item(entry):
     except:
         log.error("Failure to add entry - " + entry[0])
         return None
-    
+
     newitem.description = entry[1]
     newitem.min = entry[3]
     newitem.max = entry[4]
@@ -179,7 +179,7 @@ def add_item(entry):
     newitem.init_aux(entry[8])
     __database[entry[0]] = newitem
     return newitem
-                
+
 
 
 def init(config):
@@ -190,16 +190,16 @@ def init(config):
     variables = {}
     log = logging.getLogger('database')
     log.info("Initializing Database")
-    
+
     ddfile = config.get("config", "db_file")
     try:
         f = open(ddfile,'r')
     except:
         log.critical("Unable to find database definition file - " + ddfile)
         raise
-    
+
     state = "var"
-    
+
     for line in f:
         if line[0] != "#":
             line = clean_line(line)
@@ -225,8 +225,14 @@ def init(config):
 
 
 def write(key, value):
-    __database[key].value = value
-    
+    entry = __database[key]
+    entry.value = value
+    for name, func in entry.callbacks.items():
+        # Each item in the dictionary should be a tuple
+        # of the function and the udata.  This calls the
+        # function.
+        func[0](key, entry.value, func[1])
+
 
 def read(key):
     return __database[key].value
@@ -234,15 +240,20 @@ def read(key):
 
 def get_raw_item(key):
     return __database[key]
-    
+
 
 def listkeys():
     return list(__database.keys())
 
 
+# Adds or redefines the callback function that will be called when
+# the items value is set.
 def callback_add(name, key, function, udata):
+    item = __database[key]
+    item.callbacks[name] = (function, udata)
     log.debug("Adding callback function for %s on key %s" % (name, key))
 
 
 def callback_del(name, key):
+    del __database[key].callbacks[name]
     log.debug("Deleting callback function for %s on key %s" % (name, key))

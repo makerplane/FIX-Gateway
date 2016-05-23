@@ -72,7 +72,15 @@ class Command(cmd.Cmd):
                 if each: print("  {0} = {1}".format(each,str(x.aux[each])))
         except KeyError:
             print(("Unknown Key " + args[0]))
-        
+
+    def do_sub(self, line):
+        """Subscribe\nSubscribe to updates"""
+        args = line.split(" ")
+        try:
+            self.plugin.db_callback_add(args[0], self.callback_function)
+        except KeyError:
+            print(("Unknown Key " + args[0]))
+
     def do_quit(self, line):
         """quit\nExit Plugin"""
         return True
@@ -80,10 +88,12 @@ class Command(cmd.Cmd):
     def do_exit(self, line):
         """exit\nExit Plugin"""
         return self.do_quit(line)
-    
+
     def do_EOF(self, line):
         return True
 
+    def callback_function(self, id, value, udata):
+        print("{0} = {1}".format(id, value))
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
