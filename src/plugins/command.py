@@ -69,7 +69,7 @@ class Command(cmd.Cmd):
             print("TOL:   {0}".format(str(x.tol)))
             print("Auxillary Data:")
             for each in x.aux:
-                print("  {0} = {1}".format(each,str(x.aux[each])))
+                if each: print("  {0} = {1}".format(each,str(x.aux[each])))
         except KeyError:
             print(("Unknown Key " + args[0]))
         
