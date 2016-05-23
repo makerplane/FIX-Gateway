@@ -26,7 +26,9 @@ import queue
 
 jobQueue = queue.Queue()
 
-
+# This is the base class for all plugin objects.  Every plugin should
+# inherit this class and override at least the run function.  See the
+# skel.py file in the plugins directory for a basic example.
 class PluginBase(object):
     def __init__(self, name, config):
         self.name = name

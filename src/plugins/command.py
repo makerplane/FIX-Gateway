@@ -26,7 +26,7 @@ class Command(cmd.Cmd):
         self.plugin = p
 
     def do_read(self, line):
-        """read key\nRead the value from the database given the key"""
+        """read\nRead the value from the database given the key"""
         args = line.split(" ")
         try:
             x = self.plugin.db_read(args[0])
@@ -35,7 +35,7 @@ class Command(cmd.Cmd):
             print(("Unknown Key " + args[0]))
 
     def do_write(self, line):
-        """write key value\nWrite Value into Database with given key"""
+        """writevalue\nWrite Value into Database with given key"""
         args = line.split(" ")
         if len(args) < 2:
             print("Missing Argument")

@@ -39,11 +39,14 @@ class Connection(object):
 
     # This sends a standard Net-FIX value update message to the queue.
     def __send_value(self, id, value):
-        a = "1" if value[1] else "0"
-        o = "1" if value[2] else "0"
-        b = "1" if value[3] else "0"
-        f = "1" if value[4] else "0"
-        s = "{0};{1};{2}{3}{4}{5}\n".format(id, value[0],a, o, b, f)
+        if value is tuple:
+            a = "1" if value[1] else "0"
+            o = "1" if value[2] else "0"
+            b = "1" if value[3] else "0"
+            f = "1" if value[4] else "0"
+            s = "{0};{1};{2}{3}{4}{5}\n".format(id, value[0],a, o, b, f)
+        else:
+            s = "{0};{1}\n".format(id, value)
         self.queue.put(s.encode())
 
     def __send_report(self, id):

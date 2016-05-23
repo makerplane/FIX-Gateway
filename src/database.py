@@ -226,17 +226,31 @@ def init(config):
 
 
 def write(key, value):
-    entry = __database[key]
-    entry.value = value
-    for name, func in entry.callbacks.items():
-        # Each item in the dictionary should be a tuple
-        # of the function and the udata.  This calls the
-        # function.
-        func[0](key, entry.value, func[1])
+    if '.' in key:
+        x = key.split('.')
+        entry = __database[x[0]]
+        entry.set_aux_value(x[1], value)
+        for name, func in entry.callbacks.items():
+            # We call teh get_aux_value() function again because
+            # the value may have been formated or bounds checked
+            func[0](key, entry.get_aux_value(x[1]), func[1])
+    else:
+        entry = __database[key]
+        entry.value = value
+        for name, func in entry.callbacks.items():
+            # Each item in the dictionary should be a tuple
+            # of the function and the udata.  This calls the
+            # function.
+            func[0](key, entry.value, func[1])
 
 
 def read(key):
-    return __database[key].value
+    if '.' in key:
+        x = key.split('.')
+        entry = __database[x[0]]
+        return entry.get_aux_value(x[1])
+    else:
+        return __database[key].value
 
 
 def get_raw_item(key):
