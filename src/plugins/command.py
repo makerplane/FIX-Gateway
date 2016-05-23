@@ -81,6 +81,14 @@ class Command(cmd.Cmd):
         except KeyError:
             print(("Unknown Key " + args[0]))
 
+    def do_unsub(self, line):
+        args = line.split(" ")
+        try:
+            self.plugin.db_callback_del(args[0])
+        except KeyError:
+            print(("Unknown Key " + args[0]))
+
+
     def do_quit(self, line):
         """quit\nExit Plugin"""
         return True
