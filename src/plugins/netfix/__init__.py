@@ -89,14 +89,9 @@ class Connection(object):
             current += len(message.split(','))
 
 
-    def handle_request(self, data):
-        try:
-            d = data.decode("utf-8")
-        except UnicodeDecodeError:
-            self.log.debug("Bad Message from {0}".format(self.addr[0]))
-        if d[-1] != '\n':  # newline character
-            self.log.debug("Bad Frame from {0}".format(self.addr[0]))
-        elif d[0] == '@': # It's a command frame
+    def handle_request(self, d):
+
+        if d[0] == '@': # It's a command frame
             if d[1] == 'l':
                 self.__send_list()
                 #print("List ID's")
@@ -111,9 +106,17 @@ class Connection(object):
                 else:
                     self.__send_value(id, val)
             elif d[1] == 's':
-                self.parent.db_callback_add(id, self.subscription_handler)
+                try:
+                    self.parent.db_callback_add(id, self.subscription_handler)
+                    self.queue.put("@s{0}\n".format(id).encode())
+                except KeyError:
+                    self.queue.put("@s{0}!001\n".format(id).encode())
             elif d[1] == 'u':
-                self.parent.db_callback_del(id)
+                try:
+                    self.parent.db_callback_del(id)
+                    self.queue.put("@u{0}\n".format(id).encode())
+                except KeyError:
+                    self.queue.put("@u{0}!001\n".format(id).encode())
             elif d[1] == 'q':
                 self.__send_report(id)
         else:  # If no '@' then it must be a value update
@@ -146,6 +149,7 @@ class Connection(object):
                 # We pretty much ignore this stuff for now
                 self.log.debug("Problem with input {0}: {1}".format(d.strip, e))
 
+    # Callback function used for subscriptions
     def subscription_handler(self, id, value, udata):
         self.__send_value(id, value)
 
@@ -165,12 +169,24 @@ class ReceiveThread(threading.Thread):
 
 
     def run(self):
+        data = b""
         with self.conn:
             self.log.info('Client connection from {0} port {1}'.format(str(self.addr[0]), str(self.addr[1]) ))
+            buff = ""
             while True:
                 data = self.conn.recv(self.bsize)
                 if not data: break
-                self.co.handle_request(data)
+                try:
+                    dstring = data.decode("utf-8")
+                except UnicodeDecodeError:
+                    self.log.debug("Bad Message from {0}".format(self.addr[0]))
+                for d in dstring:
+                    if d=='\n':
+                        self.co.handle_request(buff)
+                        buff = ""
+                    else:
+                        buff += d
+
 
             self.co.queue.put('exit')  #Signals the send thread to exit.
             self.log.info('Disconnected by {0} port {1}'.format(str(self.addr[0]), str(self.addr[1]) ))
@@ -191,7 +207,7 @@ class SendThread(threading.Thread):
         self.parent = co.parent # This should point up to the Plugin Object
         self.running = True
         self.log = self.parent.log
-        self.getout = False
+        #self.getout = False
 
     # All this does is watch the queue in the connection object and
     # send anything that it finds there to the socket connection
@@ -205,7 +221,8 @@ class SendThread(threading.Thread):
 
 
     def stop(self):
-        self.getout = True
+        self.co.queue.put('exit')
+        #self.getout = True
 
 
 # This thread is responsible for starting and stopping the thread pairs that
@@ -269,7 +286,6 @@ class ServerThread(threading.Thread):
                     sendthread = SendThread(co)
 
                     self.threads.append( (receivethread, sendthread) )
-                    print('Starting Thread {0}'.format(len(self.threads)))
                     receivethread.start()
                     sendthread.start()
 

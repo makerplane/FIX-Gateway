@@ -130,4 +130,5 @@ def main():
     log.info("FIX Gateway Exiting Normally")
 
 if __name__ == "__main__":
+    # TODO: Add daemonization
     main()
