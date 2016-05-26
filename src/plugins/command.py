@@ -70,6 +70,8 @@ class Command(cmd.Cmd):
             print("Auxillary Data:")
             for each in x.aux:
                 if each: print("  {0} = {1}".format(each,str(x.aux[each])))
+            for each in x.callbacks:
+                print("Callback function defined: {0}".format(each[0]))
         except KeyError:
             print(("Unknown Key " + args[0]))
 
