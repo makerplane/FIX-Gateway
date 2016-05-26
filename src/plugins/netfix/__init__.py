@@ -187,6 +187,7 @@ class ReceiveThread(threading.Thread):
 
 
             self.co.queue.put('exit')  #Signals the send thread to exit.
+            self.parent.db_callback_del("*", self.co.subscription_handler, None)
             self.log.info('Disconnected by {0} port {1}'.format(str(self.addr[0]), str(self.addr[1]) ))
             self.running = False
 

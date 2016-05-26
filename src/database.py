@@ -109,6 +109,7 @@ class db_item(object):
         self.timestamp = datetime.utcnow()
         # call all of the callback functions
         for func in self.callbacks:
+            log.debug("Calling Callback for {0}".format(self.key))
             func[1](self.key, self.value, func[2])
 
 
@@ -268,10 +269,15 @@ def callback_add(name, key, function, udata):
 
 
 def callback_del(name, key, function, udata):
-    __database[key].callbacks.remove( (name, function, udata) )
+    if key == "*":
+        for each in __database:
+            log.debug("Deleting callback function for %s on key %s" % (name, each))
+            __database[each].callbacks.remove( (name, function, udata) )
+    else:
+        log.debug("Deleting callback function for %s on key %s" % (name, key))
+        __database[key].callbacks.remove( (name, function, udata) )
     # for f in __database[key].callbacks:
     #     if f[0] == name and f[1] == function and f[2] == udata:
     #         print("Found it"+str(f))
     #         del f
     #del __database[key].callbacks[name]
-    log.debug("Deleting callback function for %s on key %s" % (name, key))
