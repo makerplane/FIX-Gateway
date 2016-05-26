@@ -39,7 +39,7 @@ class Connection(object):
 
     # This sends a standard Net-FIX value update message to the queue.
     def __send_value(self, id, value):
-        if value is tuple:
+        if type(value) is tuple:
             a = "1" if value[1] else "0"
             o = "1" if value[2] else "0"
             b = "1" if value[3] else "0"
@@ -90,7 +90,6 @@ class Connection(object):
 
 
     def handle_request(self, d):
-
         if d[0] == '@': # It's a command frame
             if d[1] == 'l':
                 self.__send_list()
@@ -113,7 +112,7 @@ class Connection(object):
                     self.queue.put("@s{0}!001\n".format(id).encode())
             elif d[1] == 'u':
                 try:
-                    self.parent.db_callback_del(id)
+                    self.parent.db_callback_del(id, self.subscription_handler)
                     self.queue.put("@u{0}\n".format(id).encode())
                 except KeyError:
                     self.queue.put("@u{0}!001\n".format(id).encode())
@@ -152,7 +151,6 @@ class Connection(object):
     # Callback function used for subscriptions
     def subscription_handler(self, id, value, udata):
         self.__send_value(id, value)
-
 
 # Two threads are started for each connection.  This one is for receiving the data
 class ReceiveThread(threading.Thread):
@@ -292,6 +290,8 @@ class ServerThread(threading.Thread):
 
     def stop(self):
         self.getout = True
+
+
 
 
 class Plugin(plugin.PluginBase):

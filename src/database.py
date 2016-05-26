@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #  Copyright (c) 2014 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -23,7 +21,7 @@ __database = {}
 
 
 class db_item(object):
-    def __init__(self, dtype='float'):
+    def __init__(self, key, dtype='float'):
         types = {'float':float, 'int':int, 'bool':bool, 'str':str}
         try:
             self.dtype = types[dtype]
@@ -31,6 +29,7 @@ class db_item(object):
         except:
             log.error("Unknown datatype - " + str(dtype))
             raise
+        self.key = key
         self._value = 0.0
         self.description = ""
         self.units = ""
@@ -43,7 +42,7 @@ class db_item(object):
         self._tol = 100     # Time to live in milliseconds.  Any older and quality is bad
         self.timestamp = datetime.utcnow()
         self.aux = {}
-        self.callbacks = {}
+        self.callbacks = []
 
     # initialize the auxiliary data dictionary.  aux should be a comma delimited
     # string of the items to include.
@@ -64,6 +63,10 @@ class db_item(object):
         except KeyError:
             log.error("No aux {0} for {1}".format(name, self.description))
             raise
+        for func in self.callbacks:
+            # We call teh get_aux_value() function again because
+            # the value may have been formated or bounds checked
+            func[1]("{0}.{1}".format(self.key, name), self.aux[name], func[2])
 
     def get_aux_value(self, name):
         try:
@@ -104,6 +107,10 @@ class db_item(object):
             pass  # ignore at this point
         # set the timestamp to right now
         self.timestamp = datetime.utcnow()
+        # call all of the callback functions
+        for func in self.callbacks:
+            func[1](self.key, self.value, func[2])
+
 
     @property
     def min(self):
@@ -163,10 +170,11 @@ def expand_entry(entry, var, count):
             l.append(newentry)
     return l
 
+
 def add_item(entry):
     log.debug("Adding - " + entry[1])
     try:
-        newitem = db_item(entry[2])
+        newitem = db_item(entry[0], entry[2])
     except:
         log.error("Failure to add entry - " + entry[0])
         return None
@@ -180,7 +188,6 @@ def add_item(entry):
     newitem.init_aux(entry[8])
     __database[entry[0]] = newitem
     return newitem
-
 
 
 def init(config):
@@ -230,18 +237,9 @@ def write(key, value):
         x = key.split('.')
         entry = __database[x[0]]
         entry.set_aux_value(x[1], value)
-        for name, func in entry.callbacks.items():
-            # We call teh get_aux_value() function again because
-            # the value may have been formated or bounds checked
-            func[0](key, entry.get_aux_value(x[1]), func[1])
     else:
         entry = __database[key]
         entry.value = value
-        for name, func in entry.callbacks.items():
-            # Each item in the dictionary should be a tuple
-            # of the function and the udata.  This calls the
-            # function.
-            func[0](key, entry.value, func[1])
 
 
 def read(key):
@@ -265,10 +263,15 @@ def listkeys():
 # the items value is set.
 def callback_add(name, key, function, udata):
     item = __database[key]
-    item.callbacks[name] = (function, udata)
+    item.callbacks.append( (name, function, udata) )
     log.debug("Adding callback function for %s on key %s" % (name, key))
 
 
-def callback_del(name, key):
-    del __database[key].callbacks[name]
+def callback_del(name, key, function, udata):
+    __database[key].callbacks.remove( (name, function, udata) )
+    # for f in __database[key].callbacks:
+    #     if f[0] == name and f[1] == function and f[2] == udata:
+    #         print("Found it"+str(f))
+    #         del f
+    #del __database[key].callbacks[name]
     log.debug("Deleting callback function for %s on key %s" % (name, key))

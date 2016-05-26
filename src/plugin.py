@@ -69,5 +69,5 @@ class PluginBase(object):
     def db_callback_add(self, key, function, udata=None):
         database.callback_add(self.name, key, function, udata)
 
-    def db_callback_del(self, key):
-        database.callback_del(self.name, key)
+    def db_callback_del(self, key, function, udata=None):
+        database.callback_del(self.name, key, function, udata)
