@@ -84,7 +84,7 @@ class db_item(object):
 
     @property
     def value(self):
-        if self.age > self.tol:
+        if self.age > self.tol and self.tol != 0:
             self.old = True
         else:
             self.old = False
@@ -92,20 +92,23 @@ class db_item(object):
 
     @value.setter
     def value(self, x):
-        try:
-            self._value = self.dtype(x)
-        except ValueError:
-            log.error("Bad value '" + str(x) + "' given for " + self.description)
-        # bounds check and cap
-        try:
-            if self._value < self._min: self._value = self._min
-        except:  # Probably only fails if min has not been set
-            pass  # ignore at this point
-        try:
-            if self._value > self._max: self._value = self._max
-        except:  # Probably only fails if max has not been set
-            pass  # ignore at this point
-        # set the timestamp to right now
+        if self.dtype == bool:
+            self._value = (x == True or x.lower() in ["yes", "true", "1", 1])
+        else:
+            try:
+                self._value = self.dtype(x)
+            except ValueError:
+                log.error("Bad value '" + str(x) + "' given for " + self.description)
+            # bounds check and cap
+            try:
+                if self._value < self._min: self._value = self._min
+            except:  # Probably only fails if min has not been set
+                pass  # ignore at this point
+            try:
+                if self._value > self._max: self._value = self._max
+            except:  # Probably only fails if max has not been set
+                pass  # ignore at this point
+            # set the timestamp to right now
         self.timestamp = datetime.utcnow()
         # call all of the callback functions
         for func in self.callbacks:
