@@ -274,11 +274,17 @@ def callback_add(name, key, function, udata):
 def callback_del(name, key, function, udata):
     if key == "*":
         for each in __database:
-            log.debug("Deleting callback function for %s on key %s" % (name, each))
-            __database[each].callbacks.remove( (name, function, udata) )
+            try:
+                __database[each].callbacks.remove( (name, function, udata) )
+                log.debug("Deleting callback function for %s on key %s" % (name, each))
+            except ValueError:
+                pass
     else:
         log.debug("Deleting callback function for %s on key %s" % (name, key))
-        __database[key].callbacks.remove( (name, function, udata) )
+        try:
+            __database[key].callbacks.remove( (name, function, udata) )
+        except ValueError:
+            log.debug("Callback not deleted because it was not found in the list")
     # for f in __database[key].callbacks:
     #     if f[0] == name and f[1] == function and f[2] == udata:
     #         print("Found it"+str(f))
