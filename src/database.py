@@ -33,10 +33,10 @@ class db_item(object):
         self._value = 0.0
         self.description = ""
         self.units = ""
-        self.annunciate = False
-        self.old = False
-        self.bad = False
-        self.fail = False
+        self._annunciate = False
+        self._old = False
+        self._bad = False
+        self._fail = False
         self._max = None
         self._min = None
         self._tol = 100     # Time to live in milliseconds.  Any older and quality is bad
@@ -75,6 +75,10 @@ class db_item(object):
             log.error("No aux {0} for {1}".format(name, self.description))
             raise
 
+    def send_callbacks(self):
+        for func in self.callbacks:
+            log.debug("Calling Callback for {0}".format(self.key))
+            func[1](self.key, self.value, func[2])
 
     # return the age of the item in milliseconds
     @property
@@ -111,9 +115,10 @@ class db_item(object):
             # set the timestamp to right now
         self.timestamp = datetime.utcnow()
         # call all of the callback functions
-        for func in self.callbacks:
-            log.debug("Calling Callback for {0}".format(self.key))
-            func[1](self.key, self.value, func[2])
+        #for func in self.callbacks:
+        #    log.debug("Calling Callback for {0}".format(self.key))
+        #    func[1](self.key, self.value, func[2])
+        self.send_callbacks()
 
 
     @property
@@ -148,6 +153,51 @@ class db_item(object):
             self._tol = int(x)
         except ValueError:
             log.error("Time to live should be an integer for " + self.description)
+
+    @property
+    def annunciate(self):
+        return self._annunciate
+
+    @annunciate.setter
+    def annunciate(self, x):
+        last = self._annunciate
+        self._annunciate = bool(x)
+        if self._annunciate != last:
+            self.send_callbacks()
+
+    @property
+    def old(self):
+        return self._old
+
+    @old.setter
+    def old(self, x):
+        last = self._old
+        self._old = bool(x)
+        if self._old != last:
+            self.send_callbacks()
+
+    @property
+    def bad(self):
+        return self._bad
+
+    @bad.setter
+    def bad(self, x):
+        last = self._bad
+        self._bad = bool(x)
+        if self._bad != last:
+            self.send_callbacks()
+
+    @property
+    def fail(self):
+        return self._fail
+
+    @fail.setter
+    def fail(self, x):
+        last = self._fail
+        self._fail = bool(x)
+        if self._fail != last:
+            self.send_callbacks()
+
 
 def check_for_variables(entry):
     for ch in entry[0]:
