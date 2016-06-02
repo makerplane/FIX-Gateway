@@ -149,11 +149,6 @@ class db_item(object):
         except ValueError:
             log.error("Time to live should be an integer for " + self.description)
 
-# cleans up the lines
-def clean_line(line):
-    while "\t\t" in line: line = line.replace("\t\t", "\t")
-    return line
-
 def check_for_variables(entry):
     for ch in entry[0]:
         if ch.islower(): return ch
@@ -214,9 +209,8 @@ def init(config):
 
     for line in f:
         if line[0] != "#":
-            line = clean_line(line)
-            entry = line.split("\t")
-            if entry[0] == "---":
+            entry = line.split(":")
+            if entry[0][:3] == "---":
                 state = "db"
                 log.debug("Database Variables: " + str(variables))
                 continue

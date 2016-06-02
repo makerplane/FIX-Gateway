@@ -1,48 +1,48 @@
-e=2	Engines							
-c=4	Cylinders per engine							
-t=2	Fuel Tanks							
-b=16	Generic Buttons							
-r=4	Generic Encoders							
-a=16	Generic Analog							
----								
-#Key	Description	Type	Min	Max	Units	Initial	TOL	Auxiliary Data
-ANLGa	Generic Analog %a	float	0	1	%/100	0.0	2000	
-BTNb	Generic Button %b	bool	0	1	.	False	0	
-ENCr	Generic Encoder %r	int	-32768	32767	Pulses	0	0	
-IAS	Indicated Airspeed	float	0	1000	knots	0.0	2000	Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
-TAS	True Airspeed	float	0	2000	knots	0.0	2000	
-CAS	True Airspeed	float	0	2000	knots	0.0	2000	
-ALT	Indicated Altitude	float	-1000	60000	ft	0.0	2000	
-TALT	True Altitude	float	-1000	60000	ft	0.0	2000	
-DALT	Density Altitude	float	-1000	60000	ft	0.0	2000	
-BARO	Altimeter Setting	float	0	35	inHg	29.92	2000	
-VS	Vertical Speed	float	-10000	10000	ft/min	0.0	2000	Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-OAT	Outside Air Temperature	float	-300	300	degC	0.0	2000	
-ROLL	Roll Angle	float	-180	180	deg	0.0	200	
-PITCH	Pitch Angle	float	-180	180	deg	0.0	200	
-YAW	Yaw Angle	float	-180	180	deg	0.0	200	
-AOA	Angle of attack	float	-180	180	deg	0.0	200	Min,Max,0g,Warn,Stall
-CTLPTCH	Pitch Control	float	-1	1	%/100	0.0	200	
-CTLROLL	Roll Control	float	-1	1	%/100	0.0	200	
-CTLYAW	Yaw Control (Rudder)	float	-1	1	%/100	0.0	200	
-CTLCOLL	Collective Control	float	-1	1	%/100	0.0	200	
-CTLATP	AntiTorque Pedal Ctrl	float	-1	1	%/100	0.0	200	
-CTLFLAP	Flap Control	float	-1	1	%/100	0.0	200	
-CTLLBRK	Left Brake Control	float	0	1	%/100	0.0	200	
-CTLRBRK	Right Brake Control	float	0	1	%/100	0.0	1000	
-ANORM	Normal Acceleration	float	-30	30	g	0.0	200	
-ALAT	Lateral Acceleration	float	-30	30	g	0.0	200	
-ALONG	Longitudinal Acceleration	float	-30	30	g	0.0	200	
-THRe	Throttle Control Engine %e	float	0	1	%/100	0.0	1000	
-PROPe	Prop Control Engine %e	float	0	1	%/100	0.0	1000	
-MIXe	Mixture Control Engine %e	float	0	1	%/100	0.0	1000	
-OILPe	Oil Pressure Engine %e	float	0	200	psi	0.0	2000	Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-OILTe	Oil Temperature Engine %e	float	0	300	degC	0.0	2000	Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-H2OTe	Coolant Temperature Engine %e	float	0	200	degC	0.0	2000	Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-FUELPe	Fuel Pressure Engine %e	float	0	200	psi	0.0	2000	Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-FUELFe	Fuel Flow Engine %e	float	0	100	gal/hr	0.0	2000	
-MAPe	Manifold Pressure Engine %e	float	0	60	inHg	0.0	2000	
-EGTec	Exhaust Gas Temp Engine %e, Cylinder %c	float	0	1000	degC	0.0	2000	
-CHTec	Cylinder Head Temp Engine %e, Cylinder %c	float	0	1000	degC	0.0	2000	
-FUELQt	Fuel Quantity Tank %t	float	0	200	gal	0.0	2000	Min,Max,lowWarn,lowAlarm
-TACHe	Engine RPM	int	0	10000	RPM	0	2000	Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+e=2:Engines:::::::
+c=4:Cylinders per engine:::::::
+t=2:Fuel Tanks:::::::
+b=16:Generic Buttons:::::::
+r=4:Generic Encoders:::::::
+a=16:Generic Analog:::::::
+---::::::::
+#Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
+ANLGa:Generic Analog %a:float:0:1:%/100:0.0:2000:
+BTNb:Generic Button %b:bool:0:1::False:0:
+ENCr:Generic Encoder %r:int:::Pulses:0:0:
+IAS:Indicated Airspeed:float:0:1000:knots:0.0:2000:Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
+TAS:True Airspeed:float:0:2000:knots:0.0:2000:
+CAS:True Airspeed:float:0:2000:knots:0.0:2000:
+ALT:Indicated Altitude:float:-1000:60000:ft:0.0:2000:
+TALT:True Altitude:float:-1000:60000:ft:0.0:2000:
+DALT:Density Altitude:float:-1000:60000:ft:0.0:2000:
+BARO:Altimeter Setting:float:0:35:inHg:29.92:2000:
+VS:Vertical Speed:float:-10000:10000:ft/min:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+OAT:Outside Air Temperature:float:-300:300:degC:0.0:2000:
+ROLL:Roll Angle:float:-180:180:deg:0.0:200:
+PITCH:Pitch Angle:float:-180:180:deg:0.0:200:
+YAW:Yaw Angle:float:-180:180:deg:0.0:200:
+AOA:Angle of attack:float:-180:180:deg:0.0:200:Min,Max,0g,Warn,Stall
+CTLPTCH:Pitch Control:float:-1:1:%/100:0.0:200:
+CTLROLL:Roll Control:float:-1:1:%/100:0.0:200:
+CTLYAW:Yaw Control (Rudder):float:-1:1:%/100:0.0:200:
+CTLCOLL:Collective Control:float:-1:1:%/100:0.0:200:
+CTLATP:AntiTorque Pedal Ctrl:float:-1:1:%/100:0.0:200:
+CTLFLAP:Flap Control:float:-1:1:%/100:0.0:200:
+CTLLBRK:Left Brake Control:float:0:1:%/100:0.0:200:
+CTLRBRK:Right Brake Control:float:0:1:%/100:0.0:1000:
+ANORM:Normal Acceleration:float:-30:30:g:0.0:200:
+ALAT:Lateral Acceleration:float:-30:30:g:0.0:200:
+ALONG:Longitudinal Acceleration:float:-30:30:g:0.0:200:
+THRe:Throttle Control Engine %e:float:0:1:%/100:0.0:1000:
+PROPe:Prop Control Engine %e:float:0:1:%/100:0.0:1000:
+MIXe:Mixture Control Engine %e:float:0:1:%/100:0.0:1000:
+OILPe:Oil Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+OILTe:Oil Temperature Engine %e:float:0:300:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+H2OTe:Coolant Temperature Engine %e:float:0:200:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+FUELPe:Fuel Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:
+MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:
+EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
+CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
+FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
+TACHe:Engine RPM:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
