@@ -70,6 +70,8 @@ def main():
     log.info("Starting FIX Gateway")
 
     config = configparser.ConfigParser()
+    # To kepp configparser from making everythign lowercase
+    config.optionxform = str
     config.read(config_file)
     try:
         database.init(config)
@@ -78,6 +80,13 @@ def main():
         print(e)
         raise
         return # we don't want to run with a screwed up database
+
+    log.info("Setting Initial Values")
+    try:
+        for item in config.items("initial"):
+            database.write(item[0], item[1])
+    except Exception as e:
+        log.error("Problem setting initial values from configuration - {0}".format(e))
 
     # TODO: Add a hook here for post database creation code
 
