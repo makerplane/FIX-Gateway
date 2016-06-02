@@ -103,7 +103,10 @@ class Connection(object):
                 except KeyError:
                     self.queue.put("@r{0}!001\n".format(id).encode())
                 else:
-                    self.__send_value(id, val)
+                    if val != None:
+                        self.__send_value(id, val)
+                    else:
+                        self.queue.put("@r{0}!001\n".format(id).encode())
             elif d[1] == 's':
                 try:
                     self.parent.db_callback_add(id, self.subscription_handler)
