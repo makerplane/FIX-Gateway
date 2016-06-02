@@ -84,11 +84,33 @@ class Command(cmd.Cmd):
             print(("Unknown Key " + args[0]))
 
     def do_unsub(self, line):
+        """Unsubscribe\nRemove subscription to updates"""
         args = line.split(" ")
         try:
             self.plugin.db_callback_del(args[0])
         except KeyError:
             print(("Unknown Key " + args[0]))
+
+    def do_flag(self, line):
+        """Set Flag\nSet or clear quality flags"""
+        args = line.split(" ")
+        if len(args) < 3:
+            print("Not Enough Arguments") # TODO print usage??
+            return
+        try:
+            x = self.plugin.db_get_item(args[0])
+        except KeyError:
+            print("Unknown Key " + args[0])
+        bit = True if args[2].lower() in ["true", "high", "1", "yes"] else False
+        if args[1].lower()[0] == 'b':
+            x.bad = bit
+        elif args[1].lower()[0] == 'f':
+            x.fail = bit
+        elif args[1].lower()[0] == 'a':
+            x.annunciate = bit
+        elif args[1].lower()[0] == 's':
+            x.secondary = bit
+
 
 
     def do_quit(self, line):
