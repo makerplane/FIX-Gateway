@@ -1,0 +1,17 @@
+Move initial value configuration into it's own file.  Would need to have
+different ones for different setups and it tends to overwhelm the configuration
+file.
+
+Add status tracking and display.  Probably have a status dictionary for each
+plugin and then add a mechanism to get text or data associated with that
+for display in the command module or a gui module.  Perhaps even a way to
+indicate some alarms for some of it.
+
+Add some tags to indicate some status information so that EFIS displays and
+other equipment can have access to that.
+
+DATABASE LOCKING!!!  Multithreaded app / single database??? Duh??!!
+
+Finsh FlightGear Plugin.  Need to add conversion functions.  Finish the
+XML file to try and get most of the data.  Also need to set the input
+protocol up so that we can write to FlightGear

@@ -21,13 +21,14 @@ import threading
 import os
 import xml.etree.ElementTree as ET
 import socket
-import queue
 
+items = []
+var_sep = ','
 
-class UDP_Process(threading.Thread):
-    def __init__(self, conn, host, port):
-        threading.Thread.__init__(self)
-        self.queue = conn
+class UDPClient(threading.Thread):
+    def __init__(self, host, port):
+        super(UDPClient, self).__init__()
+
         UDP_IP = host
         UDP_PORT = int(port)
 
@@ -35,57 +36,64 @@ class UDP_Process(threading.Thread):
                              socket.SOCK_DGRAM)  # UDP
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.sock.settimeout(2.0)
         self.sock.bind((UDP_IP, UDP_PORT))
         self.running = 1
 
+    def write_data(self, data):
+        l = data.split(var_sep)
+        for i, each in enumerate(l):
+            if items[i].item != None:
+                items[i].item.value = each
+
     def run(self):
+        buff = ""
         while self.running:
             #Reads the UDP packet splits then sends it to the Queue
-            data, addr = self.sock.recvfrom(1024)  # buffer size is 1024 bytes
-            data_test = data
-            if (data_test):
-                self.queue.put(data_test)
-            else:
+            try:
+                data = self.sock.recv(1024)  # buffer size is 1024 bytes
+                if data:
+                    for d in data.decode('utf-8'):
+                        if d != '\n':
+                            buff += d
+                        else:
+                            self.write_data(buff)
+                            buff = ""
+            except socket.timeout:
                 pass
 
     def stop(self):
         self.running = 0
 
 
-def parseProtocolFile(fg_root, xml_file):
-    # First we build a list with the possible locations of the file
-    # We look in the FG_ROOT/Protocols directory as well as the
-    # directory where our module is located.  May add others if they
-    # make sense.
-    Name_List = []
+class Item(object):
+    def __init__(self, key):
+        self.key = key
+        self.item = None
+        self.type = ""
+        self.conversion = None
 
-    filelist = [os.path.join(fg_root, xml_file)]  # "Protocols", xml_file)]
-                #os.path.join(os.path.dirname(__file__), xml_file)]
-    # Now loop through the files and use the first one we find
-    found = False
-    for each in filelist:
-        if os.path.isfile(each):
-            tree = ET.parse(each)
-            found = True
-            break
-    if not found:
-        raise RuntimeError("XML file not found")
+    def __str__(self):
+        return self.key
+
+def parseProtocolFile(fg_root, xml_file):
+    # Open the XML Protocol file
+    filepath = os.path.join(fg_root, "Protocol/" + xml_file)
+
+    tree = ET.parse(filepath)
     root = tree.getroot()
     if root.tag != "PropertyList":
         raise ValueError("Root Tag is not PropertyList")
 
-    for node in tree.findall('.//key'):
-        Name_List.append(node.text)
-
-    return Name_List
-
-    #generic = root.find("generic")
-    #output = generic.find("output")
-    #if child.text != "CANFIX":
-    #    raise ValueError("Not a CANFIX Protocol File")
-
-    #child = root.find("version")
-    #version = child.text
+    # TODO Read var_separator tag and adjust accordingly
+    # TODO Get conversion if any and set conversion function
+    generic = root.find("generic")
+    output = generic.find("output")
+    for chunk in output:
+        name = chunk.find("name")
+        if name != None:
+            info = name.text.split(":")
+            items.append(Item(info[0].strip()))
 
 
 class MainThread(threading.Thread):
@@ -97,34 +105,11 @@ class MainThread(threading.Thread):
         self.config = parent.config
 
     def run(self):
-        q = queue.Queue()
-        t = UDP_Process(q, self.config['host'], self.config['port'])
-        t.setDaemon(True)
-        t.start()
-        while True:
-            if self.getout:
-                break
-            try:
-                data_test = q.get(0)
-                data_test = data_test.decode().rstrip()
-                data_test = data_test.split(',')
-                if data_test != ['']:
-                    for data in data_test:
-                        for l, d in zip(self.parent.xml_list, data_test):
-                            try:
-                                try:
-                                    self.parent.db_write(l.upper(), float(d))
-                                except ValueError:
-                                    self.parent.db_write(l, d)
-                            except KeyError:
-                                self.log.warning(l.upper() + " not in index")
-            except queue.Empty:
-                pass
-            self.log.debug("Yep")
-        t.stop()
+        self.clientThread = UDPClient(self.config['host'], self.config['port'])
+        self.clientThread.start()
 
     def stop(self):
-        self.getout = True
+        self.clientThread.stop()
 
 
 class Plugin(plugin.PluginBase):
@@ -136,10 +121,17 @@ class Plugin(plugin.PluginBase):
         super(Plugin, self).run()
         try:
             self.xml_list = parseProtocolFile(self.config['fg_root'],
-                                         self.config['xml_file'])
+                                              self.config['xml_file'])
         except Exception as e:
             self.log.critical(e)
             return
+
+        # This loop checks to see if we have each item in the database
+        # if not then we'll just let it get set to None and ignore it when
+        # we parse the string from FlightGear
+        for each in items:
+            each.item = self.db_get_item(each.key)
+
         self.thread.start()
 
     def stop(self):

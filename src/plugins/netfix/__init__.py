@@ -103,10 +103,7 @@ class Connection(object):
                 except KeyError:
                     self.queue.put("@r{0}!001\n".format(id).encode())
                 else:
-                    if val != None:
-                        self.__send_value(id, val)
-                    else:
-                        self.queue.put("@r{0}!001\n".format(id).encode())
+                    self.__send_value(id, val)
             elif d[1] == 's':
                 try:
                     self.parent.db_callback_add(id, self.subscription_handler)
@@ -188,9 +185,8 @@ class ReceiveThread(threading.Thread):
                     else:
                         buff += d
 
-
+            # TODO Should remove all of the callbacks that we have set here
             self.co.queue.put('exit')  #Signals the send thread to exit.
-            self.parent.db_callback_del("*", self.co.subscription_handler, None)
             self.log.info('Disconnected by {0} port {1}'.format(str(self.addr[0]), str(self.addr[1]) ))
             self.running = False
 

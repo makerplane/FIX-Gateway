@@ -8,7 +8,7 @@ a=16:Generic Analog:::::::
 #Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
 ANLGa:Generic Analog %a:float:0:1:%/100:0.0:2000:
 BTNb:Generic Button %b:bool:0:1::False:0:
-ENCr:Generic Encoder %r:int:::Pulses:0:0:
+ENCr:Generic Encoder %r:int:-32768:32767:Pulses:0:0:
 IAS:Indicated Airspeed:float:0:1000:knots:0.0:2000:Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
 TAS:True Airspeed:float:0:2000:knots:0.0:2000:
 CAS:True Airspeed:float:0:2000:knots:0.0:2000:

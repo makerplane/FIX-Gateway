@@ -300,7 +300,11 @@ def read(key):
 
 
 def get_raw_item(key):
-    return __database[key]
+    try:
+        return __database[key]
+    except KeyError:
+        return None
+        
 
 
 def listkeys():
