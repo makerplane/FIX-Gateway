@@ -26,23 +26,23 @@ class Command(cmd.Cmd):
         self.plugin = p
 
     def do_read(self, line):
-        """read key\nRead the value from the database given the key"""
+        """read\nRead the value from the database given the key"""
         args = line.split(" ")
         try:
-            x = self.plugin.db_read(args[0].upper())
+            x = self.plugin.db_read(args[0])
             print(x)
         except KeyError:
             print(("Unknown Key " + args[0]))
 
     def do_write(self, line):
-        """write key value\nWrite Value into Database with given key"""
+        """writevalue\nWrite Value into Database with given key"""
         args = line.split(" ")
         if len(args) < 2:
             print("Missing Argument")
         else:
             try:
                 #TODO: Should do more error checking here
-                self.plugin.db_write(args[0].upper(), args[1])
+                self.plugin.db_write(args[0], args[1])
             except KeyError:
                 print(("Unknown Key " + args[0]))
 
@@ -54,6 +54,65 @@ class Command(cmd.Cmd):
             for each in x:
                 print(each)
 
+    def do_report(self, line):
+        """Report\nDetailed ID Report"""
+        args = line.split(" ")
+        try:
+            x = self.plugin.db_get_item(args[0])
+            print(x.description)
+            print("Type:  {0}".format(x.typestring))
+            print("Value: {0}".format(str(x.value[0])))
+            print("Q:     {0}".format(str(x.value[1:])))
+            print("Min:   {0}".format(str(x.min)))
+            print("Max:   {0}".format(str(x.max)))
+            print("Units: {0}".format(x.units))
+            print("TOL:   {0}".format(str(x.tol)))
+            print("Auxillary Data:")
+            for each in x.aux:
+                if each: print("  {0} = {1}".format(each,str(x.aux[each])))
+            for each in x.callbacks:
+                print("Callback function defined: {0}".format(each[0]))
+        except KeyError:
+            print(("Unknown Key " + args[0]))
+
+    def do_sub(self, line):
+        """Subscribe\nSubscribe to updates"""
+        args = line.split(" ")
+        try:
+            self.plugin.db_callback_add(args[0], self.callback_function)
+        except KeyError:
+            print(("Unknown Key " + args[0]))
+
+    def do_unsub(self, line):
+        """Unsubscribe\nRemove subscription to updates"""
+        args = line.split(" ")
+        try:
+            self.plugin.db_callback_del(args[0])
+        except KeyError:
+            print(("Unknown Key " + args[0]))
+
+    def do_flag(self, line):
+        """Set Flag\nSet or clear quality flags"""
+        args = line.split(" ")
+        if len(args) < 3:
+            print("Not Enough Arguments") # TODO print usage??
+            return
+        try:
+            x = self.plugin.db_get_item(args[0])
+        except KeyError:
+            print("Unknown Key " + args[0])
+        bit = True if args[2].lower() in ["true", "high", "1", "yes"] else False
+        if args[1].lower()[0] == 'b':
+            x.bad = bit
+        elif args[1].lower()[0] == 'f':
+            x.fail = bit
+        elif args[1].lower()[0] == 'a':
+            x.annunciate = bit
+        elif args[1].lower()[0] == 's':
+            x.secondary = bit
+
+
+
     def do_quit(self, line):
         """quit\nExit Plugin"""
         return True
@@ -62,12 +121,11 @@ class Command(cmd.Cmd):
         """exit\nExit Plugin"""
         return self.do_quit(line)
 
-#    def do_help(self, line):
-#        print("Helping...")
-
     def do_EOF(self, line):
         return True
 
+    def callback_function(self, id, value, udata):
+        print("{0} = {1}".format(id, value))
 
 class MainThread(threading.Thread):
     def __init__(self, parent):

@@ -19,8 +19,6 @@
 #  This class is the base class that should be used for all plugins in the
 #  system
 
-# We have to do this because print is a statement not a function and we need
-# this as a callback later in the code.
 
 import database
 import logging
@@ -28,7 +26,9 @@ import queue
 
 jobQueue = queue.Queue()
 
-
+# This is the base class for all plugin objects.  Every plugin should
+# inherit this class and override at least the run function.  See the
+# skel.py file in the plugins directory for a basic example.
 class PluginBase(object):
     def __init__(self, name, config):
         self.name = name
@@ -63,8 +63,11 @@ class PluginBase(object):
     def db_list(self):
         return database.listkeys()
 
+    def db_get_item(self, key):
+        return database.get_raw_item(key)
+
     def db_callback_add(self, key, function, udata=None):
         database.callback_add(self.name, key, function, udata)
 
-    def db_callback_del(self, key):
-        database.callback_del(self.name, key)
+    def db_callback_del(self, key, function, udata=None):
+        database.callback_del(self.name, key, function, udata)

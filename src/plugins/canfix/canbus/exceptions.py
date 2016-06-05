@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-#  Copyright (c) 2014 Phil Birkelbach
+#  Copyright (c) 2012 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -16,12 +14,26 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import plugin
 
+class BusError(Exception):
+    """Base class for exceptions in this module"""
+    pass
 
-class Plugin(plugin.PluginBase):
-    def __init__(self, name, config):
-        super(Plugin, self).__init__(name, config)
+class BusInitError(BusError):
+    """CAN Bus Initialization Error"""
+    def __init__(self, msg):
+        self.msg = msg
 
-    def run(self):
-        super(Plugin, self).run()
+class BusReadError(BusError):
+    """CAN Bus Read Error"""
+    def __init__(self, msg):
+        self.msg = msg
+
+class BusWriteError(BusError):
+    """CAN Bus Write Error"""
+    def __init__(self, msg):
+        self.msg = msg
+
+class DeviceTimeout(Exception):
+    """Device Timeout Exception"""
+    pass
