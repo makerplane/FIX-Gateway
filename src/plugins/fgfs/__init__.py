@@ -131,6 +131,8 @@ class Plugin(plugin.PluginBase):
         # we parse the string from FlightGear
         for each in items:
             each.item = self.db_get_item(each.key)
+            if each.item == None:
+                self.log.warning("{0} found in protocol file but not in the database".format(each.key))
 
         self.thread.start()
 

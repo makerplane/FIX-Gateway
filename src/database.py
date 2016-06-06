@@ -64,8 +64,6 @@ class db_item(object):
             log.error("No aux {0} for {1}".format(name, self.description))
             raise
         for func in self.callbacks:
-            # We call teh get_aux_value() function again because
-            # the value may have been formated or bounds checked
             func[1]("{0}.{1}".format(self.key, name), self.aux[name], func[2])
 
     def get_aux_value(self, name):
@@ -304,7 +302,7 @@ def get_raw_item(key):
         return __database[key]
     except KeyError:
         return None
-        
+
 
 
 def listkeys():

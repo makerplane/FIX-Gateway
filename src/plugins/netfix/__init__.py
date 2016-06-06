@@ -193,7 +193,10 @@ class ReceiveThread(threading.Thread):
 
     def stop(self):
         self.getout = True
-        self.conn.shutdown(socket.SHUT_RDWR)
+        try:
+            self.conn.shutdown(socket.SHUT_RDWR)
+        except Exception as e:
+            self.log.debug("Problem shutting down connection - {0}".format(e))
 
 
 class SendThread(threading.Thread):
