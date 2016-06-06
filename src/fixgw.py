@@ -82,9 +82,15 @@ def main():
         return # we don't want to run with a screwed up database
 
     log.info("Setting Initial Values")
+    fn = config.get("config", "ini_file")
     try:
-        for item in config.items("initial"):
-            database.write(item[0], item[1])
+        f = open(fn, 'r')
+        for line in f.readlines():
+            l = line.strip()
+            if l and l[0] != '#':
+                x = l.split("=")
+                if len(x) >= 2:
+                    database.write(x[0].strip(), x[1].strip())
     except Exception as e:
         log.error("Problem setting initial values from configuration - {0}".format(e))
 
