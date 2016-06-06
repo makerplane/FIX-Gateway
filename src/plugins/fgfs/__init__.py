@@ -38,7 +38,7 @@ class UDPClient(threading.Thread):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.settimeout(2.0)
         self.sock.bind((UDP_IP, UDP_PORT))
-        self.running = 1
+        self.run = 1
 
     def write_data(self, data):
         l = data.split(var_sep)
@@ -48,7 +48,7 @@ class UDPClient(threading.Thread):
 
     def run(self):
         buff = ""
-        while self.running:
+        while self.run:
             #Reads the UDP packet splits then sends it to the Queue
             try:
                 data = self.sock.recv(1024)  # buffer size is 1024 bytes
@@ -63,7 +63,7 @@ class UDPClient(threading.Thread):
                 pass
 
     def stop(self):
-        self.running = 0
+        self.run = 0
 
 
 class Item(object):
@@ -135,7 +135,10 @@ class Plugin(plugin.PluginBase):
         self.thread.start()
 
     def stop(self):
-        self.thread.stop()
+        try:
+            self.thread.stop()
+        except AttributeError:
+            pass
         if self.thread.is_alive():
             self.thread.join()
         super(Plugin, self).stop()
