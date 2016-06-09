@@ -71,3 +71,9 @@ class PluginBase(object):
 
     def db_callback_del(self, key, function, udata=None):
         database.callback_del(self.name, key, function, udata)
+
+    # This method should be reimplemented in the child class
+    # It should return a dictionary of status information
+    def get_status(self):
+        return None
+        

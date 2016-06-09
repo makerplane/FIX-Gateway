@@ -24,6 +24,7 @@ import plugin
 import threading
 import socket
 import queue
+from collections import OrderedDict
 
 
 # This holds the data and functions that are needed by both connection threads.
@@ -35,6 +36,7 @@ class Connection(object):
         self.log = parent.log
         self.queue = queue.Queue()
         self.buffer_size = int(parent.config['buffer_size']) if ('buffer_size' in parent.config) and parent.config['buffer_size'] else 1024
+
 
 
     # This sends a standard Net-FIX value update message to the queue.
@@ -164,6 +166,7 @@ class ReceiveThread(threading.Thread):
         self.log = self.parent.log
         self.getout = False
         self.bsize = self.parent.thread.buffer_size
+        self.msg_recv = 0
 
 
     def run(self):
@@ -181,6 +184,7 @@ class ReceiveThread(threading.Thread):
                 for d in dstring:
                     if d=='\n':
                         self.co.handle_request(buff)
+                        self.msg_recv += 1
                         buff = ""
                     else:
                         buff += d
@@ -208,6 +212,8 @@ class SendThread(threading.Thread):
         self.parent = co.parent # This should point up to the Plugin Object
         self.running = True
         self.log = self.parent.log
+        self.msg_sent = 0
+
         #self.getout = False
 
     # All this does is watch the queue in the connection object and
@@ -218,6 +224,7 @@ class SendThread(threading.Thread):
                 data = self.co.queue.get()
                 if data == 'exit': break
                 self.conn.sendall(data)
+                self.msg_sent += 1
             self.running = False
 
 
@@ -294,6 +301,14 @@ class ServerThread(threading.Thread):
     def stop(self):
         self.getout = True
 
+    def get_status(self):
+        d = OrderedDict({"Current Connections":len(self.threads)})
+        for i, t in enumerate(self.threads):
+            c = {"Client":t[0].addr,
+                 "Messages Received":t[0].msg_recv,
+                 "Messages Sent":t[1].msg_sent}
+            d["Connection {0}".format(i)] = c
+        return d
 
 
 
@@ -328,3 +343,6 @@ class Plugin(plugin.PluginBase):
         if self.thread.is_alive():
             self.thread.join()
         super(Plugin, self).stop()
+
+    def get_status(self):
+        return self.thread.get_status()

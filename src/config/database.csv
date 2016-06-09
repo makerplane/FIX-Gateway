@@ -1,10 +1,10 @@
-e=2:Engines:::::::
-c=4:Cylinders per engine:::::::
-t=2:Fuel Tanks:::::::
-b=16:Generic Buttons:::::::
-r=4:Generic Encoders:::::::
-a=16:Generic Analog:::::::
----::::::::
+e=2:Engines
+c=4:Cylinders per engine
+t=2:Fuel Tanks
+b=16:Generic Buttons
+r=4:Generic Encoders
+a=16:Generic Analog
+---
 #Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
 ANLGa:Generic Analog %a:float:0:1:%/100:0.0:2000:
 BTNb:Generic Button %b:bool:0:1::False:0:
@@ -12,11 +12,17 @@ ENCr:Generic Encoder %r:int:-32768:32767:Pulses:0:0:
 IAS:Indicated Airspeed:float:0:1000:knots:0.0:2000:Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
 TAS:True Airspeed:float:0:2000:knots:0.0:2000:
 CAS:True Airspeed:float:0:2000:knots:0.0:2000:
+GS:Ground Speed:float:0:2000:knots:0.0:2000:
 ALT:Indicated Altitude:float:-1000:60000:ft:0.0:2000:
 TALT:True Altitude:float:-1000:60000:ft:0.0:2000:
 DALT:Density Altitude:float:-1000:60000:ft:0.0:2000:
 BARO:Altimeter Setting:float:0:35:inHg:29.92:2000:
 VS:Vertical Speed:float:-10000:10000:ft/min:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+HEAD:Current Aircraft Magnetic Heading:float:0:360:deg:0.0:2000:
+TRACK:Current Aircraft Bearing:float:0:360:deg:0.0:2000:
+TRACKM:Current Aircraft Magnetic Bearing:float:0:360:deg:0.0:2000:
+COURSE:Selected Course:float:0:360:deg:0.0:2000:
+XTRACK:Cross Track Error:float:0:100:nM:0.0:2000:
 OAT:Outside Air Temperature:float:-300:300:degC:0.0:2000:
 ROLL:Roll Angle:float:-180:180:deg:0.0:200:
 PITCH:Pitch Angle:float:-180:180:deg:0.0:200:
@@ -46,3 +52,5 @@ EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
 CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
 FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
 TACHe:Engine RPM:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+LAT:Latitude:float:-90:90:deg:0.0:2000:
+LONG:Longitude:float:-180:180:deg:0:2000:

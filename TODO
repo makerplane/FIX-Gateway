@@ -20,7 +20,8 @@ Airdata plugin.  This plugin would calculate things like TAS, wind direction
 Density altitude etc.  It would also be a good example of a plugin that used
 only the callback mechanism instead of needing a thread.
 
-
+Add background task that would send subscription updates when data gets old.
+This could probably be a very low priority task that ran once a second or so.
 
 Allow daemonization of the program.
 

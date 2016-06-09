@@ -124,6 +124,7 @@ class Plugin(plugin.PluginBase):
                                               self.config['xml_file'])
         except Exception as e:
             self.log.critical(e)
+            self.stop()
             return
 
         # This loop checks to see if we have each item in the database

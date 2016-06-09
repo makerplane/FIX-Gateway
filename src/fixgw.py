@@ -22,6 +22,7 @@ import logging
 import logging.config
 import argparse
 import database
+import status
 import plugin
 import queue
 import sys
@@ -110,6 +111,8 @@ def main():
                 except Exception as e:
                     logging.critical("Unable to load module - " + module + ": " + str(e))
 
+
+    status.initialize(plugins)
 
     # TODO add a hook here for pre module run code
 

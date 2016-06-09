@@ -19,7 +19,7 @@
 import plugin
 import cmd
 import threading
-
+import status
 
 class Command(cmd.Cmd):
     def setplugin(self, p):
@@ -111,7 +111,8 @@ class Command(cmd.Cmd):
         elif args[1].lower()[0] == 's':
             x.secondary = bit
 
-
+    def do_status(self, line):
+        print(status.get_string())
 
     def do_quit(self, line):
         """quit\nExit Plugin"""
