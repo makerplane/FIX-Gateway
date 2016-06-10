@@ -44,6 +44,7 @@ class MainThread(threading.Thread):
             time.sleep(1)
             self.count += 1
             self.log.debug("Yep")  # Do something more useful here
+        self.running = False
 
     def stop(self):
         self.getout = True

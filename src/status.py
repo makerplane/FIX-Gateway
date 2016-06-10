@@ -23,7 +23,7 @@ def initialize(p):
     plugins = p
 
 def get_dict():
-    result = OrderedDict()
+    result = OrderedDict({"Version":"0.2"})
     # Database information
     db = {"Item Count":len(database.listkeys())}
 

@@ -23,6 +23,20 @@ only the callback mechanism instead of needing a thread.
 Add background task that would send subscription updates when data gets old.
 This could probably be a very low priority task that ran once a second or so.
 
+Should add a leading zero to item variables.
+
 Allow daemonization of the program.
+
+Maybe a feature to allow plugins to override a value.  It might be helpful for
+some kinds of testing to allow the gui or command interface to override a
+particular item so that the real hardware updates are stored but not actually
+returned to other plugins or call callbacks.  It would have to be globally
+tracked, able to be removed and indicated in the status for sure.
+
+Does it make sense to track which plugin is writing to any particular database
+item and flag when multiple plugins attempt to write to the same item.  Or
+perhaps we have an item ownership system?  It'll probably work okay in the real
+systems because it'll make sense, but it might be hard to troubleshoot issues
+later if there are conflicts.
 
 GUI Plugin?  Maybe a separate program? Maybe both?
