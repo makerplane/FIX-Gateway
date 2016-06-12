@@ -38,9 +38,9 @@ class UDPClient(threading.Thread):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.settimeout(2.0)
         self.sock.bind((UDP_IP, UDP_PORT))
-        self.run = 1
+        self.getout = False
 
-    def write_data(self, data):
+    def save_data(self, data):
         l = data.split(var_sep)
         for i, each in enumerate(l):
             if items[i].item != None:
@@ -48,7 +48,7 @@ class UDPClient(threading.Thread):
 
     def run(self):
         buff = ""
-        while self.run:
+        while not self.getout:
             #Reads the UDP packet splits then sends it to the Queue
             try:
                 data = self.sock.recv(1024)  # buffer size is 1024 bytes
@@ -57,13 +57,14 @@ class UDPClient(threading.Thread):
                         if d != '\n':
                             buff += d
                         else:
-                            self.write_data(buff)
+                            self.save_data(buff)
                             buff = ""
             except socket.timeout:
                 pass
+        self.running = False
 
     def stop(self):
-        self.run = 0
+        self.getout = True
 
 
 class Item(object):
