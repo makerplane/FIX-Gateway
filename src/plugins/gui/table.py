@@ -25,17 +25,18 @@ except:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
+
 class DataTable(QTableWidget):
     def __init__(self, parent=None):
         super(DataTable, self).__init__(parent)
         cols = ["Description", "Value", "Set", "A", "O", "B", "F"]
         self.setColumnCount(len(cols))
         self.setHorizontalHeaderLabels(cols)
-        l = database.listkeys()
-        l.sort()
-        self.setRowCount(len(l))
-        self.setVerticalHeaderLabels(l)
-        for i, key in enumerate(l):
+        self.dblist = database.listkeys()
+        self.dblist.sort()
+        self.setRowCount(len(self.dblist))
+        self.setVerticalHeaderLabels(self.dblist)
+        for i, key in enumerate(self.dblist):
             item = database.get_raw_item(key)
             cell = QTableWidgetItem(item.description)
             cell.setFlags(Qt.ItemIsEnabled)
@@ -44,6 +45,21 @@ class DataTable(QTableWidget):
             cell.setFlags(Qt.ItemIsEnabled)
             self.setItem(i, 1, cell)
 
-
         self.resizeColumnsToContents()
+        self.timer = QTimer()
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.update)
+
         #self.resizeRowsToContents()
+
+    def update(self):
+        for i, key in enumerate(self.dblist):
+            x = database.read(key)
+            y = self.item(i,1)
+            y.setText(str(x[0]))
+
+    def showEvent(self, QShowEvent):
+        self.timer.start()
+
+    def hideEvent(self, QHideEvent):
+        self.timer.stop()
