@@ -277,6 +277,7 @@ def init(config):
                         log.error("Variable {0} not set for {1}".format(ch, entry[1]))
                 else:
                     add_item(entry)
+    f.close()
 
 
 def write(key, value):

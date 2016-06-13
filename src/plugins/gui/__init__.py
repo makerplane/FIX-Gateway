@@ -39,7 +39,6 @@ from . import simulate
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
 
@@ -76,8 +75,7 @@ class MainThread(threading.Thread):
         self.parent.running = False
 
     def stop(self):
-        self.getout = True
-
+        QApplication.quit()
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
@@ -91,7 +89,9 @@ class Plugin(plugin.PluginBase):
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(1.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()
 
     # Probably don't need status for the GUI

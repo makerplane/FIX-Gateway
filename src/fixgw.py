@@ -25,6 +25,8 @@ import database
 import status
 import plugin
 import queue
+import signal
+import os
 import sys
 
 config_file = "config/main.cfg"
@@ -114,9 +116,16 @@ def main():
 
     status.initialize(plugins)
 
+    def sig_int_handler(signum, frame):
+        plugin.jobQueue.put("QUIT")
+
+    signal.signal(signal.SIGINT, sig_int_handler)
+
+
     # TODO add a hook here for pre module run code
 
     for each in plugins:
+        log.debug("Attempting to start plugin {0}".format(each))
         plugins[each].run()
 
     iteration = 0
@@ -125,7 +134,7 @@ def main():
             job = plugin.jobQueue.get(timeout=1.0)
             if job == "QUIT":
                 break
-        except KeyboardInterrupt:
+        except KeyboardInterrupt:  # This should be broken by the signal handler
             log.info("Termination from keybaord received")
             break
         except queue.Empty:
@@ -142,10 +151,20 @@ def main():
                 log.info("No plugins running, quitting")
                 break
 
+    cleanstop = True
     for each in plugins:
-        plugins[each].stop()
+        log.debug("Attempting to stop plugin {0}".format(each))
+        try:
+            plugins[each].stop()
+        except plugin.PluginFail:
+            log.warning("Plugin {0} did not shutdown properly".format(each))
+            cleanstop = False
 
-    log.info("FIX Gateway Exiting Normally")
+    if cleanstop == True:
+        log.info("FIX Gateway Exiting Normally")
+    else:
+        log.info("FIX Gateway Exiting Forcefully")
+        os._exit(-1)
 
 if __name__ == "__main__":
     # TODO: Add daemonization

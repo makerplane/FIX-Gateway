@@ -92,7 +92,7 @@ class Command(cmd.Cmd):
             print(("Unknown Key " + args[0]))
 
     def do_flag(self, line):
-        """Set Flag\nSet or clear quality flags"""
+        """flag\nSet or clear quality flags"""
         args = line.split(" ")
         if len(args) < 3:
             print("Not Enough Arguments") # TODO print usage??
@@ -112,6 +112,7 @@ class Command(cmd.Cmd):
             x.secondary = bit
 
     def do_status(self, line):
+        """status\nRead status information"""
         print(status.get_string())
 
     def do_quit(self, line):
@@ -163,7 +164,9 @@ class Plugin(plugin.PluginBase):
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(1.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()
 
     def is_running(self):

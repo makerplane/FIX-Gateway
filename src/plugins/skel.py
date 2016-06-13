@@ -75,7 +75,9 @@ class Plugin(plugin.PluginBase):
         also undo any callbacks that were set up in the run() method"""
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(1.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()
 
     def get_status(self):
