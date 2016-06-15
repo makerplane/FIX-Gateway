@@ -1,8 +1,3 @@
-Add status tracking and display.  Probably have a status dictionary for each
-plugin and then add a mechanism to get text or data associated with that
-for display in the command module or a gui module.  Perhaps even a way to
-indicate some alarms for some of it.
-
 Add some tags to indicate some status information so that EFIS displays and
 other equipment can have access to that.
 
@@ -23,9 +18,17 @@ only the callback mechanism instead of needing a thread.
 Add background task that would send subscription updates when data gets old.
 This could probably be a very low priority task that ran once a second or so.
 
-Should add a leading zero to item variables.
+Should add a leading zero to item variables if greater than 9.
 
 Allow daemonization of the program.
+
+Make item keys in command module case insensitive.
+
+Add commands to start/stop/restart plugins.  Might also add configuration to
+load and/or start the plugin.  It could be loaded but not started.  Testing,
+simulation and GUI plugins might not always start.
+
+Add annunciation backend.
 
 Maybe a feature to allow plugins to override a value.  It might be helpful for
 some kinds of testing to allow the gui or command interface to override a
@@ -38,5 +41,3 @@ item and flag when multiple plugins attempt to write to the same item.  Or
 perhaps we have an item ownership system?  It'll probably work okay in the real
 systems because it'll make sense, but it might be hard to troubleshoot issues
 later if there are conflicts.
-
-GUI Plugin?  Maybe a separate program? Maybe both?

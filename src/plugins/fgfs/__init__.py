@@ -144,5 +144,7 @@ class Plugin(plugin.PluginBase):
         except AttributeError:
             pass
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(2.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()

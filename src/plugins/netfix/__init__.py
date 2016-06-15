@@ -23,7 +23,10 @@
 import plugin
 import threading
 import socket
-import queue
+try:
+    import queue
+except:
+    import Queue as queue
 from collections import OrderedDict
 
 
@@ -36,7 +39,6 @@ class Connection(object):
         self.log = parent.log
         self.queue = queue.Queue()
         self.buffer_size = int(parent.config['buffer_size']) if ('buffer_size' in parent.config) and parent.config['buffer_size'] else 1024
-
 
 
     # This sends a standard Net-FIX value update message to the queue.
@@ -171,11 +173,14 @@ class ReceiveThread(threading.Thread):
 
     def run(self):
         data = b""
-        with self.conn:
+        try:
             self.log.info('Client connection from {0} port {1}'.format(str(self.addr[0]), str(self.addr[1]) ))
             buff = ""
             while True:
-                data = self.conn.recv(self.bsize)
+                try:
+                    data = self.conn.recv(self.bsize)
+                except:
+                    break # Major error we'll just bail
                 if not data: break
                 try:
                     dstring = data.decode("utf-8")
@@ -189,10 +194,12 @@ class ReceiveThread(threading.Thread):
                     else:
                         buff += d
 
-            # TODO Should remove all of the callbacks that we have set here
             self.co.queue.put('exit')  #Signals the send thread to exit.
+            self.parent.db_callback_del("*", self.co.subscription_handler, None)
             self.log.info('Disconnected by {0} port {1}'.format(str(self.addr[0]), str(self.addr[1]) ))
             self.running = False
+        finally:
+            self.conn.close()
 
 
     def stop(self):
@@ -214,32 +221,29 @@ class SendThread(threading.Thread):
         self.log = self.parent.log
         self.msg_sent = 0
 
-        #self.getout = False
 
     # All this does is watch the queue in the connection object and
     # send anything that it finds there to the socket connection
     def run(self):
-        with self.conn:
+        try:
             while True:
                 data = self.co.queue.get()
                 if data == 'exit': break
                 self.conn.sendall(data)
                 self.msg_sent += 1
             self.running = False
+        finally:
+            self.conn.close()
 
 
     def stop(self):
         self.co.queue.put('exit')
-        #self.getout = True
 
 
 # This thread is responsible for starting and stopping the thread pairs that
 #  represent connections.
 class ServerThread(threading.Thread):
     def __init__(self, parent):
-        """The calling object should pass itself as the parent.
-           This gives the thread all the plugin goodies that the
-           parent has."""
         super(ServerThread, self).__init__()
         self.getout = False    # indicator for when to stop
         self.parent = parent   # parent plugin object
@@ -257,7 +261,8 @@ class ServerThread(threading.Thread):
         while True:
             if self.getout:
                 break
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 s.settimeout(self.timeout)
                 s.bind((self.host, self.port))
@@ -296,6 +301,8 @@ class ServerThread(threading.Thread):
                     self.threads.append( (receivethread, sendthread) )
                     receivethread.start()
                     sendthread.start()
+            finally:
+                s.close()
 
 
     def stop(self):
@@ -313,12 +320,6 @@ class ServerThread(threading.Thread):
 
 
 class Plugin(plugin.PluginBase):
-    """ All plugins for FIX Gateway should implement at least the class
-    named 'Plugin.'  They should be derived from the base class in
-    the plugin module.
-
-    The run and stop methods of the plugin should be overridden but the
-    base module functions should be called first."""
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
         if config['type'] == 'server':
@@ -328,21 +329,18 @@ class Plugin(plugin.PluginBase):
 
 
     def run(self):
-        """ The run method should return immediately.  The main routine will
-        block when calling this function.  If the plugin is simply a collection
-        of callback functions, those can be setup here and no thread will be
-        necessary"""
         super(Plugin, self).run()
         self.thread.start()
 
+
     def stop(self):
-        """ The stop method should not return until the plugin has completely
-        stopped.  This generally means a .join() on a thread.  It should
-        also undo any callbacks that were set up in the run() method"""
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(2.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()
+
 
     def get_status(self):
         return self.thread.get_status()

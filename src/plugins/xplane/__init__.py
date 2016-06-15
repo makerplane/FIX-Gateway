@@ -41,7 +41,7 @@ class MainThread(threading.Thread):
                                   socket.SOCK_DGRAM)  # UDP
         self.sock.bind((UDP_IP, UDP_PORT))
         self.sock.setblocking(0)
-        
+
         # inputkeys is a dictionary that holds the data out indexes from X-Plane
         # and the keys to use for that data in FixGW to know what to send.  It's
         # read from the config file.  Only data that is found in this config
@@ -52,7 +52,7 @@ class MainThread(threading.Thread):
                 index = int(each[3:])
                 l = self.parent.config[each].replace(" ", "").split(",")
                 self.inputkeys[index] = l
-                
+
     def writedata(self, index, data):
         if index == 3:
             self.parent.db_write("IAS", data[0])
@@ -70,7 +70,7 @@ class MainThread(threading.Thread):
         for each in self.inputkeys:
             data = "DATA" + chr(0)
             data += struct.pack("i", int(each))
-        
+
             for i in range(8):
                 if self.inputkeys[each][i].lower() == 'x':
                     data += chr(0) + chr(192) + chr(121) + chr(196)
@@ -81,7 +81,7 @@ class MainThread(threading.Thread):
             #    print hex(ord(each)),
             #print ""
             self.sock.sendto(data, (UDP_IP,49200))
-        
+
     def run(self):
         while True:
             if self.getout:
@@ -125,5 +125,7 @@ class Plugin(plugin.PluginBase):
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(2.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()

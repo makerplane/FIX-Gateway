@@ -22,9 +22,15 @@
 
 import database
 import logging
-import queue
+try:
+    import queue
+except:
+    import Queue as queue
 
 jobQueue = queue.Queue()
+
+class PluginFail(Exception):
+    pass
 
 # This is the base class for all plugin objects.  Every plugin should
 # inherit this class and override at least the run function.  See the
@@ -76,4 +82,3 @@ class PluginBase(object):
     # It should return a dictionary of status information
     def get_status(self):
         return None
-        
