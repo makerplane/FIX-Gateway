@@ -66,7 +66,6 @@ class Plugin(plugin.PluginBase):
         block when calling this function.  If the plugin is simply a collection
         of callback functions, those can be setup here and no thread will be
         necessary"""
-        super(Plugin, self).run()
         self.thread.start()
 
     def stop(self):
@@ -78,8 +77,7 @@ class Plugin(plugin.PluginBase):
             self.thread.join(1.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
-        super(Plugin, self).stop()
-
+        
     def get_status(self):
         """ The get_status method should return a dict or OrderedDict that
         is basically a key/value pair of statistics"""

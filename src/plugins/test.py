@@ -57,9 +57,8 @@ class Plugin(plugin.PluginBase):
             self.keylist.append(s)
 
     def run(self):
-        super(Plugin, self).run()
         self.t.start()
 
     def stop(self):
         self.t.join()  # Wait for the thread to stop
-        super(Plugin, self).stop()
+        

@@ -119,7 +119,6 @@ class Plugin(plugin.PluginBase):
         self.thread = MainThread(self)
 
     def run(self):
-        super(Plugin, self).run()
         try:
             self.xml_list = parseProtocolFile(self.config['fg_root'],
                                               self.config['xml_file'])
@@ -147,4 +146,3 @@ class Plugin(plugin.PluginBase):
             self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
-        super(Plugin, self).stop()

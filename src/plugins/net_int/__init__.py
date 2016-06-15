@@ -188,11 +188,10 @@ class Plugin(plugin.PluginBase):
         self.thread = MainThread(self)
 
     def run(self):
-        super(Plugin, self).run()
         self.thread.start()
 
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
             self.thread.join()
-        super(Plugin, self).stop()
+        

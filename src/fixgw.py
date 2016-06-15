@@ -134,7 +134,11 @@ def main():
 
     for each in plugins:
         log.debug("Attempting to start plugin {0}".format(each))
-        plugins[each].run()
+        try:
+            plugins[each].start()
+        except Exception as e:
+            if args.debug:
+                raise e  # If we have debuggin set we'll raise this exception
 
     iteration = 0
     while True:
@@ -163,7 +167,7 @@ def main():
     for each in plugins:
         log.debug("Attempting to stop plugin {0}".format(each))
         try:
-            plugins[each].stop()
+            plugins[each].shutdown()
         except plugin.PluginFail:
             log.warning("Plugin {0} did not shutdown properly".format(each))
             cleanstop = False

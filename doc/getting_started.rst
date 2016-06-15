@@ -99,6 +99,13 @@ to work the way you think they should using this argument can give you a lot of
 information to discover where the problem is.  This option will produce a lot of
 data and probably shouldn't be used in the actual airplane.
 
+Also if ``--debug`` is set there are some exceptions that will be raised in
+certain  parts of the program that will stop the whole program.  Without this
+flag they may  simply cause a particular part of the program to stop
+functioning.  With this flag it will raise the exception all the way to the top
+so that we can get the traceback information for troubleshooting.  Again don't
+set this flag unless you are troubleshooting.
+
 Other command line options are ``--config-file`` and ``--log-config``.  These
 set  alternate files for the main configuration and logging configuration
 respectively. If the ``--log-config`` option is not set whatever file is used

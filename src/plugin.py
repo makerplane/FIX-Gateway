@@ -45,11 +45,14 @@ class PluginBase(object):
 
         self.running = False
 
-    def run(self):
+    def start(self):
         self.log.info("Starting")
+        self.run()
         self.running = True
+        
 
-    def stop(self):
+    def shutdown(self):
+        self.stop()
         self.log.info("Stopping")
         self.running = False
 
