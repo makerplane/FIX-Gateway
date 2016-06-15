@@ -16,8 +16,21 @@
 
 import logging
 from datetime import datetime
+import threading
+import time
 
 __database = {}
+
+class UpdateThread(threading.Thread):
+    def __init__(self, func, delay):
+        super(UpdateThread, self).__init__()
+        self.delay = delay
+        self.func = func
+
+    def run(self):
+        while True:
+            time.sleep(self.delay)
+            self.func()
 
 
 class db_item(object):
@@ -87,10 +100,10 @@ class db_item(object):
     @property
     def value(self):
         if self.age > self.tol and self.tol != 0:
-            self.old = True
+            self._old = True
         else:
-            self.old = False
-        return (self._value, self.annunciate, self.old, self.bad, self.fail)
+            self._old = False
+        return (self._value, self._annunciate, self._old, self._bad, self._fail)
 
     @value.setter
     def value(self, x):
@@ -113,10 +126,6 @@ class db_item(object):
                     pass  # ignore at this point
                 # set the timestamp to right now
         self.timestamp = datetime.utcnow()
-        # call all of the callback functions
-        #for func in self.callbacks:
-        #    log.debug("Calling Callback for {0}".format(self.key))
-        #    func[1](self.key, self.value, func[2])
         self.send_callbacks()
 
 
@@ -198,6 +207,7 @@ class db_item(object):
             self.send_callbacks()
 
 
+# These are support functions for loading the initial database
 def check_for_variables(entry):
     for ch in entry[0]:
         if ch.islower(): return ch
@@ -208,7 +218,7 @@ def check_for_variables(entry):
 def expand_entry(entry, var, count):
     l = []
     for i in range(count):
-        newentry = entry.copy()
+        newentry = list(entry) #.copy()
         newentry[0] = newentry[0].replace(var, str(i+1))
         newentry[1] = newentry[1].replace('%' + var, str(i+1))
         ch = check_for_variables(newentry)
@@ -238,6 +248,7 @@ def add_item(entry):
     return newitem
 
 
+# Main database initialization function
 def init(config):
     global log
     global __database
@@ -278,8 +289,12 @@ def init(config):
                 else:
                     add_item(entry)
     f.close()
+    t = UpdateThread(update, 1.0)
+    t.daemon = True
+    t.start()
 
 
+# These are the public functions for interacting with the database
 def write(key, value):
     if '.' in key:
         x = key.split('.')
@@ -304,7 +319,6 @@ def get_raw_item(key):
         return __database[key]
     except KeyError:
         return None
-
 
 
 def listkeys():
@@ -333,8 +347,10 @@ def callback_del(name, key, function, udata):
             __database[key].callbacks.remove( (name, function, udata) )
         except ValueError:
             log.debug("Callback not deleted because it was not found in the list")
-    # for f in __database[key].callbacks:
-    #     if f[0] == name and f[1] == function and f[2] == udata:
-    #         print("Found it"+str(f))
-    #         del f
-    #del __database[key].callbacks[name]
+
+# Maintenance Functions
+def update():
+    for key in __database:
+        item = __database[key]
+        if item.age > item.tol and item.tol != 0:
+            item.old = True
