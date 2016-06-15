@@ -2,11 +2,11 @@
 Database Definition
 ====================
 
-The database for FIX Gateway is configured using a colon ':' delimited text
-file.  The database is initialized based on the contents of this file before any
-of the plugins are loaded.  The database is immutable.  It cannot be changed by
-plugins once the program is loaded.  Users can modify the database definition
-for their own use.
+The database for FIX Gateway is defined by a colon ':' delimited text file.  The
+database is initialized based on the contents of this file before any of the
+plugins are loaded.  The database is immutable.  It cannot be changed by plugins
+once the program is loaded.  Users can modify the database definition for their
+own use.
 
 File Format
 ----------------
