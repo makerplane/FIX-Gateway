@@ -173,7 +173,7 @@ class ReceiveThread(threading.Thread):
 
     def run(self):
         data = b""
-        with self.conn:
+        try:
             self.log.info('Client connection from {0} port {1}'.format(str(self.addr[0]), str(self.addr[1]) ))
             buff = ""
             while True:
@@ -198,6 +198,8 @@ class ReceiveThread(threading.Thread):
             self.parent.db_callback_del("*", self.co.subscription_handler, None)
             self.log.info('Disconnected by {0} port {1}'.format(str(self.addr[0]), str(self.addr[1]) ))
             self.running = False
+        finally:
+            self.conn.close()
 
 
     def stop(self):
@@ -223,13 +225,15 @@ class SendThread(threading.Thread):
     # All this does is watch the queue in the connection object and
     # send anything that it finds there to the socket connection
     def run(self):
-        with self.conn:
+        try:
             while True:
                 data = self.co.queue.get()
                 if data == 'exit': break
                 self.conn.sendall(data)
                 self.msg_sent += 1
             self.running = False
+        finally:
+            self.conn.close()
 
 
     def stop(self):
@@ -257,7 +261,8 @@ class ServerThread(threading.Thread):
         while True:
             if self.getout:
                 break
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 s.settimeout(self.timeout)
                 s.bind((self.host, self.port))
@@ -296,6 +301,8 @@ class ServerThread(threading.Thread):
                     self.threads.append( (receivethread, sendthread) )
                     receivethread.start()
                     sendthread.start()
+            finally:
+                s.close()
 
 
     def stop(self):
