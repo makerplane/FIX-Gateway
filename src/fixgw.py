@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 #  Copyright (c) 2014 Phil Birkelbach
 #
@@ -16,7 +16,14 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import configparser
+try:
+    import configparser
+except:
+    import ConfigParser as configparser
+try:
+    import queue
+except:
+    import Queue as queue
 import importlib
 import logging
 import logging.config
@@ -24,7 +31,7 @@ import argparse
 import database
 import status
 import plugin
-import queue
+
 import signal
 import os
 import sys
@@ -72,9 +79,9 @@ def main():
         log.setLevel(logging.DEBUG)
     log.info("Starting FIX Gateway")
 
-    config = configparser.ConfigParser()
+    config = configparser.RawConfigParser()
     # To kepp configparser from making everythign lowercase
-    config.optionxform = str
+    #config.optionxform = str
     config.read(config_file)
     try:
         database.init(config)
@@ -96,6 +103,7 @@ def main():
                     database.write(x[0].strip(), x[1].strip())
     except Exception as e:
         log.error("Problem setting initial values from configuration - {0}".format(e))
+        raise
 
     # TODO: Add a hook here for post database creation code
 
@@ -104,7 +112,7 @@ def main():
     # run through the plugin_list dict and find all the plugins that are
     # configured to be loaded and load them.
 
-    for each in config:
+    for each in config.sections():
         if each[:5] == "conn_":
             if config.getboolean(each, "load"):
                 module = config.get(each, "module")

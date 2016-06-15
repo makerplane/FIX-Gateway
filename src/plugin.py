@@ -22,7 +22,10 @@
 
 import database
 import logging
-import queue
+try:
+    import queue
+except:
+    import Queue as queue
 
 jobQueue = queue.Queue()
 

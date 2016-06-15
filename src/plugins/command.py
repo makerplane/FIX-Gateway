@@ -126,8 +126,8 @@ class Command(cmd.Cmd):
     def do_EOF(self, line):
         return True
 
-    def callback_function(self, id, value, udata):
-        print("{0} = {1}".format(id, value))
+    def callback_function(self, key, value, udata):
+        print("{0} = {1}".format(key, value))
 
 class MainThread(threading.Thread):
     def __init__(self, parent):

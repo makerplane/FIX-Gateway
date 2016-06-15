@@ -23,7 +23,10 @@
 import plugin
 import threading
 import socket
-import queue
+try:
+    import queue
+except:
+    import Queue as queue
 from collections import OrderedDict
 
 
