@@ -12,17 +12,16 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# The idea behind this file is to create an interface to generic aircraft
-# data, regardless of how that data is retrieved.  Right now it is simply
-# an extra layer on top of CANFIX but it's here is a place to allow for
-# other interfaces.
+# This is the CAN-FIX plugin. CAN-FIX is a CANBus based protocol for
+# aircraft data.
 
 import threading
+import plugin
 
-import canbus
-import canfix
+from . import canbus
+from . import canfix
 
 class Parameter(object):
     def __init__(self, name = None, value = None):
@@ -32,10 +31,12 @@ class Parameter(object):
         self.quaility = False
         self.annunciate = False
 
-class Fix(threading.Thread):
-    def __init__(self, adapter=None, device=None, bitrate=125):
-        threading.Thread.__init__(self)
+class MainThread(threading.Thread):
+    def __init__(self, parent, adapter=None, device=None, bitrate=125):
+        super(MainThread, self).__init__()
         self.getout = False
+        self.parent = parent
+        self.log = parent.log
         self.adapter = adapter
         self.device = device
         self.bitrate = bitrate
@@ -49,7 +50,7 @@ class Fix(threading.Thread):
             self._parameterCallback = function
         else:
             raise ValueError("Argument is supposed to be callable")
-    
+
     def run(self):
         self.can.connect()
         while(True):
@@ -59,26 +60,49 @@ class Fix(threading.Thread):
                 # if the frame represents a CAN-FIX parameter then we make
                 # a generic FIX parameter and send that to the callback
                 cfobj = canfix.parseFrame(frame)
-                print "Fix Thread parseFrame() returned", cfobj
+                self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
                 if isinstance(cfobj, canfix.Parameter):
                     p = Parameter(cfobj.name, cfobj.value)
                     if self._parameterCallback:
                         self._parameterCallback(cfobj)
                     else:
-                        print frame
+                        print(frame)
+                # TODO increment frame counter
             except canbus.exceptions.DeviceTimeout:
                 pass
             except canbus.exceptions.BusError:
                 # TODO: Should handle some of these
-                # Maybe after ten or se we 
+                # Maybe after ten or se we
+                # TODO increment error counter
                 pass
             finally:
                 if(self.getout):
                     break
-        print "End of the FIX Thread"
+        self.log.debug("End of the CAN-FIX Thread")
         self.can.disconnect()
-    
-    def quit(self):
+
+    def stop(self):
         self.getout = True
         self.join()
 
+
+class Plugin(plugin.PluginBase):
+    def __init__(self, name, config):
+        super(Plugin, self).__init__(name, config)
+        adapter = config['adapter']
+        device = int(config['device'])
+        bitrate = int(config['bitrate'])
+        self.thread = MainThread(self, adapter, device, bitrate)
+
+    def run(self):
+        self.thread.start()
+
+    def stop(self):
+        self.thread.stop()
+        if self.thread.is_alive():
+            self.thread.join(1.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
+
+    def get_status(self):
+        return OrderedDict({"Count":self.thread.count})

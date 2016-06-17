@@ -1,4 +1,4 @@
-#  CAN-FIX Utilities - An Open Source CAN FIX Utility Package 
+#  CAN-FIX Utilities - An Open Source CAN FIX Utility Package
 #  Copyright (c) 2012 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -15,12 +15,15 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-from exceptions import *
-import Queue
+from .exceptions import *
+try:
+    import queue
+except:
+    import Queue as queue
 import random
 import time
 import struct
-import canbus
+from . import cantypes
 
 import inspect # For TESTING Only
 
@@ -34,13 +37,13 @@ class Node():
         self.FWVCode = 0x0000
         self.FWChannel = None
         self.frameFunction = None
-        
+
     def setFunction(self, function):
         if callable(function):
             self.frameFunction = function
         else:
             raise TypeError("Argument passed is not a function")
-        
+
     def doFrame(self, frame):
         """Function that handles incoming frames for the node"""
         if frame.id > 0x700 and frame.data[0] == self.nodeID:
@@ -68,18 +71,18 @@ class Node():
                     FWChannel = frame.data[4]
                     f.data.append(0x00)
             return f
-        
+
         return None
-        
+
     def getFrame(self):
         """Function that produces a frame for the node."""
         if self.frameFunction:
             return self.frameFunction(self.nodeID)
         else:
             pass
-        
 
-# These are just functions that generate messages for each of the 
+
+# These are just functions that generate messages for each of the
 # nodes that we've created.
 
 r_fuel_qty = 22.0
@@ -103,7 +106,7 @@ engine['i'] = 0
 def __func_engine(node):
     global engine
     t = time.time()
-    frame = canbus.Frame()
+    frame = cantypes.Frame()
     if t > engine['lasttime'] + 1:
         if engine['n'] == 0:
             o = (int(time.time()*100) % 10) - 5
@@ -119,8 +122,8 @@ def __func_engine(node):
             engine['lasttime'] = t
             return None
         return frame
-            
-    
+
+
 airdata = {}
 airdata['lasttime'] = 0.0
 airdata['airspeed'] = 165
@@ -131,32 +134,35 @@ airdata['n'] = 0
 def __func_airdata(node):
     global airdata
     t = time.time()
-    frame = canbus.Frame()
+    frame = cantypes.Frame()
     if t > airdata['lasttime'] + 1:
         if airdata['n'] == 0:
             o = (int(time.time()*1000.0) % 40) - 20
             x = struct.pack('<H', (airdata['airspeed']*10 + o))
             frame.id = 0x183 #Indicated Airspeed
-            frame.data = [node, 0, 0, ord(x[0]), ord(x[1])]
+            #frame.data = [node, 0, 0, ord(x[0]), ord(x[1])]
+            frame.data = [node, 0, 0, x[0], x[1]]
             airdata['n'] += 1
         elif airdata['n'] == 1:
             o = (int(time.time()*1000.0) % 20) - 10
             x = struct.pack('<l', (airdata['altitude']+o))
             frame.id = 0x184 #Indicated Altitude
-            frame.data = [node, 0, 0, ord(x[0]), ord(x[1]), ord(x[2]), ord(x[3])]
+            #frame.data = [node, 0, 0, ord(x[0]), ord(x[1]), ord(x[2]), ord(x[3])]
+            frame.data = [node, 0, 0, x[0], x[1], x[2], x[3]]
             airdata['n'] += 1
         elif airdata['n'] == 2:
             o = (int(time.time()*1000.0) % 100) - 50
-            x = struct.pack('<H', airdata['oat'] * 100 + o)
+            x = struct.pack('<H', int(airdata['oat'] * 100 + o))
             frame.id = 0x407 #OAT
-            frame.data = [node, 0, 0, ord(x[0]), ord(x[1])]
+            #frame.data = [node, 0, 0, ord(x[0]), ord(x[1])]
+            frame.data = [node, 0, 0, x[0], x[1]]
             airdata['n'] += 1
         else:
             airdata['n'] = 0
             airdata['lasttime'] = t
             return None
         return frame
-    
+
 def configNodes():
     nodelist = []
     for each in range(3):
@@ -167,39 +173,39 @@ def configNodes():
         nodelist.append(node)
     nodelist[0].setFunction(__func_airdata)
     nodelist[1].setFunction(__func_engine)
-    #nodelist[0].FMVCode = 
+    #nodelist[0].FMVCode =
     return nodelist
-    
-    
+
+
 class Adapter():
     """Class that represents a CAN Bus simulation adapter"""
     def __init__(self):
         self.name = "CAN Device Simulator"
         self.shortname = "simulate"
         self.type = "None"
-        self.__rQueue = Queue.Queue()
+        self.__rQueue = queue.Queue()
         random.seed()
         self.nodes = configNodes()
-    
+
     def connect(self, config):
-        print "Connecting to simulation adapter"
-        self.open()    
-    
+        print("Connecting to simulation adapter")
+        self.open()
+
     def disconnect(self):
-        print "Disconnecting from simulation adapter"
+        print("Disconnecting from simulation adapter")
         self.close()
-        
+
     def open(self):
-        print "Opening CAN Port"
+        print("Opening CAN Port")
 
     def close(self):
-        print "Closing CAN Port"
+        print("Closing CAN Port")
 
     def error(self):
-        print "Closing CAN Port"
+        print("Closing CAN Port")
 
     def sendFrame(self, frame):
-        print "sendFrame() Called"
+        print("sendFrame() Called")
         if frame.id < 0 or frame.id > 2047:
             raise ValueError("Frame ID out of range")
         else:
@@ -209,16 +215,12 @@ class Adapter():
                     self.__rQueue.put(result)
 
     def recvFrame(self):
-        print "recvFrame() Called"
         for each in self.nodes:
             result = each.getFrame()
             if result:
                 self.__rQueue.put(result)
-            
+
         try:
             return self.__rQueue.get(timeout = 0.25)
-        except Queue.Empty:
+        except queue.Empty:
             raise DeviceTimeout()
-        
-                
-        

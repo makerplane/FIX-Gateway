@@ -15,11 +15,10 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-from exceptions import *
+from .exceptions import *
 import serial
 import time
-import canbus
-#from serial.tools.list_ports import comports
+from . import cantypes
 
 class Adapter():
     """Class that represents an the Open Source CAN-FIX-it USB to CANBus adapter"""
@@ -74,7 +73,7 @@ class Adapter():
             self.portname = config.device
         except KeyError:
             self.portname = comports[0][0]
-            print "Setting Port to default" + self.portname
+            print("Setting Port to default" + self.portname)
         try:
             self.timeout = config.timeout
         except KeyError:
@@ -83,9 +82,9 @@ class Adapter():
         try:
             self.ser = serial.Serial(self.portname, 115200, timeout=self.timeout)
 
-            print "Reseting CAN-FIX-it"
+            print("Reseting CAN-FIX-it")
             self.__sendCommand("K")
-            print "Setting Bit Rate"
+            print("Setting Bit Rate")
             self.__sendCommand(bitrates[self.bitrate])
             self.open()
         except BusReadError:
@@ -95,11 +94,11 @@ class Adapter():
         self.close()
 
     def open(self):
-        print "Opening CAN Port"
+        print("Opening CAN Port")
         self.__sendCommand("O")
-        
+
     def close(self):
-        print "Closing CAN Port"
+        print("Closing CAN Port")
         self.__sendCommand("C")
 
     def error(self):
@@ -131,6 +130,6 @@ class Adapter():
         data= []
         for n in range((len(result)-5)/2):
             data.append(int(result[5+n*2:7+n*2], 16))
-        frame = canbus.Frame(int(result[1:4], 16), data)
+        frame = cantypes.Frame(int(result[1:4], 16), data)
         #print frame
         return frame
