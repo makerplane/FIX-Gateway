@@ -120,6 +120,8 @@ def main():
                     load_plugin(each[5:], module, config)
                 except Exception as e:
                     logging.critical("Unable to load module - " + module + ": " + str(e))
+                    if args.debug:
+                        raise
 
 
     status.initialize(plugins)

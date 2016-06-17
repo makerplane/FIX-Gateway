@@ -57,9 +57,10 @@ data easily.  Any plugin that writes to the datbase can override this data.
 
     ini_file = config/fg_172.ini
 
-Each connection has it's own section in the configuration file.  These sections all begin with **conn_**.  The text folowing the "_" will be the name
-of the connection within FGW.  There are only two required options to
-load and run a connection.
+Each connection has it's own section in the configuration file.  These sections
+all begin with **conn_**.  The text folowing the "_" will be the name of the
+connection within FGW.  There are only two required options to load and run a
+connection.
 
 ::
 
