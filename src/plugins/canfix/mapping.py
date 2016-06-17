@@ -1,4 +1,4 @@
-#  Copyright (c) 2012 Phil Birkelbach
+#  Copyright (c) 2016 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -14,15 +14,23 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+# This is the CAN-FIX plugin. CAN-FIX is a CANBus based protocol for
+# aircraft data.
 
-class Frame(object):
-    """Class represents a CANBus frame"""
-    def __init__(self, id=0, data=[]):
-        self.id = id
-        self.data = data
-    def __str__(self):
-        s = hex(self.id)[2:] + ':'
-        for each in self.data:
-            if each < 16: s = s + '0'
-            s = s + hex(each)[2:]  + ' '
-        return s.upper()
+# This file controls mapping CAN-FIX parameter ids to FIX database keys
+
+import database
+from . import protocol
+
+
+input_mapping = list(1280)
+output_mapping = {}
+
+class InputMap(object):
+    def __init__(self, dbKey, conversion=None):
+        pass
+
+
+class OutputMap(object):
+    def __init__(self, canFixID, index, conversion = None):
+        pass

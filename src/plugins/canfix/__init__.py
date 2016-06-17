@@ -20,8 +20,8 @@
 import threading
 import plugin
 
-from . import canbus
-from . import canfix
+import can
+import canfix
 
 class Parameter(object):
     def __init__(self, name = None, value = None):
@@ -32,17 +32,16 @@ class Parameter(object):
         self.annunciate = False
 
 class MainThread(threading.Thread):
-    def __init__(self, parent, adapter=None, device=None, bitrate=125):
+    def __init__(self, parent, config):
         super(MainThread, self).__init__()
+        self.interface = config['interface']
+        self.channel = config['channel']
+        self.device = int(config['device'])
+
         self.getout = False
         self.parent = parent
         self.log = parent.log
-        self.adapter = adapter
-        self.device = device
-        self.bitrate = bitrate
-        self.can = canbus.Connection(self.adapter)
-        self.can.device = self.device
-        self.can.bitrate = self.bitrate
+        self.bus = can.interface.Bus(self.channel, bustype = self.interface)
         self._parameterCallback = None
 
     def setParameterCallback(self, function):
@@ -52,34 +51,33 @@ class MainThread(threading.Thread):
             raise ValueError("Argument is supposed to be callable")
 
     def run(self):
-        self.can.connect()
         while(True):
             try:
-                frame = self.can.recvFrame()
-                # Once we get a frame we parse it through canfix then
-                # if the frame represents a CAN-FIX parameter then we make
-                # a generic FIX parameter and send that to the callback
-                cfobj = canfix.parseFrame(frame)
-                self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
-                if isinstance(cfobj, canfix.Parameter):
-                    p = Parameter(cfobj.name, cfobj.value)
-                    if self._parameterCallback:
-                        self._parameterCallback(cfobj)
+                msg = self.bus.recv(1.0)
+                if msg:
+                    print(msg)
+                    # Once we get a frame we parse it through canfix then
+                    # if the frame represents a CAN-FIX parameter then we make
+                    # a generic FIX parameter and send that to the callback
+                    try:
+                        cfobj = canfix.parseMessage(msg)
+                    except ValueError as e:
+                        self.log.warning(e)
                     else:
-                        print(frame)
-                # TODO increment frame counter
-            except canbus.exceptions.DeviceTimeout:
-                pass
-            except canbus.exceptions.BusError:
-                # TODO: Should handle some of these
-                # Maybe after ten or se we
-                # TODO increment error counter
-                pass
+                        self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
+                        if isinstance(cfobj, canfix.Parameter):
+                            p = Parameter(cfobj.name, cfobj.value)
+                            if self._parameterCallback:
+                                self._parameterCallback(cfobj)
+                        else:
+                            print(cfobj)
+                #     # TODO increment frame counter
+                #     # TODO increment error counter
             finally:
                 if(self.getout):
                     break
         self.log.debug("End of the CAN-FIX Thread")
-        self.can.disconnect()
+        #self.can.disconnect()
 
     def stop(self):
         self.getout = True
@@ -89,10 +87,7 @@ class MainThread(threading.Thread):
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
-        adapter = config['adapter']
-        device = int(config['device'])
-        bitrate = int(config['bitrate'])
-        self.thread = MainThread(self, adapter, device, bitrate)
+        self.thread = MainThread(self, config)
 
     def run(self):
         self.thread.start()
