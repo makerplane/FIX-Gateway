@@ -106,7 +106,7 @@ class MainThread(threading.Thread):
         self.config = parent.config
 
     def run(self):
-        self.clientThread = UDPClient(self.config['host'], self.config['port'])
+        self.clientThread = UDPClient(self.config['host'], self.config['out_port'])
         self.clientThread.start()
 
     def stop(self):
