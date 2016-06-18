@@ -19,17 +19,12 @@
 
 import threading
 import plugin
+from collections import OrderedDict
 
 import can
 import canfix
 
-class Parameter(object):
-    def __init__(self, name = None, value = None):
-        self.name = name
-        self.value = value
-        self.failed = False
-        self.quaility = False
-        self.annunciate = False
+from . import mapping
 
 class MainThread(threading.Thread):
     def __init__(self, parent, config):
@@ -42,23 +37,16 @@ class MainThread(threading.Thread):
         self.parent = parent
         self.log = parent.log
         self.bus = can.interface.Bus(self.channel, bustype = self.interface)
-        self._parameterCallback = None
+        self.framecount = 0
+        self.errorcount = 0
 
-    def setParameterCallback(self, function):
-        if callable(function):
-            self._parameterCallback = function
-        else:
-            raise ValueError("Argument is supposed to be callable")
 
     def run(self):
         while(True):
             try:
                 msg = self.bus.recv(1.0)
                 if msg:
-                    print(msg)
-                    # Once we get a frame we parse it through canfix then
-                    # if the frame represents a CAN-FIX parameter then we make
-                    # a generic FIX parameter and send that to the callback
+                    self.framecount += 1
                     try:
                         cfobj = canfix.parseMessage(msg)
                     except ValueError as e:
@@ -66,18 +54,15 @@ class MainThread(threading.Thread):
                     else:
                         self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
                         if isinstance(cfobj, canfix.Parameter):
-                            p = Parameter(cfobj.name, cfobj.value)
-                            if self._parameterCallback:
-                                self._parameterCallback(cfobj)
+                            mapping.inputMap(cfobj)
                         else:
-                            print(cfobj)
+                            # TODO What to do with the other types
+                            pass
                 #     # TODO increment frame counter
                 #     # TODO increment error counter
             finally:
                 if(self.getout):
                     break
-        self.log.debug("End of the CAN-FIX Thread")
-        #self.can.disconnect()
 
     def stop(self):
         self.getout = True
@@ -100,4 +85,5 @@ class Plugin(plugin.PluginBase):
             raise plugin.PluginFail
 
     def get_status(self):
-        return OrderedDict({"Count":self.thread.count})
+        return OrderedDict({"Frame Count":self.thread.framecount,
+                            "Error Count":self.thread.errorcount})
