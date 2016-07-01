@@ -52,13 +52,12 @@ class MainThread(threading.Thread):
                     except ValueError as e:
                         self.log.warning(e)
                     else:
-                        self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
+                        #self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
                         if isinstance(cfobj, canfix.Parameter):
                             mapping.inputMap(cfobj)
                         else:
                             # TODO What to do with the other types
                             pass
-                #     # TODO increment frame counter
                 #     # TODO increment error counter
             finally:
                 if(self.getout):

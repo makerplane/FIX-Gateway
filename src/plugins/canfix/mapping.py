@@ -69,8 +69,19 @@ def getInputFunction(dbKey, canfixID):
     else:
         return InputFunc
 
-input_mapping[0x183 - 0x100] = getInputFunction("IAS", 0x183)
-input_mapping[0x500 - 0x100] = getInputFunction("CHT1", 0x500)
+# These are the standard numerical mappings
+maps = [(0x180, "PITCH"), (0x181, "ROLL"),
+        (0x183, "IAS"), (0x184, "ALT"),
+        (0x185, "HEAD"), (0x186, "VS"),
+        (0x200, "TACH1"), (0x201, "TACH2"),
+        (0x202, "PROP1"), (0x203, "PROP2"),
+        (0x21E, "MAP1"), (0x21F, "MAP2"),
+        (0x220, "OILP1"), (0x221, "OILP2"),
+        (0x500, "CHT1")]
+
+for each in maps:
+    input_mapping[each[0] - 0x100] = getInputFunction(each[1], each[0])
+
 
 def inputMap(par):
     try:
