@@ -1,15 +1,16 @@
-e=2:Engines:::::::
-c=4:Cylinders per engine:::::::
-t=2:Fuel Tanks:::::::
-b=16:Generic Buttons:::::::
-r=4:Generic Encoders:::::::
-a=16:Generic Analog:::::::
----::::::::
+e=1:Engines
+c=6:Cylinders per engine
+t=2:Fuel Tanks
+b=1:Generic Buttons
+r=1:Generic Encoders
+a=8:Generic Analog
+---
 #Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
 ANLGa:Generic Analog %a:float:0:1:%/100:0.0:2000:
 BTNb:Generic Button %b:bool:0:1::False:0:
 ENCr:Generic Encoder %r:int:-32768:32767:Pulses:0:0:
 IAS:Indicated Airspeed:float:0:1000:knots:0.0:2000:Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
+IASW:Indicated Airspeed Warning:int:0:5:warninglevel:0:0:2000
 TAS:True Airspeed:float:0:2000:knots:0.0:2000:
 CAS:True Airspeed:float:0:2000:knots:0.0:2000:
 GS:Ground Speed:float:0:2000:knots:0.0:2000:
@@ -23,9 +24,12 @@ TRACK:Current Aircraft Bearing:float:0:360:deg:0.0:2000:
 TRACKM:Current Aircraft Magnetic Bearing:float:0:360:deg:0.0:2000:
 COURSE:Selected Course:float:0:360:deg:0.0:2000:
 XTRACK:Cross Track Error:float:0:100:nM:0.0:2000:
-OAT:Outside Air Temperature:float:-300:300:degC:0.0:2000:
+OAT:Outside Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+CAT:Cabine Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+OATW:Outside Air Temperature Warning:int:0:5:warninglevel:0:0:2000
 ROLL:Roll Angle:float:-180:180:deg:0.0:200:
 PITCH:Pitch Angle:float:-180:180:deg:0.0:200:
+PITCHSET:Pitch angle setting:float:-180:180:deg:0.0:200:
 YAW:Yaw Angle:float:-180:180:deg:0.0:200:
 AOA:Angle of attack:float:-180:180:deg:0.0:200:Min,Max,0g,Warn,Stall
 CTLPTCH:Pitch Control:float:-1:1:%/100:0.0:200:
@@ -48,6 +52,7 @@ H2OTe:Coolant Temperature Engine %e:float:0:200:degC:0.0:2000:Min,Max,lowWarn,hi
 FUELPe:Fuel Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:
 MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:
+VOLT:System Voltage:float:1:16:volt:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
 CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
 FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
