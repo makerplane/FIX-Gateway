@@ -12,73 +12,77 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# The idea behind this file is to create an interface to generic aircraft
-# data, regardless of how that data is retrieved.  Right now it is simply
-# an extra layer on top of CANFIX but it's here is a place to allow for
-# other interfaces.
+# This is the CAN-FIX plugin. CAN-FIX is a CANBus based protocol for
+# aircraft data.
 
 import threading
+import plugin
+from collections import OrderedDict
 
-import canbus
+import can
 import canfix
 
-class Parameter(object):
-    def __init__(self, name = None, value = None):
-        self.name = name
-        self.value = value
-        self.failed = False
-        self.quaility = False
-        self.annunciate = False
+from . import mapping
 
-class Fix(threading.Thread):
-    def __init__(self, adapter=None, device=None, bitrate=125):
-        threading.Thread.__init__(self)
+class MainThread(threading.Thread):
+    def __init__(self, parent, config):
+        super(MainThread, self).__init__()
+        self.interface = config['interface']
+        self.channel = config['channel']
+        self.device = int(config['device'])
+
         self.getout = False
-        self.adapter = adapter
-        self.device = device
-        self.bitrate = bitrate
-        self.can = canbus.Connection(self.adapter)
-        self.can.device = self.device
-        self.can.bitrate = self.bitrate
-        self._parameterCallback = None
+        self.parent = parent
+        self.log = parent.log
+        self.bus = can.interface.Bus(self.channel, bustype = self.interface)
+        self.framecount = 0
+        self.errorcount = 0
 
-    def setParameterCallback(self, function):
-        if callable(function):
-            self._parameterCallback = function
-        else:
-            raise ValueError("Argument is supposed to be callable")
-    
+
     def run(self):
-        self.can.connect()
         while(True):
             try:
-                frame = self.can.recvFrame()
-                # Once we get a frame we parse it through canfix then
-                # if the frame represents a CAN-FIX parameter then we make
-                # a generic FIX parameter and send that to the callback
-                cfobj = canfix.parseFrame(frame)
-                print "Fix Thread parseFrame() returned", cfobj
-                if isinstance(cfobj, canfix.Parameter):
-                    p = Parameter(cfobj.name, cfobj.value)
-                    if self._parameterCallback:
-                        self._parameterCallback(cfobj)
+                msg = self.bus.recv(1.0)
+                if msg:
+                    self.framecount += 1
+                    try:
+                        cfobj = canfix.parseMessage(msg)
+                    except ValueError as e:
+                        self.log.warning(e)
                     else:
-                        print frame
-            except canbus.exceptions.DeviceTimeout:
-                pass
-            except canbus.exceptions.BusError:
-                # TODO: Should handle some of these
-                # Maybe after ten or se we 
-                pass
+                        #self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
+                        if isinstance(cfobj, canfix.Parameter):
+                            mapping.inputMap(cfobj)
+                        else:
+                            # TODO What to do with the other types
+                            pass
+                #     # TODO increment error counter
             finally:
                 if(self.getout):
                     break
-        print "End of the FIX Thread"
-        self.can.disconnect()
-    
-    def quit(self):
+
+    def stop(self):
         self.getout = True
         self.join()
 
+
+class Plugin(plugin.PluginBase):
+    def __init__(self, name, config):
+        super(Plugin, self).__init__(name, config)
+        self.thread = MainThread(self, config)
+
+    def run(self):
+        self.thread.start()
+
+    def stop(self):
+        self.thread.stop()
+        if self.thread.is_alive():
+            self.thread.join(1.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
+
+    def get_status(self):
+        return OrderedDict({"Frame Count":self.thread.framecount,
+                            "Error Count":self.thread.errorcount})

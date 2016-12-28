@@ -105,8 +105,17 @@ class db_item(object):
             self._old = False
         return (self._value, self._annunciate, self._old, self._bad, self._fail)
 
+    # We can set the value in the item with either a value of a tuple that
+    # contains the property flags as well.  (value, annunc, bad, fail)
     @value.setter
     def value(self, x):
+        if type(x) == tuple:
+            if len(x) < 4:
+                raise ValueError("Tupe too small for {}".format(self.key))
+            self._annunciate = x[1]
+            self._bad = x[2]
+            self._fail = x[3]
+            x = x[0]
         if self.dtype == bool:
             self._value = (x == True or x.lower() in ["yes", "true", "1", 1])
         else:

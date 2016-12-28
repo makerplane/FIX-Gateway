@@ -329,7 +329,6 @@ class Plugin(plugin.PluginBase):
 
 
     def run(self):
-        super(Plugin, self).run()
         self.thread.start()
 
 
@@ -339,8 +338,7 @@ class Plugin(plugin.PluginBase):
             self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
-        super(Plugin, self).stop()
-
+        
 
     def get_status(self):
         return self.thread.get_status()

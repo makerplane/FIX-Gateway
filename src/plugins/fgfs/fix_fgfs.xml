@@ -143,6 +143,15 @@
    </chunk>
   </output>
 
+  <input>
+    <chunk>
+      <name>BARO: Altimeter Setting</name>
+      <type>double</type>
+      <format>%.2f</format>
+      <node>/instrumentation/altimeter/setting-inhg</node>
+    </chunk>
+  </input>
+
  </generic>
 
 </PropertyList>

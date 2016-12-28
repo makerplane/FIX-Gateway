@@ -15,10 +15,7 @@ Airdata plugin.  This plugin would calculate things like TAS, wind direction
 Density altitude etc.  It would also be a good example of a plugin that used
 only the callback mechanism instead of needing a thread.
 
-Add background task that would send subscription updates when data gets old.
-This could probably be a very low priority task that ran once a second or so.
-
-Should add a leading zero to item variables if greater than 9.
+Should add a leading zero to item variables if greater than 9. (maybe not)
 
 Allow daemonization of the program.
 
@@ -41,3 +38,29 @@ item and flag when multiple plugins attempt to write to the same item.  Or
 perhaps we have an item ownership system?  It'll probably work okay in the real
 systems because it'll make sense, but it might be hard to troubleshoot issues
 later if there are conflicts.
+
+GUI Plugin
+
+  Add Tree view for status
+
+  Add trending capability
+
+
+CAN-FIX Plugin
+
+  Add mandatory Node Specific Message responses
+
+  Finish input mapping
+
+  Add output mapping
+
+  Add node status information.
+
+
+FlightGear Plugin
+
+  Finish outputs
+
+  Add conversion functions
+
+  Finish XML file
