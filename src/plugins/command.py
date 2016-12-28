@@ -19,7 +19,7 @@
 import plugin
 import cmd
 import threading
-
+import status
 
 class Command(cmd.Cmd):
     def setplugin(self, p):
@@ -92,7 +92,7 @@ class Command(cmd.Cmd):
             print(("Unknown Key " + args[0]))
 
     def do_flag(self, line):
-        """Set Flag\nSet or clear quality flags"""
+        """flag\nSet or clear quality flags"""
         args = line.split(" ")
         if len(args) < 3:
             print("Not Enough Arguments") # TODO print usage??
@@ -111,7 +111,9 @@ class Command(cmd.Cmd):
         elif args[1].lower()[0] == 's':
             x.secondary = bit
 
-
+    def do_status(self, line):
+        """status\nRead status information"""
+        print(status.get_string())
 
     def do_quit(self, line):
         """quit\nExit Plugin"""
@@ -124,8 +126,8 @@ class Command(cmd.Cmd):
     def do_EOF(self, line):
         return True
 
-    def callback_function(self, id, value, udata):
-        print("{0} = {1}".format(id, value))
+    def callback_function(self, key, value, udata):
+        print("{0} = {1}".format(key, value))
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
@@ -162,7 +164,9 @@ class Plugin(plugin.PluginBase):
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(1.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()
 
     def is_running(self):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 #  Copyright (c) 2014 Phil Birkelbach
 #
@@ -16,14 +16,24 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import configparser
+try:
+    import configparser
+except:
+    import ConfigParser as configparser
+try:
+    import queue
+except:
+    import Queue as queue
 import importlib
 import logging
 import logging.config
 import argparse
 import database
+import status
 import plugin
-import queue
+
+import signal
+import os
 import sys
 
 config_file = "config/main.cfg"
@@ -69,9 +79,9 @@ def main():
         log.setLevel(logging.DEBUG)
     log.info("Starting FIX Gateway")
 
-    config = configparser.ConfigParser()
+    config = configparser.RawConfigParser()
     # To kepp configparser from making everythign lowercase
-    config.optionxform = str
+    #config.optionxform = str
     config.read(config_file)
     try:
         database.init(config)
@@ -82,11 +92,18 @@ def main():
         return # we don't want to run with a screwed up database
 
     log.info("Setting Initial Values")
+    fn = config.get("config", "ini_file")
     try:
-        for item in config.items("initial"):
-            database.write(item[0], item[1])
+        f = open(fn, 'r')
+        for line in f.readlines():
+            l = line.strip()
+            if l and l[0] != '#':
+                x = l.split("=")
+                if len(x) >= 2:
+                    database.write(x[0].strip(), x[1].strip())
     except Exception as e:
         log.error("Problem setting initial values from configuration - {0}".format(e))
+        raise
 
     # TODO: Add a hook here for post database creation code
 
@@ -95,7 +112,7 @@ def main():
     # run through the plugin_list dict and find all the plugins that are
     # configured to be loaded and load them.
 
-    for each in config:
+    for each in config.sections():
         if each[:5] == "conn_":
             if config.getboolean(each, "load"):
                 module = config.get(each, "module")
@@ -105,9 +122,18 @@ def main():
                     logging.critical("Unable to load module - " + module + ": " + str(e))
 
 
+    status.initialize(plugins)
+
+    def sig_int_handler(signum, frame):
+        plugin.jobQueue.put("QUIT")
+
+    signal.signal(signal.SIGINT, sig_int_handler)
+
+
     # TODO add a hook here for pre module run code
 
     for each in plugins:
+        log.debug("Attempting to start plugin {0}".format(each))
         plugins[each].run()
 
     iteration = 0
@@ -116,7 +142,7 @@ def main():
             job = plugin.jobQueue.get(timeout=1.0)
             if job == "QUIT":
                 break
-        except KeyboardInterrupt:
+        except KeyboardInterrupt:  # This should be broken by the signal handler
             log.info("Termination from keybaord received")
             break
         except queue.Empty:
@@ -133,10 +159,20 @@ def main():
                 log.info("No plugins running, quitting")
                 break
 
+    cleanstop = True
     for each in plugins:
-        plugins[each].stop()
+        log.debug("Attempting to stop plugin {0}".format(each))
+        try:
+            plugins[each].stop()
+        except plugin.PluginFail:
+            log.warning("Plugin {0} did not shutdown properly".format(each))
+            cleanstop = False
 
-    log.info("FIX Gateway Exiting Normally")
+    if cleanstop == True:
+        log.info("FIX Gateway Exiting Normally")
+    else:
+        log.info("FIX Gateway Exiting Forcefully")
+        os._exit(-1)
 
 if __name__ == "__main__":
     # TODO: Add daemonization

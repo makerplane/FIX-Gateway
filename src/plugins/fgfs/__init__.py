@@ -38,9 +38,9 @@ class UDPClient(threading.Thread):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.settimeout(2.0)
         self.sock.bind((UDP_IP, UDP_PORT))
-        self.running = 1
+        self.getout = False
 
-    def write_data(self, data):
+    def save_data(self, data):
         l = data.split(var_sep)
         for i, each in enumerate(l):
             if items[i].item != None:
@@ -48,7 +48,7 @@ class UDPClient(threading.Thread):
 
     def run(self):
         buff = ""
-        while self.running:
+        while not self.getout:
             #Reads the UDP packet splits then sends it to the Queue
             try:
                 data = self.sock.recv(1024)  # buffer size is 1024 bytes
@@ -57,13 +57,14 @@ class UDPClient(threading.Thread):
                         if d != '\n':
                             buff += d
                         else:
-                            self.write_data(buff)
+                            self.save_data(buff)
                             buff = ""
             except socket.timeout:
                 pass
+        self.running = False
 
     def stop(self):
-        self.running = 0
+        self.getout = True
 
 
 class Item(object):
@@ -124,6 +125,7 @@ class Plugin(plugin.PluginBase):
                                               self.config['xml_file'])
         except Exception as e:
             self.log.critical(e)
+            self.stop()
             return
 
         # This loop checks to see if we have each item in the database
@@ -131,11 +133,18 @@ class Plugin(plugin.PluginBase):
         # we parse the string from FlightGear
         for each in items:
             each.item = self.db_get_item(each.key)
+            if each.item == None:
+                self.log.warning("{0} found in protocol file but not in the database".format(each.key))
 
         self.thread.start()
 
     def stop(self):
-        self.thread.stop()
+        try:
+            self.thread.stop()
+        except AttributeError:
+            pass
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(2.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()

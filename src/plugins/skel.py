@@ -24,7 +24,7 @@
 import plugin
 import threading
 import time
-
+from collections import OrderedDict
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
@@ -35,13 +35,16 @@ class MainThread(threading.Thread):
         self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
+        self.count = 0
 
     def run(self):
         while True:
             if self.getout:
                 break
             time.sleep(1)
+            self.count += 1
             self.log.debug("Yep")  # Do something more useful here
+        self.running = False
 
     def stop(self):
         self.getout = True
@@ -72,5 +75,12 @@ class Plugin(plugin.PluginBase):
         also undo any callbacks that were set up in the run() method"""
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(1.0)
+        if self.thread.is_alive():
+            raise plugin.PluginFail
         super(Plugin, self).stop()
+
+    def get_status(self):
+        """ The get_status method should return a dict or OrderedDict that
+        is basically a key/value pair of statistics"""
+        return OrderedDict({"Count":self.thread.count})
