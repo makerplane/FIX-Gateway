@@ -22,7 +22,7 @@ Configuration
 * hardw = True # if you want to use hardware SPI or False for software SPI
 
 Software SPI pin Not need if you use hardware SPI
-—————————
+--------------------
 * clk = 18 # Software SPI clk pin 
 * miso = 23 # Software SPI miso pin
 * mosi = 24 # Software SPI mosi pin
