@@ -1,3 +1,4 @@
+# coding: utf8
 # Adafruit BNO055 Absolute Orientation Sensor Library
 # Copyright (c) 2015 Adafruit Industries
 # Author: Tony DiCola

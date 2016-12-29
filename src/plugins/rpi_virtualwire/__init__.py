@@ -1,3 +1,4 @@
+# coding: utf8
 #!/usr/bin/env python
 
 #  Copyright (c) 2017 Jean-Manuel Gagnon
@@ -26,67 +27,69 @@ import sys
 import plugin
 import threading
 import time
-from Adafruit_BNO055 import BNO055
+import pigpio
+from virtualwire import virtualwire
 from collections import OrderedDict
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
-    	"""The calling object should pass itself as the parent.
-	This gives the thread all the plugin goodies that the
-        parent has."""
-        super(MainThread, self).__init__()
-	self.getout = False   # indicator for when to stop
-        self.parent = parent  # parent plugin object
-        self.log = parent.log  # simplifies logging
-        self.count = 0
-        self.bno = BNO055.BNO055(serial_port='/dev/ttyAMA0', rst=18)
-        if not self.bno.begin():
-      		raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+		"""The calling object should pass itself as the parent.
+		This gives the thread all the plugin goodies that the
+		parent has."""
+		super(MainThread, self).__init__()
+		self.getout = False   # indicator for when to stop
+		self.parent = parent  # parent plugin object
+		self.log = parent.log  # simplifies logging
+		self.count = 0
+		self.ias = 0
+		self.oat = 0
+		self.ias_W_S = 0
+		self.oat_W_S = 0
+		self.smooted = 0.8
+		pigpio.exceptions = False
+		self.rxpin = int(parent.config['rxpin']) if ('rxpin' in parent.config) and parent.config['rxpin'] else 23
+		self.bps = int(parent.config['bps']) if ('bps' in parent.config) and parent.config['rxpin'] else 2000
+		self.pi = pigpio.pi() # Connect to local Pi
+		self.rx = virtualwire.rx(self.pi, self.rxpin, self.bps) # Specify Pi, rx GPIO.
 
     def run(self):
-        while True:
-		if self.getout:
-			break
-		time.sleep(.1)
-		self.count += 1
-		heading, roll, pitch = self.bno.read_euler()
-		if pitch >= 90:
-			pdiff = pitch - 90
-            		pitch = 90 - pdiff
-            		if roll > 0:
-                		roll = -(roll - 180)
-            		else:
-                		roll = -(roll + 180)
-        	elif pitch <= -90:
-            		mpdiff = pitch + 90
-            		pitch = -(90 + mpdiff)
-            		if roll > 0:
-                		roll = -(roll - 180)
-            		else:
-                		roll = -(roll + 180)
-        	if heading >= 180:
-            		heading = heading - 180
-        	else:
-            		heading = heading + 180
-        	try:
-            		pitchset = self.parent.db_read("PITCHSET")
-            		pitch = pitch + int(pitchset[0])
-		except:
-			pass
-		self.parent.db_write("HEAD", heading)
-		self.parent.db_write("ROLL", roll)
-		self.parent.db_write("PITCH", pitch)
-	        #time.sleep(.1)
-       		x,y,z = self.bno.read_accelerometer()
-       		x = -x/60
-       		self.parent.db_write("ALAT", x)
-		#self.parent.db_write("SYS", sys)
-		#self.parent.db_write("GYRO", gyro)
-		#self.parent.db_write("MAG", mag)
-		#self.log.debug("Yep")  # Do something more useful here
-	self.running = False
+		while True:
+			if self.getout:
+				break
+			time.sleep(.25)
+			self.count += 1
+			try:
+				while self.rx.ready():
+					try:
+						msg = str("".join(chr (c) for c in self.rx.get()))
+					except:
+						msg = [400, -50]
+                    	#print msg
+						pass
+					msg = msg.split(',')
+					if float(msg[0]) < 400 :
+						init_ias = float(msg[0])
+						self.ias = float((self.ias*self.smooted)+(1.0-self.smooted)*(init_ias))
+						self.ias_W_S = 3
+					if float(msg[1]) > -50 :                   
+						self.oat = float(msg[1])
+						self.oat_W_S = 3
+					else: 
+						self.ias_W_S = 2
+						self.oat_W_S = 2
+			except:
+				self.ias_W_S = 2
+				self.oat_W_S = 2
+				pass
+			self.parent.db_write("IAS", int(self.ias))
+			self.parent.db_write("OAT", self.oat)
+			self.parent.db_write("IASW", self.ias_W_S)
+			self.parent.db_write("OATW", self.oat_W_S)
+		self.running = False
 
     def stop(self):
+    	self.rx.cancel()
+        self.pi.stop()
         self.getout = True
 
 

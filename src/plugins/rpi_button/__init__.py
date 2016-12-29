@@ -1,6 +1,7 @@
+# coding: utf8
 #!/usr/bin/env python
 
-#  Copyright (c) 2014 Phil Birkelbach
+#  Copyright (c) 2017 Jean-Manuel Gagnon
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -36,23 +37,29 @@ class MainThread(threading.Thread):
         self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
-        self.key = parent.config['bkey'] if ('bkey' in parent.config) and parent.config['bkey'] else "BTN1"
+        self.btnkey = parent.config['btnkey'] if ('btnkey' in parent.config) and parent.config['btnkey'] else "BTN1"
         self.btnpin = int(parent.config['btnpin']) if ('btnpin' in parent.config) and parent.config['btnpin'] else 4
+        self.rdelay = parent.config['rdelay'] if ('rdelay' in parent.config) and parent.config['rdelay'] else "0"
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.btnpin,GPIO.IN, pull_up_down=GPIO.PUD_UP)
         self.count = 0
-
+        self.prev_input = 0
+# TODO !Not tested!
     def run(self):
         while True:
             if self.getout:
                 break
-            time.sleep(0.001)
+            time.sleep(0.05)
             self.count += 1
-            if (GPIO.input(self.btnpin)):
+            input = GPIO.input(self.btnpin)
+            if ((not prev_input) and input):
                     self.parent.db_write(self.btnkey, "True")
             else:
     				self.parent.db_write(self.btnkey, "False")
-    
+    		self.prev_input = input
+    		if self.rdelay != 0:
+				self.prev_input = 0
+    			time.sleep(self.rdelay)
         self.running = False
 
     def stop(self):
