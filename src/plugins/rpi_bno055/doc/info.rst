@@ -41,9 +41,9 @@ But this plugins automatique put absolute orientation and acceleration data to d
 Configuration
 -------------------
 
-[conn_bno055] 
-load = yes
-module = plugins.rpi_bno055
+* [conn_bno055] 
+* load = yes
+* module = plugins.rpi_bno055
 
 Independency installation 
 --------------------

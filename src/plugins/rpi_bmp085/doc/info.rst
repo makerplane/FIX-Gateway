@@ -13,13 +13,13 @@ This precision sensor from Bosch is the best low-cost sensing solution for measu
 Configuration
 -------------------
 
-[conn_bmp085]
-load = yes # yes or no
-module = plugins.rpi_bmp085 
-tkey = CAT # temperature KEY
-pkey = AIRPRESS # Air pressure KEY
+* [conn_bmp085]
+* load = yes # yes or no
+* module = plugins.rpi_bmp085 
+* tkey = CAT # temperature KEY
+* pkey = AIRPRESS # Air pressure KEY
 
-# Altitude result send directly to ALT KEY in feet
+* # Altitude result send directly to ALT KEY in feet
 
 Installation 
 --------------------
