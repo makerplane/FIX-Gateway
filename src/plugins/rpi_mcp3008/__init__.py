@@ -53,9 +53,11 @@ class MainThread(threading.Thread):
 		self.VKEY6 = parent.config['vkey6'] if ('vkey6' in parent.config) and parent.config['vkey6'] else "ANLG6"
 		self.VKEY7 = parent.config['vkey7'] if ('vkey7' in parent.config) and parent.config['vkey7'] else "ANLG7"
 		self.VKEY8 = parent.config['vkey8'] if ('vkey8' in parent.config) and parent.config['vkey8'] else "ANLG8"
-
-		#self.mcp = Adafruit_MCP3008.MCP3008(clk=self.CLK, cs=self.CS, miso=self.MISO, mosi=self.MOSI)
-		self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+		self.HARDW = parent.config['hardw'] if ('hardw' in parent.config) and parent.config['hardw'] else "False"
+		if HARDW == True:
+			self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+		else:
+			self.mcp = Adafruit_MCP3008.MCP3008(clk=self.CLK, cs=self.CS, miso=self.MISO, mosi=self.MOSI)
 
 	def run(self):
         	while True:
