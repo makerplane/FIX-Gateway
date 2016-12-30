@@ -18,6 +18,7 @@ ALT:Indicated Altitude:float:-1000:60000:ft:0.0:2000:
 TALT:True Altitude:float:-1000:60000:ft:0.0:2000:
 DALT:Density Altitude:float:-1000:60000:ft:0.0:2000:
 BARO:Altimeter Setting:float:0:35:inHg:29.92:2000:
+AIRPRESS:Air Pressure:float:0:200000:Pa:101325:2000:
 VS:Vertical Speed:float:-10000:10000:ft/min:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 HEAD:Current Aircraft Magnetic Heading:float:0:360:deg:0.0:2000:
 TRACK:Current Aircraft Bearing:float:0:360:deg:0.0:2000:
@@ -29,6 +30,10 @@ CAT:Cabine Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn
 OATW:Outside Air Temperature Warning:int:0:5:warninglevel:0:0:2000
 ROLL:Roll Angle:float:-180:180:deg:0.0:200:
 PITCH:Pitch Angle:float:-180:180:deg:0.0:200:
+ORISYSW:Orientation System Warning:int:0:5:warninglevel:0:0:2000
+GYROW:Gyroscope sensor Warning:int:0:5:warninglevel:0:0:2000
+ACCELW:Acceleration sensor Warning:int:0:5:warninglevel:0:0:2000
+MAGW:Magnetic sensor Warning:int:0:5:warninglevel:0:0:2000
 PITCHSET:Pitch angle setting:float:-180:180:deg:0.0:200:
 YAW:Yaw Angle:float:-180:180:deg:0.0:200:
 AOA:Angle of attack:float:-180:180:deg:0.0:200:Min,Max,0g,Warn,Stall

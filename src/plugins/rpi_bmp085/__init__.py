@@ -1,3 +1,4 @@
+# coding: utf8
 #!/usr/bin/env python
 
 #  Copyright (c) 2017 Jean-Manuel Gagnon
@@ -31,33 +32,40 @@ from collections import OrderedDict
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
-    	"""The calling object should pass itself as the parent.
-	This gives the thread all the plugin goodies that the
+		"""The calling object should pass itself as the parent.
+		This gives the thread all the plugin goodies that the
         parent has."""
-        super(MainThread, self).__init__()
+		super(MainThread, self).__init__()
 	self.getout = False   # indicator for when to stop
-        self.parent = parent  # parent plugin object
-        self.log = parent.log  # simplifies logging
-        self.count = 0
-        self.alt = 0
-        self.smooted = 0.85
-        self.sensor = BMP085.BMP085()
+		self.parent = parent  # parent plugin object
+		self.log = parent.log  # simplifies logging
+		self.count = 0
+		self.tkey = parent.config['tkey'] if ('tkey' in parent.config) and parent.config['tkey'] else "CAT"
+		self.pkey = parent.config['pkey'] if ('pkey' in parent.config) and parent.config['pkey'] else "AIRPRESS"
+		self.alt = 0
+		self.sleep_time = .03 # 3 x .03 give +/-10Hz refresh rate
+		self.smooted = 0.8 # smooth altitude 0 to 1 , 1 is very smooth.  
+		self.sensor = BMP085.BMP085(mode=BMP085.BMP085_ULTRAHIGHRES)
 
     def run(self):
-        while True:
-		if self.getout:
-			break
-		time.sleep(.1)
-		self.count += 1
-		stdbaro = 29.92
-		currentbaro = self.parent.db_read("BARO")
-        	init_alt = (float(self.sensor.read_altitude())*3.28083989502)
-        	self.alt = float((self.alt*self.smooted)+(1.0-self.smooted)*(init_alt))
-		altitude = ((float(currentbaro[0]) - stdbaro)*1000) + self.alt
-        	cat = float(self.sensor.read_temperature())
-		self.parent.db_write("ALT", round(altitude))
-        	self.parent.db_write("CAT", cat)
-	self.running = False
+		while True:
+			if self.getout:
+				break
+			time.sleep(sleep_time)
+			self.count += 1
+			stdbaro = 29.92
+			currentbaro = self.parent.db_read("BARO")
+			init_alt = round((float(self.sensor.read_altitude())*3.28083989502))
+			self.alt = float((self.alt*self.smooted)+(1.0-self.smooted)*(init_alt))
+			altitude = ((float(currentbaro[0]) - stdbaro)*1000) + self.alt
+			self.parent.db_write("ALT", altitude)
+			time.sleep(sleep_time)
+			cat = float(self.sensor.read_temperature())
+			self.parent.db_write(self.tkey, cat)
+			time.sleep(sleep_time)
+			airpress = int(self.sensor.read_pressure())
+			self.parent.db_write(self.pkey, airpress)
+		self.running = False
 
     def stop(self):
         self.getout = True
