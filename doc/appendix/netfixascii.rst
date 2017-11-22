@@ -1,0 +1,153 @@
+=======================================
+Net-FIX ASCII Protocol Description
+=======================================
+
+.. Need to clean up this file and make it look like an intelligent
+   person wrote it.  ]]]
+
+This is a description of the Net-FIX ASCII Protocol.  This is an
+implementation of FIX over a network using simple ASCII sentences.
+
+Data points are transmitted in colon ';' delited strings that begin
+with the FIX identifier and are followed by the data.
+
+The data sentence from the server to the client is formed like this...
+
+::
+
+  ID;xxxx.x;aobfs\n
+
+Where the ID is the Net-FIX ASCII identifier for the data point.  For example TAS =
+True Airspeed.  The Net-FIX ASCII identifier is the same identifier that is setup
+in the FIX-Gateway database.  At some point these ID's may be formailzed separately
+but since we are still in development of this system at this stage we are using
+the FIX-Gateway :doc:`database` as a common place to configure this information.
+
+The ``xxxx.x`` represents the value. The value can be a float, int,
+bool or string (The string cannot contain a ;).  Floats will contain the decimal
+point, integers will not. Booleans will be 'T' or 'F' and strings will begin
+with an '&'.  the 'obf' represent the quality flags.  They will be either 1 or
+0. a=annunciate, o=Old, b=bad, f=failed, s=secondary fail.  The old flag is set
+if the data has not been written within the configured time to live for that
+point.  The bad is set if there is reason to doubt the data but it hasn't
+actually failed. If the failed flag is set then the data cannot be trusted and
+should not be displayed or used in a calculation.  The secondary failed flag may
+not always exist and if it is there it means that the secondary source of the
+data (for redundant systems) is failed and is not available.  The sentence is
+terminated with a newline ('\n' or 0x0A) character.
+
+The sentence from the client to the server is similar...
+
+::
+  
+  ID;xxxx.x;abfs\n
+
+The difference is that the old flag is removed.  If the client
+determines that the data is old it should simply set the bad flag.
+The secondary failed flag is optional.  If flags are not sent they are
+assumed to be false '0';
+
+Commands from the client to the server should begin with an '@'.  What
+follows the '@' depend on the individual command.
+
+Commands are single letter commands that are followed by any
+parameters that are needed.  Responses to the command from the server
+will begin with the '@' and the command letter.
+
+General command sentence...
+
+``@cxxxxx...\n``
+
+c = the command letter
+xxxx... represents the data required by the individual command
+
+Commands:
+
+``r`` = Read Data - pass the ID or the ID + aux value that you
+want to read.
+
+``@rIAS`` would cause the server to send the normal data sentence
+for Indicated Altitude.
+
+``@rIAS.Vs`` would cause the server to report the Vs auxilliary data
+if it exists.
+
+If there is a problem with the command the server
+would respond with the error symbol '!' followed by the error code
+
+.. We'll work out error codes as we go.
+
+For example...
+
+``@rIAS!xxxx`` where xxxx is the error code.
+
+
+``s`` = subscribe - subscribe to an ID to have the server send this data
+each time it's written.
+
+``@sTAS`` would cause the server to send the True Airspeed each time it's
+written to the database.  The server would respond with the identical
+message, or the ! followed by an error code.
+
+``u`` = unsubscribe - unsubscribe from the data point.
+
+``@uTAS`` would undo the above subscription.  The server would respond
+with the identical message, or the ! followed by an error code.
+
+
+``l`` = List - used to list the Identifiers that the server is handling.
+
+``@l`` would cause the server to send the entire list of IDs that are
+configured.  The list may be huge and as such may be returned in
+more than one response.  The client should be prepared for
+multiple responses.  The response will include the total number of
+Identifiers to expect then the current index.  The Identifiers will
+not be in any kind of order.  Identifiers would be separated with commas ','
+
+The response might look like this...
+
+::
+
+  @l234;12;ID1,ID2,ID3,ID4...
+
+Where 234 is the total and 12 is the starting index.
+
+``q`` = Identifier Report - Used to cause the server to report all the
+data associated with a given ID.  Data such as the min and max
+values the units the time to live etc.
+
+``@qAOA`` would cause the server to respond with all the parameters
+associated with this data point.
+
+Server response.
+
+::
+
+  @qAOA;desc;type;min;max;units;tol;aux
+
+*desc* = the description of the data ("Indicated Airspeed")
+*type* = data type and will be one of [float, int, bool, str]
+*min* = the minimum value the point will ever be
+*max* = the maximum value the point will ever be
+*units* = string denoting the units ("knots")
+*tol* = an integer indicating the time to live of the point in milliseconds.
+*aux* = a comma separated list of the auxillary data points.  ("min,max,lowWarn,lowAlarm")
+
+
+The client/server is asynchronous so the client does not have to wait
+for a response from the server before sending another command.  Data
+updates from subscriptions may also come in between the client command
+and the response.  The client should pay attention to the structure of
+the message to make sure that it is a response to the command.  This
+is why the arguments to the command are returned with the response.
+So the client can differentiate.
+
+Min and Max that might show up in auxillary data is different than the
+min and max that show up as items in the report.  The report items are
+the protocols limit on the data.  If they show up in the aux data they
+are to be used for setting the range of indicators for display units.
+The datapoint will never exceed the min/max that are set in the
+database definition but the min and max that may be in the aux data
+are arbitrary and the server does nothing except type check that
+information.
+
