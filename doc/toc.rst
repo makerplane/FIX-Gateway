@@ -1,11 +1,24 @@
-=================
-Table of Contents
-=================
+=======================================
+FIX Gateway documentation
+=======================================
 
-* `Introduction <intro.rst>`_
+.. toctree::
+   :maxdepth: 2
+   :glob:
+   :caption: Contents:
+   
+   intro
+   getting_started
+   database
+   plugin
+   plugins/toc
+   appendix/toc
 
-* `Getting Started <getting_started.rst>`_
 
-* `Database Definition <database.rst>`_
 
-* `Plugin Developement <plugin.rst>`_
+.. Indices and tables
+   ==================
+
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`

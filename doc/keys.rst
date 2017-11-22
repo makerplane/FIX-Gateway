@@ -1,6 +1,6 @@
-====================================
-FIX Gateway Database Key Definitions
-====================================
+========================
+Database Key Definitions
+========================
 
 Lower case letters indicate where numbers would be.  For example
 EGTec  would look like EGT14 for the fourth EGT on engine 1.

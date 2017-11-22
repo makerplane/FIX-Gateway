@@ -1,6 +1,6 @@
-=================================
-FIX Gateway Getting Started Guide
-=================================
+=====================
+Getting Started Guide
+=====================
 
 Welcome to FIX Gateway (FGW).  This Getting Started Guide is meant as a way to help
 you get FIX Gateway up and running quickly.  It is not meant to be the full
@@ -22,11 +22,32 @@ or
 
     git clone https://github.com/makerplane/FIX-Gateway.git fixgw
 
+
+Requirements
+------------
+
 The only dependencies for FIX Gateway to function is Python itself.  FGW works
-with Python 2.7 and the latest version of Python 3. If you intend to use the gui
+with Python 2.7 and the latest version of Python 3.
+
+Many of the plugins will require other dependencies.  See the individual plugin
+documentation for information about that.  We'll discuss some of the more common
+ones.
+
+If you intend to use the gui
 plugin you will also need PyQt installed.  It should work with either PyQt4 or
 PyQt5.  You'll have to consult the PyQt documentation on how to install PyQt on
 your system.
+
+The canfix plugin will require both the python-can package as well as the
+python-canfix package.  Installing the python-canfix package with pip should
+install both.
+
+There are several plugins that are specific to use on the Raspberry Pi SBC.
+These plugins require some python modules that are specific to the Raspberry Pi.
+
+The flight simulator plugins will obviously require that you have the flight
+simulators installed and configured properly as well.
+
 
 Basic Configuration
 -------------------
@@ -39,7 +60,7 @@ section is called [config].
 The **db_file** option tells FGW where to find the database definition file. This
 file tells FGW how to build the internal database that is how all the
 connections communicate with one another.  For details on the format of the
-database definition file see the `database.rst <database.rst>`_ file.
+database definition file see the :doc:`database` section.
 
 ::
 

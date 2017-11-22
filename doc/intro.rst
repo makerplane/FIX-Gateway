@@ -1,6 +1,6 @@
-=========================
-FIX Gateway Introduction
-=========================
+============
+Introduction
+============
 
 FIX is an acronym for Flight Information eXchange.  It is a set of protocol
 specifications for exchanging information between aircraft avionics and flight
