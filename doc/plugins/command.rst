@@ -11,7 +11,7 @@ Configuration
 ::
 
   [conn_command]
-  load = no
+  load = yes
   module = plugins.command
   prompt = FIX:
   

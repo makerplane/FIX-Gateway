@@ -25,6 +25,12 @@ At a minimum implement two methods ``run()`` and ``stop()``.  The ``run()``
 method will be called by FGW to start your plugin.  Likewise, ``stop()`` will be
 called to tell your plugin to shutdown cleanly.
 
+The ``__init__`` method of the parent class will be passed an argument called
+*config*.  This is stored in the created object as *self.config*.  This is simply
+a dictionary of the configuration key/value pairs that were in your plugin's ``conn_``
+section of the main configuration file, minus the few directives that FIX-Gateway
+needs to do it's work.
+
 ``run()`` needs to return quickly.  This is not the place for continuously
 running code. All the parts of your plugin that need to run continuously should
 be done in another thread and that thread started  from ``run()``.  The rest of
