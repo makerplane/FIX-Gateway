@@ -144,8 +144,8 @@ class MainThread(threading.Thread):
 
     def run(self):
         self.cmd.cmdloop()
-        quit_ = self.parent.config.get("quit", "yes")
-        if quit_.lower() in ["yes", "true", "1"]:
+        quit_ = self.parent.config.get("quit", True)
+        if quit_:
             self.parent.quit()
 
     def stop(self):
@@ -166,6 +166,6 @@ class Plugin(plugin.PluginBase):
             self.thread.join(1.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
-        
+
     def is_running(self):
         return self.thread.is_alive()
