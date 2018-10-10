@@ -258,7 +258,7 @@ def add_item(entry):
 
 
 # Main database initialization function
-def init(config):
+def init(ddfile):
     global log
     global __database
     global variables
@@ -267,7 +267,6 @@ def init(config):
     log = logging.getLogger('database')
     log.info("Initializing Database")
 
-    ddfile = config.get("config", "db_file")
     try:
         f = open(ddfile,'r')
     except:

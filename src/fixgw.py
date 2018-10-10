@@ -16,10 +16,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-try:
-    import configparser
-except:
-    import ConfigParser as configparser
+import yaml
 try:
     import queue
 except:
@@ -36,8 +33,7 @@ import signal
 import os
 import sys
 
-config_file = "config/main.cfg"
-logconfig_file = config_file
+config_file = "config/main.yaml"
 
 # This dictionary holds the modules for each plugin that we load
 plugin_mods = {}
@@ -46,20 +42,12 @@ plugins = {}
 
 
 def load_plugin(name, module, config):
-    # strings here remove the options from the list before it is
-    # sent to the plugin.
-    exclude_options = ["load", "module"]
     plugin_mods[name] = importlib.import_module(module)
-    # Here items winds up being a list of tuples [('key', 'value'),...]
-    items = [item for item in config.items("conn_" + name)
-             if item[0] not in exclude_options]
-    # Append the command line arguments to the items list as a tuple
-    items.append(('argv', sys.argv))
-    # Convert this to a dictionary before passing to the plugin
-    cfg = {}
-    for each in items:
-        cfg[each[0]] = each[1]
-    plugins[name] = plugin_mods[name].Plugin(name, cfg)
+    # strings here remove the options from the config before it is
+    # sent to the plugin.
+    for each in ["load", "module"]:
+        del config[each]
+    plugins[name] = plugin_mods[name].Plugin(name, config)
 
 
 def main():
@@ -68,23 +56,28 @@ def main():
                         help='Run in debug mode')
     parser.add_argument('--config-file', type=argparse.FileType('r'),
                         help='Alternate configuration file')
-    parser.add_argument('--log-config', type=argparse.FileType('w'),
+    parser.add_argument('--log-config', type=argparse.FileType('r'),
                         help='Alternate logger configuration file')
 
     args, unknown_args = parser.parse_known_args()
 
-    logging.config.fileConfig(logconfig_file)
+    cf = open(config_file)
+    config = yaml.load(cf)
+
+    if args.log_config:
+        logging.config.fileConfig(args.log_config)
+    else:
+        print(config['logging'])
+        logging.config.dictConfig(config['logging'])
+
     log = logging.getLogger()
     if args.debug:
         log.setLevel(logging.DEBUG)
     log.info("Starting FIX Gateway")
 
-    config = configparser.RawConfigParser()
-    # To kepp configparser from making everythign lowercase
-    #config.optionxform = str
-    config.read(config_file)
+
     try:
-        database.init(config)
+        database.init(config["database file"])
     except Exception as e:
         log.error("Database failure, Exiting")
         print(e)
@@ -92,18 +85,19 @@ def main():
         return # we don't want to run with a screwed up database
 
     log.info("Setting Initial Values")
-    fn = config.get("config", "ini_file")
-    try:
-        f = open(fn, 'r')
-        for line in f.readlines():
-            l = line.strip()
-            if l and l[0] != '#':
-                x = l.split("=")
-                if len(x) >= 2:
-                    database.write(x[0].strip(), x[1].strip())
-    except Exception as e:
-        log.error("Problem setting initial values from configuration - {0}".format(e))
-        raise
+    ifiles = config["initialization files"]
+    for fn in ifiles:
+        try:
+            f = open(fn, 'r')
+            for line in f.readlines():
+                l = line.strip()
+                if l and l[0] != '#':
+                    x = l.split("=")
+                    if len(x) >= 2:
+                        database.write(x[0].strip(), x[1].strip())
+        except Exception as e:
+            log.error("Problem setting initial values from configuration - {0}".format(e))
+            raise
 
     # TODO: Add a hook here for post database creation code
 
@@ -112,16 +106,15 @@ def main():
     # run through the plugin_list dict and find all the plugins that are
     # configured to be loaded and load them.
 
-    for each in config.sections():
-        if each[:5] == "conn_":
-            if config.getboolean(each, "load"):
-                module = config.get(each, "module")
-                try:
-                    load_plugin(each[5:], module, config)
-                except Exception as e:
-                    logging.critical("Unable to load module - " + module + ": " + str(e))
-                    if args.debug:
-                        raise
+    for each in config['connections']:
+        if config['connections'][each]['load']:
+            module = config['connections'][each]["module"]
+            try:
+                load_plugin(each, module, config['connections'][each])
+            except Exception as e:
+                logging.critical("Unable to load module - " + module + ": " + str(e))
+                if args.debug:
+                    raise
 
 
     status.initialize(plugins)
