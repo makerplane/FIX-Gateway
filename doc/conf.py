@@ -47,7 +47,7 @@ master_doc = 'toc'
 # General information about the project.
 project = u'FIX Gateway'
 copyright = u'2017, Phil Birkelbach, Neil Domalik, Jean-manuel Gagnon'
-author = u'Phil Birkelbach'
+author = u'Phil Birkelbach, Neil Domalik', u'Jean-manuel Gagnon'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -147,7 +147,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'FIXGateway.tex', u'FIX Gateway Documentation',
-     u'Phil Birkelbach', 'manual'),
+     u'Phil Birkelbach, Neil Domalik, Jean-manuel Gagnon', 'manual'),
 ]
 
 
