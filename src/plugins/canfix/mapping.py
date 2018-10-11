@@ -77,7 +77,11 @@ maps = [(0x180, "PITCH"), (0x181, "ROLL"),
         (0x202, "PROP1"), (0x203, "PROP2"),
         (0x21E, "MAP1"), (0x21F, "MAP2"),
         (0x220, "OILP1"), (0x221, "OILP2"),
-        (0x500, "CHT1")]
+        (0x222, "OILT1"), (0x223, "OILT2"),
+        (0x500, "CHT1"),  (0x501, "CHT2"),
+        (0x226, "FUELQ"),#(0x227, "FUELQ2"),
+        (0x21A, "FUELF1"), (0x21B, "FUELF2")
+        ]
 
 for each in maps:
     input_mapping[each[0] - 0x100] = getInputFunction(each[1], each[0])
