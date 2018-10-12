@@ -20,6 +20,7 @@ import threading
 import time
 
 __database = {}
+__db_lock = threading.Lock()
 
 class UpdateThread(threading.Thread):
     def __init__(self, func, delay):
@@ -262,7 +263,7 @@ def init(ddfile):
     global log
     global __database
     global variables
-    __database = {}
+
     variables = {}
     log = logging.getLogger('database')
     log.info("Initializing Database")
@@ -270,7 +271,7 @@ def init(ddfile):
     try:
         f = open(ddfile,'r')
     except:
-        log.critical("Unable to find database definition file - " + ddfile)
+        log.critical("Unable to open database definition file - " + ddfile)
         raise
 
     state = "var"
@@ -304,61 +305,68 @@ def init(ddfile):
 
 # These are the public functions for interacting with the database
 def write(key, value):
-    if '.' in key:
-        x = key.split('.')
-        entry = __database[x[0]]
-        entry.set_aux_value(x[1], value)
-    else:
-        entry = __database[key]
-        entry.value = value
+    with __db_lock:
+        if '.' in key:
+            x = key.split('.')
+            entry = __database[x[0]]
+            entry.set_aux_value(x[1], value)
+        else:
+            entry = __database[key]
+            entry.value = value
 
 
 def read(key):
-    if '.' in key:
-        x = key.split('.')
-        entry = __database[x[0]]
-        return entry.get_aux_value(x[1])
-    else:
-        return __database[key].value
+    with __db_lock:
+        if '.' in key:
+            x = key.split('.')
+            entry = __database[x[0]]
+            return entry.get_aux_value(x[1])
+        else:
+            return __database[key].value
 
 
 def get_raw_item(key):
-    try:
-        return __database[key]
-    except KeyError:
-        return None
+    with __db_lock:
+        try:
+            return __database[key]
+        except KeyError:
+            return None
 
 
 def listkeys():
-    return list(__database.keys())
+    with __db_lock:
+        return list(__database.keys())
 
 
 # Adds or redefines the callback function that will be called when
 # the items value is set.
 def callback_add(name, key, function, udata):
-    item = __database[key]
-    item.callbacks.append( (name, function, udata) )
+    with __db_lock:
+        item = __database[key]
+        item.callbacks.append( (name, function, udata) )
     log.debug("Adding callback function for %s on key %s" % (name, key))
 
 
 def callback_del(name, key, function, udata):
-    if key == "*":
-        for each in __database:
+    with __db_lock:
+        if key == "*":
+            for each in __database:
+                try:
+                    __database[each].callbacks.remove( (name, function, udata) )
+                    log.debug("Deleting callback function for %s on key %s" % (name, each))
+                except ValueError:
+                    pass
+        else:
+            log.debug("Deleting callback function for %s on key %s" % (name, key))
             try:
-                __database[each].callbacks.remove( (name, function, udata) )
-                log.debug("Deleting callback function for %s on key %s" % (name, each))
+                __database[key].callbacks.remove( (name, function, udata) )
             except ValueError:
-                pass
-    else:
-        log.debug("Deleting callback function for %s on key %s" % (name, key))
-        try:
-            __database[key].callbacks.remove( (name, function, udata) )
-        except ValueError:
-            log.debug("Callback not deleted because it was not found in the list")
+                log.debug("Callback not deleted because it was not found in the list")
 
 # Maintenance Functions
 def update():
-    for key in __database:
-        item = __database[key]
-        if item.age > item.tol and item.tol != 0:
-            item.old = True
+    with __db_lock:
+        for key in __database:
+            item = __database[key]
+            if item.age > item.tol and item.tol != 0:
+                item.old = True
