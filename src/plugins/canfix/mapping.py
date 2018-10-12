@@ -21,27 +21,23 @@
 
 
 import database
-from canfix import parameters
-from canfix import Parameter
+import yaml
+import canfix
 
 # This is a list of function closures
 input_mapping = [None] * 1280
 output_mapping = {}
 
+# The idea here is that we create arrays and dictionaries for each type of
+# mapping.  These contain closure functions that know how to put the data in
+# the right place.  The functions are determined ahead of time for
+# performance reasons which is why we are using closures.
+
 # This is a closure that holds the information we need to transfer data
 # from the CAN-FIX port to the FIXGW Database
-def getInputFunction(dbKey, canfixID):
-    parDef = parameters[canfixID]
-    if parDef.index:  # If there is an index then there are more than one
-        dbItem = []
-        for n in range(255):
-            item = database.get_raw_item(dbKey + str(n+1))
-            if item == None: break # we've found them all
-            dbItem.append(item)
-        if dbItem == []: return None
-    else:  # Just one item
-        dbItem = database.get_raw_item(dbKey)
-        if dbItem == None: return None
+def getInputFunction(dbKey):
+    dbItem = database.get_raw_item(dbKey)
+    if dbItem == None: return None
 
     def InputFunc(cfpar):
         if cfpar.meta:
@@ -52,45 +48,41 @@ def getInputFunction(dbKey, canfixID):
         else:
             dbItem.value = (cfpar.value, cfpar.annunciate, cfpar.quality, cfpar.failure)
 
-    def InputIndexFunc(cfpar):
-        if cfpar.meta:
-            try:
-                # We set all the items that we have for these.  Nodes won't send
-                # aux/meta values for every index.
-                for item in dbItem:
-                    item.set_aux_value(cfpar.meta, cfpar.value)
-            except:
-                self.log.warning("Problem setting Aux Value for {0}".format(dbItem.key))
-        else:
-            dbItem[cfpar.index].value = (cfpar.value, cfpar.annunciate, cfpar.quality, cfpar.failure)
+    return InputFunc
 
-    if parDef.index:
-        return InputIndexFunc
-    else:
-        return InputFunc
 
-# These are the standard numerical mappings
-maps = [(0x180, "PITCH"), (0x181, "ROLL"),
-        (0x183, "IAS"), (0x184, "ALT"),
-        (0x185, "HEAD"), (0x186, "VS"),
-        (0x200, "TACH1"), (0x201, "TACH2"),
-        (0x202, "PROP1"), (0x203, "PROP2"),
-        (0x21E, "MAP1"), (0x21F, "MAP2"),
-        (0x220, "OILP1"), (0x221, "OILP2"),
-        (0x222, "OILT1"), (0x223, "OILT2"),
-        (0x500, "CHT1"),  (0x501, "CHT2"),
-        (0x226, "FUELQ"),#(0x227, "FUELQ2"),
-        (0x21A, "FUELF1"), (0x21B, "FUELF2")
-        ]
+# This opens the map file and buids the input mapping lists.
+def initialize(mapfile):
+    try:
+        f = open(mapfile)
+    except:
+        log.error("Unable to Open Mapfile - {}".format(mapfile))
+        raise
+    maps = yaml.load(f)
 
-for each in maps:
-    input_mapping[each[0] - 0x100] = getInputFunction(each[1], each[0])
+
+    # each input mapping item := [CANID, Index, FIX DB ID, Priority]
+    for each in maps['inputs']:
+        p = canfix.parameters[each[0]]
+        # Parameters start at 0x100 so we subtract that offset to index the array
+        ix = each[0] - 0x100
+        if input_mapping[ix] is None:
+            input_mapping[ix] = [None] * 256
+        input_mapping[ix][each[1]] = getInputFunction(each[2])
 
 
 def inputMap(par):
-    try:
-        func = input_mapping[par.identifier - 0x100]
-    except KeyError:
-        func = None
-    if func:
-        func(par)
+    ix = par.identifier - 0x100
+    im = input_mapping[ix] # This should always exist
+    if im is None:
+        return None
+    if par.meta:
+        for func in im:
+            if func is not None:
+                func(par)
+            #else:
+                #log.error("Yo you gotta be kidding")
+    else:
+        func = im[par.index]
+        if func is not None:
+            func(par)

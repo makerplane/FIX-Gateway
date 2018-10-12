@@ -67,7 +67,6 @@ def main():
     if args.log_config:
         logging.config.fileConfig(args.log_config)
     else:
-        print(config['logging'])
         logging.config.dictConfig(config['logging'])
 
     log = logging.getLogger()
