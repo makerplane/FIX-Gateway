@@ -102,8 +102,14 @@ connections:
     #interface: serial
     #channel: /dev/ttyUSB0
 
-    # This is our CAN-FIX device ID
-    device: 145
+    # This file controls the
+    mapfile: config/canfix/default.map
+    # The following is our Node Identification Information
+    # See the CAN-FIX Protocol Specification for more information
+    node: 145     # CAN-FIX Node ID
+    device: 145   # CAN-FIX Device Type
+    revision: 0   # Software Revision Number
+    model: 0      # Model Number
 
   gui:
     load: yes
