@@ -10,14 +10,13 @@ Configuration
 
 ::
 
-  [conn_command]
-  load = yes
-  module = plugins.command
-  prompt = FIX:
-  
-  # If set quiting the command interpreter plugin
-  # will end execution of the program
-  quit = yes
+  command:
+    load: yes
+    module: plugins.command
+    prompt: "FIX:"
+    # If set quiting the command interpreter plugin
+    # will end execution of the program
+    quit: yes
 
 
 Commands
@@ -65,6 +64,5 @@ Prints the plugin's status to the screen
 ``exit``
 
 Exits the Command Line Plugin.  If ``quit = yes`` is set in the configuration file this will also
-cause the entire FIX-Gateway process to exit.  Otherwise the command line plugin will stop and 
+cause the entire FIX-Gateway process to exit.  Otherwise the command line plugin will stop and
 the rest of the system will function as it was.
-

@@ -17,6 +17,6 @@ Configuration
 
 ::
 
-  [conn_gui]
-  load = yes
-  module = plugins.gui
+  gui:
+    load: yes
+    module: plugins.gui
