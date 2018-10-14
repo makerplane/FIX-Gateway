@@ -104,10 +104,17 @@ class Connection(object):
             if d[1] == 'r':
                 try:
                     val = self.parent.db_read(id)
+                    if type(val) is tuple:
+                        a = "1" if val[1] else "0"
+                        o = "1" if val[2] else "0"
+                        b = "1" if val[3] else "0"
+                        f = "1" if val[4] else "0"
+                        s = "@r{0};{1};{2}{3}{4}{5}\n".format(id, val[0],a, o, b, f)
+                    else:
+                        s = "{0};{1}\n".format(id, val)
+                    self.queue.put(s.encode())
                 except KeyError:
                     self.queue.put("@r{0}!001\n".format(id).encode())
-                else:
-                    self.__send_value(id, val)
             elif d[1] == 's':
                 try:
                     self.parent.db_callback_add(id, self.subscription_handler)
@@ -338,7 +345,7 @@ class Plugin(plugin.PluginBase):
             self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
-        
+
 
     def get_status(self):
         return self.thread.get_status()
