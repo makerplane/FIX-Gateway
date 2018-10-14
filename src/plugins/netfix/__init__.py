@@ -157,7 +157,7 @@ class Connection(object):
                 self.parent.db_write(x[0], x[1])
             except Exception as e:
                 # We pretty much ignore this stuff for now
-                self.log.debug("Problem with input {0}: {1}".format(d.strip, e))
+                self.log.debug("Problem with input {0}: {1}".format(d.strip(), e))
 
     # Callback function used for subscriptions
     def subscription_handler(self, id, value, udata):
