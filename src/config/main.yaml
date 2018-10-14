@@ -174,7 +174,7 @@ connections:
     rdelay: 0 # 0 for debouncing or time in seconde to determine the repeat delay
 
   # RAIS Protocol Interface
-  conn_rais:
+  rais:
     load: no
     module: plugins.rais
     rais_directory: /home/me/openEFIS
