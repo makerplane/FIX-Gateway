@@ -39,6 +39,7 @@ class MainThread(threading.Thread):
         self.bus = can.interface.Bus(self.channel, bustype = self.interface)
         self.framecount = 0
         self.errorcount = 0
+        mapping.initialize(config['mapfile'])
 
 
     def run(self):
@@ -86,3 +87,10 @@ class Plugin(plugin.PluginBase):
     def get_status(self):
         return OrderedDict({"Frame Count":self.thread.framecount,
                             "Error Count":self.thread.errorcount})
+
+# TODO: Add error reporting in debug mode
+# TODO: Add output parameter mapping
+# TODO: Add parameter setting node specific mapping
+# TODO: Finish adding the mappings to the YAML file
+# TODO: Add the rest of the CAN-FIX protocol mandatory stuff
+# TODO: Add tests, tests, tests

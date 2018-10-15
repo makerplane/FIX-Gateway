@@ -17,16 +17,16 @@ Configuration
 
 ::
 
-  [conn_rotary_encoder]
-  load = yes
-  module = plugins.rpi_rotary_encoder
-  btn = True # Enable push button
-  btnkey = BARO # when the push button is pressed this KEY change with the rotary encoder
-  btnstcounter = 29.92 # start setting point when the push button is pressed
-  btnincr = 0.01 # Each click increment
-  btnpin = 4 # GPIO pin
-  pina = 26 #encoder GPIO pin_a
-  pinb = 19 #encoder GPIO pin_b
-  stcount = 0 # Standard start point
-  rkey = PITCHSET # KEY change with the rotary encoder
-  incr = 1 # Each click increment
+  rotary_encoder:
+    load: yes
+    module: plugins.rpi_rotary_encoder
+    btn: True
+    btnkey: BARO
+    btnstcounter: 29.92
+    btnincr: 0.01
+    btnpin: 4
+    pina: 26
+    pinb: 19
+    stcount: 0
+    rkey: PITCHSET
+    incr: 1
