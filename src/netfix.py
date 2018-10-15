@@ -20,7 +20,7 @@ import threading
 import socket
 import logging
 import time
-#import queue
+import queue
 
 log = logging.getLogger(__name__)
 
@@ -33,9 +33,26 @@ class ClientThread(threading.Thread):
         self.getout = False
         self.timeout = 1.0
         self.s = None
+        # This Queue will hold normal data parameter responses
+        self.dataqueue = queue.Queue()
+        # This Queue will hold command responses
+        self.cmdqueue = queue.Queue()
+        self.connectedEvent = threading.Event()
 
     def handle_request(self, d):
-        print(d)
+        if d[0] == '@':
+            self.cmdqueue.put([d[1], d[2:]])
+        else:
+            x = d.split(";")
+            if len(x) != 3:
+                log.error("Bad Data Sentence Received")
+            s = ""
+            if x[2][0] == "1": s += "a";
+            if x[2][1] == "1": s += "o";
+            if x[2][2] == "1": s += "b";
+            if x[2][3] == "1": s += "f";
+            x[2] = s
+            self.dataqueue.put(x)
 
     def run(self):
         log.debug("ClientThread - Starting")
@@ -49,6 +66,7 @@ class ClientThread(threading.Thread):
             except Exception as e:
                 log.debug("Failed to connect {0}".format(e))
             else:
+                self.connectedEvent.set()
                 log.debug("Connected to {0}:{1}".format(self.host, self.port))
 
                 buff = ""
@@ -57,6 +75,8 @@ class ClientThread(threading.Thread):
                         data = self.s.recv(1024)
                     except socket.timeout:
                         if self.getout:
+                            self.s.close()
+                            self.connectedEvent.clear()
                             break;
                     except Exception as e:
                         log.debug("Receive Failure {0}".format(e))
@@ -64,6 +84,7 @@ class ClientThread(threading.Thread):
                     else:
                         if not data:
                             log.debug("No Data, Bailing Out")
+                            self.connectedEvent.clear()
                             break
                         else:
                             try:
@@ -80,6 +101,8 @@ class ClientThread(threading.Thread):
                                 else:
                                     buff += d
             if self.getout:
+                self.connectedEvent.clear()
+                self.s.close()
                 log.debug("ClientThread - Exiting")
                 break
             else:
@@ -90,6 +113,9 @@ class ClientThread(threading.Thread):
     def stop(self):
         self.getout = True
 
+    def connectWait(self, timeout = 1.0):
+        return self.connectedEvent.wait(timeout)
+
     def send(self, s):
         # TODO: Deal with errors gracefully
         try:
@@ -98,26 +124,53 @@ class ClientThread(threading.Thread):
             log.error(e)
 
 
+def decodeDataString(d):
+    x = d.split(';')
+    id = x[0]
+    v = x[1]
+    f = "" # Quality Flags
+    if x[2][0] == '1': f += "a"
+    if x[2][1] == '1': f += "o"
+    if x[2][2] == '1': f += "b"
+    if x[2][3] == '1': f += "f"
+    return (id,v,f)
+
+
 class Client:
     def __init__(self, host, port, timeout=1.0):
         self.cthread = ClientThread(host, port)
         self.cthread.timeout = timeout
+        self.cthread.daemon = True
 
     def connect(self):
         self.cthread.start()
-        # TODO: Block until connected???
+        return self.cthread.connectWait()
 
     def disconnect(self):
         self.cthread.stop()
+        # TODO: Block unit disconnected.
+
+    def isConnected(self):
+        return self.cthread.connectedEvent.is_set()
+
 
     def read(self, id):
         self.cthread.send("@r{}\n".format(id).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+        except queue.Empty:
+            return None
+        return decodeDataString(res[1])
+
+    def write(self, id, value):
+        s = "{};{};00000\n".format(id, value)
+        self.cthread.send(s.encode())
+
 
 if __name__ == "__main__":
     logging.basicConfig()
     log.level = logging.DEBUG
     c = Client("localhost", 3490)
     c.connect()
-    time.sleep(10.0)
-    c.read("IAS")
+    print(c.write("IAS", 127.3))
     c.disconnect()
