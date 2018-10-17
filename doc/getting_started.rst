@@ -7,27 +7,7 @@ Welcome to FIX Gateway (FGW).
 Installation
 ------------
 
-FIX Gateway may run okay on Python 2.7 but we have deprecated support for Python
-2.x in favor of Python 3.x.  The easiest way to install FIX Gateway is to use
-pip3.
-
-::
-
-    sudo pip3 install fixgw
-
-Once installed you should be able to run the server with the command...
-
-::
-
-  fixgw
-
-or the client with this command.
-
-::
-
-  fixgwc
-
-You can also clone the GitHub repository.
+Begin by cloning the Git repository
 
 ::
 
@@ -39,8 +19,7 @@ or
 
     git clone https://github.com/makerplane/FIX-Gateway.git fixgw
 
-There are a couple of helper scripts that will allow you to run FIX Gateway from
-within the source tree, if you don't want to install the packages to your system.
+Then run one of the two helper scripts.
 
 ::
 
@@ -49,9 +28,17 @@ within the source tree, if you don't want to install the packages to your system
 
 These will run the client and the server respectively.
 
-The configuration files are installed into '/usr/local/etc/fixgw' by default and
-other files such as this documentation and other support files are located in
-'/usr/local/share/fixgw'
+The configuration files are in the ``fixgw/config`` directory.
+
+If you'd like to install the program permanently to your system or into a virtualenv you
+can issue the command...
+
+::
+
+  sudo pip3 install .
+
+from the root directory of the source repository.  **Caution** This feature is still
+in development and may not work consistently.
 
 Requirements
 ------------
@@ -59,7 +46,7 @@ Requirements
 The only dependencies for FIX Gateway are Python itself and ``pyyaml``.  If you used
 pip3 to install FIX Gateway the dependencies should have been installed
 automatically. FIX Gateway requires Python 3.6 and should run on versions of
-Python higher than 3.6.  It may run on versionso of Python 2.x but Python 2.x
+Python higher than 3.6.  It may run on versions of Python 2.x but Python 2.x
 support is deprecated and it's expected that FIX Gateway will eventually stop
 working with these older versions of Python.
 
