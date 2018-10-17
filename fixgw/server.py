@@ -94,11 +94,17 @@ def main():
     log.info("Starting FIX Gateway")
 
 
+    # Open database definition file and send to database initialization
     try:
-        database.init(config["database file"].format(CONFIG=config_path))
+        ddfile = config["database file"].format(CONFIG=config_path)
+        f = open(ddfile,'r')
+    except:
+        log.critical("Unable to open database definition file - " + ddfile)
+        raise
+    try:
+        database.init(f)
     except Exception as e:
-        log.error("Database failure, Exiting")
-        print(e)
+        log.error("Database failure, Exiting:" + str(e))
         raise
         return # we don't want to run with a screwed up database
 

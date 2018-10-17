@@ -259,7 +259,7 @@ def add_item(entry):
 
 
 # Main database initialization function
-def init(ddfile):
+def init(f):
     global log
     global __database
     global variables
@@ -267,12 +267,6 @@ def init(ddfile):
     variables = {}
     log = logging.getLogger('database')
     log.info("Initializing Database")
-
-    try:
-        f = open(ddfile,'r')
-    except:
-        log.critical("Unable to open database definition file - " + ddfile)
-        raise
 
     state = "var"
 
