@@ -1,4 +1,5 @@
 import setuptools
+import glob
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
@@ -11,11 +12,14 @@ setuptools.setup(
     description="FIX-Gateway: Gateway software for the Flight Information eXchange protocols",
     long_description=long_description,
     #long_description_content_type="text/x-rst",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/makerplane/FIX-Gateway",
     packages=setuptools.find_packages(),
     #packages=['canfix'],
     #package_data = {'fixgw':['config/*']},
     install_requires = ['pyyaml',],
+    data_files = [('etc/fixgw', ['config/default.yaml', 'config/default.db', 'config/c170b.ini','config/fg_172.ini']),
+                  ('share/fixgw/doc', glob.glob('doc/*.rst')),
+    ],
     #test_suite = 'tests',
     #scripts = ['bin/fixgw', 'bin/fixgwc'],
     entry_points = {

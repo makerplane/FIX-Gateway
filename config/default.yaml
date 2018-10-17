@@ -1,13 +1,18 @@
-# File that defines the database
-database file: config/database.conf
+# This is the main configuration file for the FIX-Gateway Server
+
+# For use in this configuration, {CONFIG} will be replaced with the
+# directory where this file is found.
+
+# File that defines the database.
+database file: "{CONFIG}/fixgw.db"
 
 # Set initial values after the database is initialized.
 # If there are duplicate assignments in these files, the last
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-  - config/c170b.ini
-  - config/fg_172.ini
+  - "{CONFIG}/c170b.ini"
+  - "{CONFIG}/fg_172.ini"
 
 # Connections:
 # if 'load' is 'yes' the connection plugin will be loaded at program start

@@ -33,7 +33,9 @@ import signal
 import os
 import sys
 
-config_file = "config/main.yaml"
+config_filename = "default.yaml"
+path_options = ['.', 'config', '/usr/local/etc/fixgw', '/etc/fixgw']
+
 
 # This dictionary holds the modules for each plugin that we load
 plugin_mods = {}
@@ -51,6 +53,14 @@ def load_plugin(name, module, config):
 
 
 def main():
+    # Look for our configuration file in the list of directories
+    for directory in path_options:
+        # store the first match that we find
+        if os.path.isfile("{}/{}".format(directory, config_filename)):
+            config_path = directory
+            break
+
+    config_file = "{}/{}".format(config_path, config_filename)
     parser = argparse.ArgumentParser(description='FIX Gateway')
     parser.add_argument('--debug', action='store_true',
                         help='Run in debug mode')
@@ -61,7 +71,11 @@ def main():
 
     args, unknown_args = parser.parse_known_args()
 
-    cf = open(config_file)
+    # if we passed in a configuration file on the command line...
+    if args.config_file:
+        cf = open(args.config_file)
+    else: # otherwise use the default
+        cf = open(config_file)
     config = yaml.load(cf)
 
     if args.log_config:
@@ -76,7 +90,7 @@ def main():
 
 
     try:
-        database.init(config["database file"])
+        database.init(config["database file"].format(CONFIG=config_path))
     except Exception as e:
         log.error("Database failure, Exiting")
         print(e)
@@ -87,7 +101,7 @@ def main():
     ifiles = config["initialization files"]
     for fn in ifiles:
         try:
-            f = open(fn, 'r')
+            f = open(fn.format(CONFIG=config_path), 'r')
             for line in f.readlines():
                 l = line.strip()
                 if l and l[0] != '#':
