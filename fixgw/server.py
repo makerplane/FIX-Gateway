@@ -63,7 +63,9 @@ def main():
 
     config_file = "{}/{}".format(config_path, config_filename)
     parser = argparse.ArgumentParser(description='FIX Gateway')
-    parser.add_argument('--debug', action='store_true',
+    parser.add_argument('--debug', '-d', action='store_true',
+                        help='Run in debug mode')
+    parser.add_argument('--verbose', '-v', action='store_true',
                         help='Run in debug mode')
     parser.add_argument('--config-file', type=argparse.FileType('r'),
                         help='Alternate configuration file')
@@ -85,6 +87,8 @@ def main():
         logging.config.dictConfig(config['logging'])
 
     log = logging.getLogger()
+    if args.verbose:
+        log.setLevel(logging.INFO)
     if args.debug:
         log.setLevel(logging.DEBUG)
     log.info("Starting FIX Gateway")
