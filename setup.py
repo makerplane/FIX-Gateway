@@ -1,12 +1,22 @@
 import setuptools
 import glob
+import os
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
+datafiles = [('etc/fixgw', ['config/default.yaml', 'config/default.db', 'config/c170b.ini','config/fg_172.ini']),
+              ('share/fixgw/doc', ['doc/_build/FIXGateway-html.tar.gz', 'doc/_build/latex/FIXGateway.pdf']),
+              ('share/fixgw', ['fixgw/plugins/fgfs/fix_fgfs.xml']),
+]
+
+for each in datafiles:
+    for file in each[1]:
+        os.chmod(file, 0o755)
+
 setuptools.setup(
     name="fixgw",
-    version="0.0.1",
+    version="0.1.0",
     author="Phil Birkelbach",
     author_email="phil@petrasoft.net",
     description="FIX-Gateway: Gateway software for the Flight Information eXchange protocols",
@@ -17,9 +27,7 @@ setuptools.setup(
     #packages=['canfix'],
     #package_data = {'fixgw':['config/*']},
     install_requires = ['pyyaml',],
-    data_files = [('etc/fixgw', ['config/default.yaml', 'config/default.db', 'config/c170b.ini','config/fg_172.ini']),
-                  ('share/fixgw/doc', glob.glob('doc/*.rst')),
-    ],
+    data_files = datafiles,
     #test_suite = 'tests',
     #scripts = ['bin/fixgw', 'bin/fixgwc'],
     entry_points = {

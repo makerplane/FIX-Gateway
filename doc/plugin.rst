@@ -15,7 +15,7 @@ The best place to start with writing a plugin is with the ``skel.py`` file that
 is included in the distribution under the ``plugins/`` directory.  This is a
 skeleton file that will give you a start on writing your own plugin.
 
-.. literalinclude:: ../src/plugins/skel.py
+.. literalinclude:: ../fixgw/plugins/skel.py
 
 
 The basic idea is that you need to create a module that contains a class named

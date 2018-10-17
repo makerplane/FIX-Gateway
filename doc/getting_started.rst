@@ -1,16 +1,33 @@
-=====================
-Getting Started Guide
-=====================
+===============
+Getting Started
+===============
 
-Welcome to FIX Gateway (FGW).  This Getting Started Guide is meant as a way to help
-you get FIX Gateway up and running quickly.  It is not meant to be the full
-documentation of the project.
+Welcome to FIX Gateway (FGW).
 
 Installation
 ------------
 
-Currently the only way to install FIX Gateway is to clone the GitHub repository.
-Typically this is done with one of these commands...
+FIX Gateway may run okay on Python 2.7 but we have deprecated support for Python
+2.x in favor of Python 3.x.  The easiest way to install FIX Gateway is to use
+pip3.
+
+::
+
+    sudo pip3 install fixgw
+
+Once installed you should be able to run the server with the command...
+
+::
+
+  fixgw
+
+or the client with this command.
+
+::
+
+  fixgwc
+
+You can also clone the GitHub repository.
 
 ::
 
@@ -22,97 +39,128 @@ or
 
     git clone https://github.com/makerplane/FIX-Gateway.git fixgw
 
+There are a couple of helper scripts that will allow you to run FIX Gateway from
+within the source tree, if you don't want to install the packages to your system.
+
+::
+
+    ./fixgw.py
+    ./fixgwc.py
+
+These will run the client and the server respectively.
+
+The configuration files are installed into '/usr/local/etc/fixgw' by default and
+other files such as this documentation and other support files are located in
+'/usr/local/share/fixgw'
 
 Requirements
 ------------
 
-The only dependencies for FIX Gateway to function is Python itself.  FGW works
-with Python 2.7 and the latest version of Python 3.
+The only dependencies for FIX Gateway are Python itself and ``pyyaml``.  If you used
+pip3 to install FIX Gateway the dependencies should have been installed
+automatically. FIX Gateway requires Python 3.6 and should run on versions of
+Python higher than 3.6.  It may run on versionso of Python 2.x but Python 2.x
+support is deprecated and it's expected that FIX Gateway will eventually stop
+working with these older versions of Python.
 
 Many of the plugins will require other dependencies.  See the individual plugin
-documentation for information about that.  We'll discuss some of the more common
+documentation for information about those.  We'll discuss some of the more common
 ones.
 
-If you intend to use the gui
-plugin you will also need PyQt installed.  It should work with either PyQt4 or
-PyQt5.  You'll have to consult the PyQt documentation on how to install PyQt on
-your system.
+If you intend to use the gui plugin you will also need PyQt installed.  It
+should work with either PyQt4 or PyQt5.  You'll have to consult the PyQt
+documentation on how to install PyQt on your system.  Support for PyQt4 will
+likely be dropped in the future as well.
 
 The canfix plugin will require both the python-can package as well as the
-python-canfix package.  Installing the python-canfix package with pip should
+python-canfix package.  Installing the python-canfix package with pip3 should
 install both.
-
-There are several plugins that are specific to use on the Raspberry Pi SBC.
-These plugins require some python modules that are specific to the Raspberry Pi.
-
-The flight simulator plugins will obviously require that you have the flight
-simulators installed and configured properly as well.
 
 
 Basic Configuration
 -------------------
 
-FIX Gateway is configured through a configuration file named main.cfg that is
-located in the config/ subdirectory of distribution.  This is an `INI` style
-file that contains sections with key=value pairs in each section.  The first
-section is called [config].
+FIX Gateway is configured through a configuration file named ``default.yaml``
+that is located in the config/ subdirectory of distribution, or installed into
+the proper place on the filesystem (eg. ``/usr/local/etc/fixgw``).  The
+configuration uses `YAML` as it's  configuration language.
 
-The **db_file** option tells FGW where to find the database definition file. This
+The **database file** option tells FGW where to find the database definition file. This
 file tells FGW how to build the internal database that is how all the
 connections communicate with one another.  For details on the format of the
 database definition file see the :doc:`database` section.
 
 ::
 
-    db_file = config/database.csv
+    database file: "{CONFIG}/default.db"
 
-The **ini_file** is a way to initialize the data in the database before the
-plugins are loaded. This will override the initial value defined in the database
-definition file but it's mostly used to set up things like the V speeds (Vfe,
-Vs, Vx, Vy, etc) or high and low alarm setpoints. It's preferable that the end
-devices send this data as part of their communication but not all end devices
-are designed to do this.  The initialization file is a way to customize this
-data easily.  Any plugin that writes to the datbase can override this data.
-
-::
-
-    ini_file = config/fg_172.ini
-
-Each connection has it's own section in the configuration file.  These sections
-all begin with **conn_**.  The text folowing the "_" will be the name of the
-connection within FGW.  There are only two required options to load and run a
-connection.
+The **initialization files** is a way to initialize the data in the database
+before the plugins are loaded. This will override the initial value defined in
+the database definition file but it's mostly used to set up things like the V
+speeds (Vfe, Vs, Vx, Vy, etc) or high and low alarm setpoints. It's preferable
+that the end devices send this data as part of their communication but not all
+end devices are designed to do this.  The initialization file is a way to
+customize this data easily.  Any plugin that writes to the datbase can override
+this data.  Information in files listed later in the list will override earlier
+initialilzations.  The database is initialized once on startup with this
+information.  Any connections will be able to overwrite this data at runtime.
 
 ::
 
-    [conn_test]
-    load = yes
-    module = plugin.test
+  initialization files:
+    - "{CONFIG}/c170b.ini"
+    - "{CONFIG}/fg_172.ini"
 
-The above configuration tells FGW to load a connection plugin named *test* and
-use the python module found at plugin.test. Any other options under a connection
-section would be passed as to the plugin itself.  The included configuration
-file contains examples of all the plugins that ship with the FGW distribution.
-Configuration of the individual plugins are documented elsewhere.
+In both of the above declarations the string `{CONFIG}` is used.  This will
+be replaced with the location where pip3 installed the configuration files.
+Relative paths can be used here as well and they will be relative to the
+current directory from where the server was run.  Absolute paths to these
+files can also be given.
+
+There is a list of connections in the configuration file that determine which
+connection plugins will be loaded.  Each item in this connection list represents
+a specific connection plugin.  Here is a short snippet of the connections list...
+
+::
+
+  connections:
+    # Network FIX Protocol Interface
+    netfix:
+      load: yes
+      module: fixgw.plugins.netfix
+      type: server
+      host: 0.0.0.0
+      port: 3490
+      buffer_size: 1024
+      timeout: 1.0
+
+
+The above configuration tells FGW to load a connection plugin named *netfix* and
+use the python module found at ``fixgw.plugins.netfix``. The `load` and `module`
+configuration options are the only two mandatory items.  Any other options
+inside a connection object would be passed as to the plugin.  The included
+configuration file contains examples of all the plugins that ship with the FIX
+Gateway distribution. Configuration of the individual plugins are documented
+elsewhere.
 
 The rest of the configuration file contains directives for message logging.  FGW
 uses the built in Python logging module. This is for message logging of the
 program itself.  Not to be confused with logging flight data which is handled in
 a connection plugin.  Python's logging system is very sophisticated and can log
-information in many different ways.  It log to the terminal, a file, the system
-logger, network sockets even email.  A description of all that this system is
-capable of is beyond the scope of this documentation.  See Python's logging
-module documentation for more details.  So far we don't add any logging levels
-beyond what is included in the logger by default.
+information in many different ways.  It can log to the terminal, a file, the
+system logger, network sockets even email.  A description of all that this
+system is capable of is beyond the scope of this documentation.  See Python's
+logging module documentation for more details.  So far we don't add any logging
+levels beyond what is included in the logger by default.
 
-Running the program
+Running the server
 -------------------
 
 To run the program simply type the following at the command line.
 
 ::
 
-    python fixgw.py
+    fixgw
 
 There are a few command line arguments that can be used to adjust how the
 program runs.  ``--debug`` is probably the most useful.  This forces the logging
@@ -136,7 +184,20 @@ load an alternate configuration file and turn debugging on...
 
 ::
 
-    python fixgw --debug --config-file="test.cfg"
+    fixgw --debug --config-file="test.yaml"
 
-FGW will load the ``test.cfg`` file instead of the ``main.cfg`` file that ships with
-the program.
+FGW will load the ``test.yaml`` file instead of the ``default.yaml``
+configuration file that ships with the program.
+
+Running the client
+-------------------
+
+FIX Gateway ships with a small client program that allows the user to interact
+with the server through the netfix protocol.  The netfix plugin must be loaded
+for this to work.
+
+To run the client simply type the following at the command line.
+
+::
+
+    fixgwc

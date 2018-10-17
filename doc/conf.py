@@ -91,7 +91,8 @@ html_theme = 'alabaster'
 # documentation.
 #
 html_theme_options = {
-    'show_powered_by': False
+    'show_powered_by': False,
+    'show_related': True
     }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -106,8 +107,9 @@ html_static_path = ['_static']
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
     '**': [
-        'relations.html',  # needs 'show_related': True theme option to display
         'searchbox.html',
+        'navigation.html',
+        'relations.html',  # needs 'show_related': True theme option to display
     ]
 }
 
@@ -171,6 +173,3 @@ texinfo_documents = [
      author, 'FIXGateway', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-
