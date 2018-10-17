@@ -18,6 +18,8 @@
 
 # This module is a FIX-Net client for FIX-Gateway
 
+from __future__ import print_function
+
 import argparse
 import threading
 import socket
