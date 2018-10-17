@@ -6,13 +6,10 @@ with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 datafiles = [('etc/fixgw', ['config/default.yaml', 'config/default.db', 'config/c170b.ini','config/fg_172.ini']),
-              ('share/fixgw/doc', ['doc/_build/FIXGateway-html.tar.gz', 'doc/_build/latex/FIXGateway.pdf']),
-              ('share/fixgw', ['fixgw/plugins/fgfs/fix_fgfs.xml']),
+             ('etc/fixgw/canfix', ['config/canfix/default.map']),
+#             ('share/fixgw/doc', ['doc/_build/FIXGateway-html.tar.gz', 'doc/_build/latex/FIXGateway.pdf']),
+             ('share/fixgw', ['fixgw/plugins/fgfs/fix_fgfs.xml']),
 ]
-
-for each in datafiles:
-    for file in each[1]:
-        os.chmod(file, 0o755)
 
 setuptools.setup(
     name="fixgw",

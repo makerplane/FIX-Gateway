@@ -34,7 +34,7 @@ import os
 import sys
 
 config_filename = "default.yaml"
-path_options = ['.', 'config', '/usr/local/etc/fixgw', '/etc/fixgw']
+path_options = ['config', '/usr/local/etc/fixgw', '/usr/etc/fixgw', '/etc/fixgw']
 
 
 # This dictionary holds the modules for each plugin that we load
@@ -53,6 +53,7 @@ def load_plugin(name, module, config):
 
 
 def main():
+    config_path = "."
     # Look for our configuration file in the list of directories
     for directory in path_options:
         # store the first match that we find
