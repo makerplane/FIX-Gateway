@@ -1,0 +1,32 @@
+# This is the main configuration file for the FIX-Gateway Server
+
+# For use in this configuration, {CONFIG} will be replaced with the
+# directory where this file is found.
+
+# File that defines the database.
+database file: "tests/config/minimal.db"
+
+# Set initial values after the database is initialized.
+# If there are duplicate assignments in these files, the last
+# file listed will overwrite data in previous files
+# Plugins may overwrite this data as well.
+initialization files:
+
+
+# Connections:
+# if 'load' is 'yes' the connection plugin will be loaded at program start
+# if 'module' should be set to the location of the Python module that
+# represents the connection plugin.
+# All other configuration options will be passed to the connection plugin
+# itself. See the FIX-Gateway documentation for specific connection plugin
+# configuration options.
+connections:
+  # Network FIX Protocol Interface
+  netfix:
+    load: yes
+    module: fixgw.plugins.netfix
+    type: server
+    host: 0.0.0.0
+    port: 3490
+    buffer_size: 1024
+    timeout: 1.0

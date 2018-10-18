@@ -25,13 +25,14 @@ import importlib
 import logging
 import logging.config
 import argparse
-import fixgw.database as database
-import fixgw.status as status
-import fixgw.plugin as plugin
-
 import signal
 import os
 import sys
+import io
+
+import fixgw.database as database
+import fixgw.status as status
+import fixgw.plugin as plugin
 
 config_filename = "default.yaml"
 path_options = ['config', '/usr/local/etc/fixgw', '/usr/etc/fixgw', '/etc/fixgw']
@@ -45,7 +46,7 @@ plugins = {}
 
 def load_plugin(name, module, config):
     plugin_mods[name] = importlib.import_module(module)
-    # strings here remove the options from the config before it is
+    # remove these options from the config before it is
     # sent to the plugin.
     for each in ["load", "module"]:
         del config[each]
@@ -76,15 +77,19 @@ def main():
 
     # if we passed in a configuration file on the command line...
     if args.config_file:
-        cf = open(args.config_file)
+        cf = args.config_file
     else: # otherwise use the default
         cf = open(config_file)
     config = yaml.load(cf)
 
+    # Either load the config file given as a command line argument or
+    # look in the configuration for the logging object
     if args.log_config:
         logging.config.fileConfig(args.log_config)
-    else:
+    elif 'logging' in config:
         logging.config.dictConfig(config['logging'])
+    else:
+        logging.basicConfig()
 
     log = logging.getLogger()
     if args.verbose:
@@ -106,24 +111,22 @@ def main():
     except Exception as e:
         log.error("Database failure, Exiting:" + str(e))
         raise
-        return # we don't want to run with a screwed up database
 
-    log.info("Setting Initial Values")
-    ifiles = config["initialization files"]
-    for fn in ifiles:
-        try:
-            f = open(fn.format(CONFIG=config_path), 'r')
-            for line in f.readlines():
-                l = line.strip()
-                if l and l[0] != '#':
-                    x = l.split("=")
-                    if len(x) >= 2:
-                        database.write(x[0].strip(), x[1].strip())
-        except Exception as e:
-            log.error("Problem setting initial values from configuration - {0}".format(e))
-            raise
-
-    # TODO: Add a hook here for post database creation code
+    if "initialization files" in config and config["initialization files"]:
+        log.info("Setting Initial Values")
+        ifiles = config["initialization files"]
+        for fn in ifiles:
+            try:
+                f = open(fn.format(CONFIG=config_path), 'r')
+                for line in f.readlines():
+                    l = line.strip()
+                    if l and l[0] != '#':
+                        x = l.split("=")
+                        if len(x) >= 2:
+                            database.write(x[0].strip(), x[1].strip())
+            except Exception as e:
+                log.error("Problem setting initial values from configuration - {0}".format(e))
+                raise
 
     # TODO: Need to do some more thorough error checking here
 
@@ -147,9 +150,8 @@ def main():
         plugin.jobQueue.put("QUIT")
 
     signal.signal(signal.SIGINT, sig_int_handler)
+    signal.signal(signal.SIGTERM, sig_int_handler)
 
-
-    # TODO add a hook here for pre module run code
 
     for each in plugins:
         log.debug("Attempting to start plugin {0}".format(each))
