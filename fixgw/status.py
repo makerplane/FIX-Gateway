@@ -14,8 +14,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import fixgw.database as database
 from collections import OrderedDict
+import fixgw.database as database
 
 
 def initialize(p):
@@ -34,11 +34,11 @@ def get_dict():
 
         x = plugins[name].get_status()
         if x: d.update(x)
-        result["Plugin-" + name] = d
+        result["Connection: " + name] = d
     return result
 
 def dict2string(d, indent = 0):
-    s = "  " * indent
+    s = "    " * indent
     result = ""
     for each in d:
         if type(d[each]) in [dict, OrderedDict]:

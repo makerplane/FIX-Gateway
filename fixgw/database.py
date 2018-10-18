@@ -112,7 +112,7 @@ class db_item(object):
     def value(self, x):
         if type(x) == tuple:
             if len(x) < 4:
-                raise ValueError("Tupe too small for {}".format(self.key))
+                raise ValueError("Tuple too small for {}".format(self.key))
             self._annunciate = x[1]
             self._bad = x[2]
             self._fail = x[3]
@@ -259,26 +259,21 @@ def add_item(entry):
 
 
 # Main database initialization function
-def init(ddfile):
+def init(f):
     global log
     global __database
     global variables
-
+    __database = {}
     variables = {}
     log = logging.getLogger('database')
     log.info("Initializing Database")
 
-    try:
-        f = open(ddfile,'r')
-    except:
-        log.critical("Unable to open database definition file - " + ddfile)
-        raise
-
     state = "var"
 
     for line in f:
-        if line[0] != "#":
-            entry = line.split(":")
+        sline = line.strip()
+        if sline and sline[0] != '#':  # Skip blank lines and comments
+            entry = sline.split(":")
             if entry[0][:3] == "---":
                 state = "db"
                 log.debug("Database Variables: " + str(variables))
