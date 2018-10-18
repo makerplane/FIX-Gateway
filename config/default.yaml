@@ -41,13 +41,6 @@ connections:
     # will end execution of the program
     quit: yes
 
-  # Network Command Interface
-  net_int:
-    load: no
-    module: fixgw.plugins.net_int
-    host: 127.0.0.1
-    port: 8888
-
   # FlightGear Flight Simulator Module
   # To start FlightGear with these paramaters, use the following command...
   #   >fgfs --generic=socket,bi,10,localhost,5500,udp,fix_fgfs
