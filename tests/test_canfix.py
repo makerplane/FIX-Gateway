@@ -15,31 +15,21 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import unittest
-#import string
-#import io
 import subprocess
 import os
-#import fixgw
-#import fixgw.server
 import time
 
 
-class TestProcess(unittest.TestCase):
+class TestCanfix(unittest.TestCase):
 
     def setUp(self):
         pass
 
-    def test_MinimalSuccess(self):
-        """Minimal Process start/stop test"""
-        p = subprocess.Popen(["python3", "fixgw.py", "--config-file", "tests/config/minimal.yaml"])
-        time.sleep(0.1)
-        p.terminate()
-        x = p.wait()
+    def test_canfix_simple(self):
+        #self.p = subprocess.Popen(["python3", "fixgw.py", "--debug", "--config-file", "tests/config/canfix_simple.yaml"])
+        self.p = subprocess.Popen(["python3", "fixgw.py", "--config-file", "tests/config/canfix_simple.yaml"])
+        x = self.p.wait()
         self.assertEqual(x,0)
-
-    def tearDown(self):
-        pass
-
 
 if __name__ == '__main__':
     unittest.main()

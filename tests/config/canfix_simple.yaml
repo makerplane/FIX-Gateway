@@ -1,0 +1,56 @@
+# This is the main configuration file for the FIX-Gateway Server
+
+# For use in this configuration, {CONFIG} will be replaced with the
+# directory where this file is found.
+
+# File that defines the database.
+database file: "tests/config/minimal.db"
+
+# Set initial values after the database is initialized.
+# If there are duplicate assignments in these files, the last
+# file listed will overwrite data in previous files
+# Plugins may overwrite this data as well.
+initialization files:
+
+
+# Connections:
+# if 'load' is 'yes' the connection plugin will be loaded at program start
+# if 'module' should be set to the location of the Python module that
+# represents the connection plugin.
+# All other configuration options will be passed to the connection plugin
+# itself. See the FIX-Gateway documentation for specific connection plugin
+# configuration options.
+connections:
+  # Network FIX Protocol Interface
+  netfix:
+    load: yes
+    module: fixgw.plugins.netfix
+    type: server
+    host: 0.0.0.0
+    port: 3490
+    buffer_size: 1024
+    timeout: 1.0
+
+  # CAN-FIX
+  canfix:
+    load: yes
+    module: fixgw.plugins.canfix
+    # See the python-can documentation for the meaning of these options
+    interface: virtual
+    channel: tcan0
+
+    # This file controls the
+    mapfile: config/canfix/default.map
+    # The following is our Node Identification Information
+    # See the CAN-FIX Protocol Specification for more information
+    node: 145     # CAN-FIX Node ID
+    device: 145   # CAN-FIX Device Type
+    revision: 0   # Software Revision Number
+    model: 0      # Model Number
+
+  cantest:
+    load: yes
+    module: tests.test_plugins.canfix_simple
+    # See the python-can documentation for the meaning of these options
+    interface: virtual
+    channel: tcan0  # The last character will be replaced with 0,1,2 for each bus we open
