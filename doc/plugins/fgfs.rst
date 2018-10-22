@@ -49,7 +49,7 @@ Configuration
     # define the protocol. It is very important that both programs are looking at
     # the same file.
     xml_file: fix_fgfs.xml
-    # UDP Ports used for communication to FlightGear.
+    # UDP Address and Ports used for communication to FlightGear.
     host: localhost
     # port used for the -out argument to FlightGear
     out_port: 5500

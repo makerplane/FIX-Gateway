@@ -71,6 +71,8 @@ class db_item(object):
     def set_aux_value(self, name, value):
         try:
             self.aux[name] = self.dtype(value)
+            if self.aux[name] < self._min: self.aux[name] = self._min
+            if self.aux[name] > self._max: self.aux[name] = self._max
         except ValueError:
             log.error("Bad Value for aux {0} {1}".format(name, value))
             raise
