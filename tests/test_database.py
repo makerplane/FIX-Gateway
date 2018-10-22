@@ -59,6 +59,7 @@ class TestDatabase(unittest.TestCase):
         pass
 
     def test_Minimal_Database_Build(self):
+        """Minimal Database Build"""
         sf = io.StringIO(minimal_config)
         database.init(sf)
         l = database.listkeys()
@@ -66,6 +67,7 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(l, minimal_list)
 
     def test_Variable_Expansion(self):
+        """Variable Expansion"""
         sf = io.StringIO(variable_config)
         database.init(sf)
         l = database.listkeys()

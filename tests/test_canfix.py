@@ -20,6 +20,7 @@ import os
 import time
 
 import canfix
+import fixgw.netfix as netfix
 
 # To test the canfix stuff we need a way to inject CAN messages and to read
 # CAN messages that are sent by fixgw.  We are doing this with the cantest.py
@@ -68,27 +69,80 @@ class TestCanfix(unittest.TestCase):
         except FileExistsError:
             pass
 
+        #self.p = subprocess.Popen(["python3", "fixgw.py", "--config-file", "tests/config/canfix.yaml"])
         self.p = subprocess.Popen(["python3", "fixgw.py", "--debug", "--config-file", "tests/config/canfix.yaml"])
         self.ofifo = open(input_fifo, 'w')
         self.ififo = open(output_fifo, 'r')
 
-    def test_Huh(self):
+        self.client = netfix.Client("localhost", 3490)
+        self.client.timeout = 0.5
+        self.client.connect()
+
+
+    def test_simple_canfix_write(self):
+        """Test that we can write a simple canfix message"""
         p = canfix.Parameter()
         p.name = "Indicated Airspeed"
         p.value = 112.4
         m = p.getMessage()
 
         self.ofifo.write(msg2string(m,'0'))
-        #self.ofifo.write("b:123:0123456789abcdef\n")
+        self.ofifo.flush()
+        time.sleep(0.5)
+        x = self.client.read("IAS")
+        self.assertEqual(x[1], '112.4')
+
+
+    def test_canfix_range_check(self):
+        p = canfix.Parameter()
+        p.name = "Roll Angle"
+
+        p.value = 0.0
+        self.ofifo.write(msg2string(p.getMessage(),'0'))
+        self.ofifo.flush()
+        time.sleep(0.01)
+        x = self.client.read("ROLL")
+        self.assertEqual(x[1], '0.0')
+
+        p.value = -180.0
+        self.ofifo.write(msg2string(p.getMessage(),'0'))
+        self.ofifo.flush()
+        time.sleep(0.01)
+        x = self.client.read("ROLL")
+        self.assertEqual(x[1], '-180.0')
+
+        p.value = -181.0
+        self.ofifo.write(msg2string(p.getMessage(),'0'))
+        self.ofifo.flush()
+        time.sleep(0.01)
+        x = self.client.read("ROLL")
+        self.assertEqual(x[1], '-180.0')
+
+        p.value = 180.0
+        self.ofifo.write(msg2string(p.getMessage(),'0'))
+        self.ofifo.flush()
+        time.sleep(0.01)
+        x = self.client.read("ROLL")
+        self.assertEqual(x[1], '180.0')
+
+        p.value = 181.0
+        self.ofifo.write(msg2string(p.getMessage(),'0'))
+        self.ofifo.flush()
+        time.sleep(0.01)
+        x = self.client.read("ROLL")
+        self.assertEqual(x[1], '180.0')
+
 
 
     def tearDown(self):
+        self.client.disconnect()
         self.ofifo.close()
         self.ififo.close()
         os.unlink(input_fifo)
         self.p.terminate()
         x = self.p.wait()
         os.unlink(output_fifo)
+
 
 
 if __name__ == '__main__':
