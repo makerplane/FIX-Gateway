@@ -50,7 +50,7 @@ connections:
 
   cantest:
     load: yes
-    module: tests.test_plugins.cantest
+    module: tests.test_plugins.canfix_simple
     # See the python-can documentation for the meaning of these options
     interface: virtual
-    channel: tcan  # The last character will be replaced with 0,1,2 for each bus we open
+    channel: tcan0  # The last character will be replaced with 0,1,2 for each bus we open

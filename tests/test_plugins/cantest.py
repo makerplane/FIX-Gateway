@@ -18,6 +18,9 @@
 # using the python-can 'virtual' interface.  This way we don't need to have
 # any 'real' CAN interfaces up and running
 
+# Right now we aren't using this.  It proved too difficult to deal with..
+# for now we are just using a plugin that runs all the tests internally
+
 import threading
 import os
 import queue

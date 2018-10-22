@@ -19,131 +19,17 @@ import subprocess
 import os
 import time
 
-import canfix
-import fixgw.netfix as netfix
-
-# To test the canfix stuff we need a way to inject CAN messages and to read
-# CAN messages that are sent by fixgw.  We are doing this with the cantest.py
-# plugin that gets loaded.  We communicate with the cantest plugin through
-# a pair of pipes.  A simple string will be used to send/receive CAN messages
-
-#  b:iii:dddddddddddddddd
-
-# b is the bus id because we'll be adding multiple CAN busses at some point
-# to test redundancy 0,1,2 etc.  Can't imagine needing more than 3
-
-# ii is the identifier
-# dd is a databyte in hex
-
-# This function creates the above string from a CAN Message and bus id character
-def msg2string(canmsg, bus):
-    ds = ""
-    for b in canmsg.data:
-        ds = ds + "{0:02X}".format(b)
-    return "{}:{:x}:{}\n".format(bus,canmsg.arbitration_id, ds)
-
-def string2msg(s):
-    msg = can.Message()
-    msg.extended_id = False
-
-    x = s.strip().split(':')
-    msg.arbitration_id = int(x[1], 16)
-    msg.dlc = int(len(x[2]) / 2)
-    for n in range(0, len(x[2]), 2):
-        msg.data.append(int(x[2][n:n+2], 16))
-    return (int(x[0]), msg)
-
-
-# in and out are from the cantest plugin's perspective
-# so we write to the input and read from the output
-input_fifo = '/tmp/fixgw_canin.pipe'
-output_fifo = '/tmp/fixgw_canout.pipe'
-
 
 class TestCanfix(unittest.TestCase):
 
     def setUp(self):
-        try:
-            os.mkfifo(input_fifo)
-            os.mkfifo(output_fifo)
-        except FileExistsError:
-            pass
+        pass
 
-        #self.p = subprocess.Popen(["python3", "fixgw.py", "--config-file", "tests/config/canfix.yaml"])
-        self.p = subprocess.Popen(["python3", "fixgw.py", "--debug", "--config-file", "tests/config/canfix.yaml"])
-        self.ofifo = open(input_fifo, 'w')
-        self.ififo = open(output_fifo, 'r')
-
-        self.client = netfix.Client("localhost", 3490)
-        self.client.timeout = 0.5
-        self.client.connect()
-
-
-    def test_simple_canfix_write(self):
-        """Test that we can write a simple canfix message"""
-        p = canfix.Parameter()
-        p.name = "Indicated Airspeed"
-        p.value = 112.4
-        m = p.getMessage()
-
-        self.ofifo.write(msg2string(m,'0'))
-        self.ofifo.flush()
-        time.sleep(0.5)
-        x = self.client.read("IAS")
-        self.assertEqual(x[1], '112.4')
-
-
-    def test_canfix_range_check(self):
-        p = canfix.Parameter()
-        p.name = "Roll Angle"
-
-        p.value = 0.0
-        self.ofifo.write(msg2string(p.getMessage(),'0'))
-        self.ofifo.flush()
-        time.sleep(0.01)
-        x = self.client.read("ROLL")
-        self.assertEqual(x[1], '0.0')
-
-        p.value = -180.0
-        self.ofifo.write(msg2string(p.getMessage(),'0'))
-        self.ofifo.flush()
-        time.sleep(0.01)
-        x = self.client.read("ROLL")
-        self.assertEqual(x[1], '-180.0')
-
-        p.value = -181.0
-        self.ofifo.write(msg2string(p.getMessage(),'0'))
-        self.ofifo.flush()
-        time.sleep(0.01)
-        x = self.client.read("ROLL")
-        self.assertEqual(x[1], '-180.0')
-
-        p.value = 180.0
-        self.ofifo.write(msg2string(p.getMessage(),'0'))
-        self.ofifo.flush()
-        time.sleep(0.01)
-        x = self.client.read("ROLL")
-        self.assertEqual(x[1], '180.0')
-
-        p.value = 181.0
-        self.ofifo.write(msg2string(p.getMessage(),'0'))
-        self.ofifo.flush()
-        time.sleep(0.01)
-        x = self.client.read("ROLL")
-        self.assertEqual(x[1], '180.0')
-
-
-
-    def tearDown(self):
-        self.client.disconnect()
-        self.ofifo.close()
-        self.ififo.close()
-        os.unlink(input_fifo)
-        self.p.terminate()
+    def test_canfix_simple(self):
+        #self.p = subprocess.Popen(["python3", "fixgw.py", "--debug", "--config-file", "tests/config/canfix_simple.yaml"])
+        self.p = subprocess.Popen(["python3", "fixgw.py", "--config-file", "tests/config/canfix_simple.yaml"])
         x = self.p.wait()
-        os.unlink(output_fifo)
-
-
+        self.assertEqual(x,0)
 
 if __name__ == '__main__':
     unittest.main()
