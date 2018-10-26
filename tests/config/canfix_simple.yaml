@@ -4,7 +4,7 @@
 # directory where this file is found.
 
 # File that defines the database.
-database file: "tests/config/minimal.db"
+database file: "config/default.db"
 
 # Set initial values after the database is initialized.
 # If there are duplicate assignments in these files, the last
