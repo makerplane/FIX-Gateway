@@ -296,6 +296,44 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(x[0], 123.4)
 
 
+    def test_bool_write(self):
+        """test using wrong datatype for item"""
+        sf = io.StringIO(general_config)
+        database.init(sf)
+        # Test actual booleans
+        database.write("BTN1", True)
+        x = database.read("BTN1")
+        self.assertEqual(x[0], True)
+        database.write("BTN1", False)
+        x = database.read("BTN1")
+        self.assertEqual(x[0], False)
+        # Test strings
+        database.write("BTN1", "True")
+        x = database.read("BTN1")
+        self.assertEqual(x[0], True)
+        database.write("BTN1", "False")
+        x = database.read("BTN1")
+        self.assertEqual(x[0], False)
+        database.write("BTN1", "1")
+        x = database.read("BTN1")
+        self.assertEqual(x[0], True)
+        database.write("BTN1", "0")
+        x = database.read("BTN1")
+        self.assertEqual(x[0], False)
+        database.write("BTN1", "Yes")
+        x = database.read("BTN1")
+        self.assertEqual(x[0], True)
+        database.write("BTN1", "No")
+        x = database.read("BTN1")
+        self.assertEqual(x[0], False)
+        # Test integers
+        database.write("BTN1", 1)
+        x = database.read("BTN1")
+        self.assertEqual(x[0], True)
+        database.write("BTN1", 0)
+        x = database.read("BTN1")
+        self.assertEqual(x[0], False)
+
 
 if __name__ == '__main__':
     unittest.main()
