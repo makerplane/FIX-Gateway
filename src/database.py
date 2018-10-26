@@ -118,7 +118,8 @@ class db_item(object):
             self._fail = x[3]
             x = x[0]
         if self.dtype == bool:
-            self._value = (x == True or x.lower() in ["yes", "true", "1", 1])
+            self._value = (x == True or (isinstance(x,str) and x.lower() in ["yes", "true", "1"])
+                                or (isinstance(x,int) and x != 0))
         else:
             try:
                 self._value = self.dtype(x)

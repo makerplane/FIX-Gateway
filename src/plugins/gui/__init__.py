@@ -45,23 +45,43 @@ class MainThread(threading.Thread):
     def run(self):
         app = QApplication(sys.argv)
         window = QTabWidget()
-        pushButton1 = QPushButton("QPushButton 1")
-        pushButton2 = QPushButton("QPushButton 2")
+        pushButton1 = QPushButton("BTN 1")
+        pushButton2 = QPushButton("BTN 2")
+        pushButton3 = QPushButton("BTN 3")
+        pushButton4 = QPushButton("BTN 4")
+        pushButton5 = QPushButton("BTN 5")
+        pushButton6 = QPushButton("BTN 6")
 
         tab1 = statusview.StatusView()
         tab1.update()
         tab2 = table.DataTable(window)
         tab3 = QWidget()
 
-        vBoxlayout	= QVBoxLayout()
-        vBoxlayout.addWidget(pushButton1)
-        vBoxlayout.addWidget(pushButton2)
+        hBoxlayout	= QHBoxLayout()
+        hBoxlayout.addWidget(pushButton1)
+        hBoxlayout.addWidget(pushButton2)
+        hBoxlayout.addWidget(pushButton3)
+        hBoxlayout.addWidget(pushButton4)
+        hBoxlayout.addWidget(pushButton5)
+        hBoxlayout.addWidget(pushButton6)
+        pushButton1.pressed.connect (self.btn1_pressed)
+        pushButton2.pressed.connect (self.btn2_pressed)
+        pushButton3.pressed.connect (self.btn3_pressed)
+        pushButton4.pressed.connect (self.btn4_pressed)
+        pushButton5.pressed.connect (self.btn5_pressed)
+        pushButton6.pressed.connect (self.btn6_pressed)
+        pushButton1.released.connect (self.btn1_released)
+        pushButton2.released.connect (self.btn2_released)
+        pushButton3.released.connect (self.btn3_released)
+        pushButton4.released.connect (self.btn4_released)
+        pushButton5.released.connect (self.btn5_released)
+        pushButton6.released.connect (self.btn6_released)
 
         #Resize width and height
         window.resize(600, 400)
 
         #Set Layout for Third Tab Page
-        tab3.setLayout(vBoxlayout)
+        tab3.setLayout(hBoxlayout)
 
         window.addTab(tab1,"Status")
         window.addTab(tab2,"Data")
@@ -73,6 +93,32 @@ class MainThread(threading.Thread):
         #sys.exit(app.exec_())
         app.exec_()
         self.parent.running = False
+
+    def btn1_pressed(self):
+        self.parent.db_write("BTN1", True)
+    def btn2_pressed(self):
+        self.parent.db_write("BTN2", True)
+    def btn3_pressed(self):
+        self.parent.db_write("BTN3", True)
+    def btn4_pressed(self):
+        self.parent.db_write("BTN4", True)
+    def btn5_pressed(self):
+        self.parent.db_write("BTN5", True)
+    def btn6_pressed(self):
+        self.parent.db_write("BTN6", True)
+
+    def btn1_released(self):
+        self.parent.db_write("BTN1", False)
+    def btn2_released(self):
+        self.parent.db_write("BTN2", False)
+    def btn3_released(self):
+        self.parent.db_write("BTN3", False)
+    def btn4_released(self):
+        self.parent.db_write("BTN4", False)
+    def btn5_released(self):
+        self.parent.db_write("BTN5", False)
+    def btn6_released(self):
+        self.parent.db_write("BTN6", False)
 
     def stop(self):
         QApplication.quit()
