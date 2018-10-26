@@ -27,6 +27,8 @@ import plugin
 import importlib
 import threading
 
+from database import callback_add
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
@@ -40,8 +42,14 @@ class MainThread(threading.Thread):
             cfg = self.config['rais_config_path']
         self.rais = rais_server_module.RAIS(config_file=cfg)
         self.rais.setParameterCallback (self.callback)
+        self.baro_publisher = rais_server_module.GivenBarometer(self.rais.pubsub_config)
+
+    def baro_changed(self, key, value, udata):
+        assert(key == "BARO")
+        self.baro_publisher.send(value[0])
 
     def run(self):
+        callback_add("", "BARO", self.baro_changed, "")
         while not self.getout:
             self.rais.listen (loop=False, timeout=0)
             time.sleep(.1)
