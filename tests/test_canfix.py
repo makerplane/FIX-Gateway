@@ -26,8 +26,8 @@ class TestCanfix(unittest.TestCase):
         pass
 
     def test_canfix_simple(self):
-        #self.p = subprocess.Popen(["python3", "fixgw.py", "--debug", "--config-file", "tests/config/canfix_simple.yaml"])
-        self.p = subprocess.Popen(["python3", "fixgw.py", "--config-file", "tests/config/canfix_simple.yaml"])
+        self.p = subprocess.Popen(["python3", "fixgw.py", "--debug", "--config-file", "tests/config/canfix_simple.yaml"])
+        #self.p = subprocess.Popen(["python3", "fixgw.py", "--config-file", "tests/config/canfix_simple.yaml"])
         x = self.p.wait()
         self.assertEqual(x,0)
 

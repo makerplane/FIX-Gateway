@@ -16,6 +16,7 @@
 
 import unittest
 import io
+import time
 import fixgw.database as database
 
 
@@ -95,6 +96,7 @@ TIMEZH:Zulu Time Hour:int:0:23::0:2000:
 TIMEZM:Zulu Time Minute:int:0:59::0:2000:
 TIMEZS:Zulu Time Second:int:0:59::0:2000:
 TIMEL:Local Time String:str:::::0:
+DUMMY::str:::::0:
 """
 
 class TestDatabase(unittest.TestCase):
@@ -185,12 +187,115 @@ class TestDatabase(unittest.TestCase):
             x = database.read("AOA.Warn")
             self.assertEqual(x, test[1])
 
-# TODO: Test callbacks
-# TODO: TOL
-# TODO: Quality Bits
-# TODO: Timestamps
-# TODO: Proper Description Creation
-# TODO: Proper Units Creation
+
+    def test_database_callbacks(self):
+        """Test database callback routines"""
+        sf = io.StringIO(general_config)
+        database.init(sf)
+        rval = None
+        def test_cb(key, val, udata): # Use a closure for our callback
+            nonlocal rval
+            rval = (key, val)
+
+        database.callback_add("test", "PITCH", test_cb, None)
+        database.write("PITCH", -11.4)
+        self.assertEqual(rval, ("PITCH", (-11.4, False, False, False, False)))
+        database.write("PITCH", 10.2)
+        self.assertEqual(rval, ("PITCH", (10.2, False, False, False, False)))
+        i = database.get_raw_item("PITCH")
+        i.fail = True
+        self.assertEqual(rval, ("PITCH", (10.2, False, False, False, True)))
+        i.annunciate = True
+        self.assertEqual(rval, ("PITCH", (10.2, True, False, False, True)))
+        i.bad = True
+        self.assertEqual(rval, ("PITCH", (10.2, True, False, True, True)))
+        time.sleep(0.250)
+        database.update() # force the update
+        self.assertEqual(rval, ("PITCH", (10.2, True, True, True, True)))
+
+
+    def test_timeout_lifetime(self):
+        """Test item timeout lifetime"""
+        sf = io.StringIO(general_config)
+        database.init(sf)
+        database.write("PITCH", -11.4)
+        x = database.read("PITCH")
+        self.assertEqual(x, (-11.4, False, False, False, False))
+        time.sleep(0.250)
+        x = database.read("PITCH")
+        self.assertEqual(x, (-11.4, False, True, False, False))
+        database.write("PITCH", -11.4)
+        x = database.read("PITCH")
+        self.assertEqual(x, (-11.4, False, False, False, False))
+
+
+    def test_description_units(self):
+        """Test description and units"""
+        sf = io.StringIO(general_config)
+        database.init(sf)
+        i = database.get_raw_item("ROLL")
+        self.assertEqual(i.description, "Roll Angle")
+        self.assertEqual(i.units, "deg")
+
+
+    def test_missing_description_units(self):
+        """Test missing description and units"""
+        sf = io.StringIO(general_config)
+        database.init(sf)
+        i = database.get_raw_item("DUMMY")
+        self.assertEqual(i.description, '')
+        self.assertEqual(i.units, '')
+
+
+    def test_quality_bits(self):
+        """Test quality bits"""
+        sf = io.StringIO(general_config)
+        database.init(sf)
+        i = database.get_raw_item("OILP1")
+        database.write("OILP1", 15.4)
+        x = database.read("OILP1")
+        self.assertEqual(x, (15.4, False, False, False, False))
+        i.annunciate = True
+        x = database.read("OILP1")
+        self.assertEqual(x, (15.4, True, False, False, False))
+        i.annunciate = False
+        x = database.read("OILP1")
+        self.assertEqual(x, (15.4, False, False, False, False))
+        i.fail = True
+        x = database.read("OILP1")
+        self.assertEqual(x, (15.4, False, False, False, True))
+        i.fail = False
+        x = database.read("OILP1")
+        self.assertEqual(x, (15.4, False, False, False, False))
+        i.bad = True
+        x = database.read("OILP1")
+        self.assertEqual(x, (15.4, False, False, True, False))
+        i.bad = False
+        x = database.read("OILP1")
+        self.assertEqual(x, (15.4, False, False, False, False))
+
+
+    def test_string_datatype(self):
+        """test writing a string to an item"""
+        sf = io.StringIO(general_config)
+        database.init(sf)
+        database.write("DUMMY", "test string")
+        x = database.read("DUMMY")
+        self.assertEqual(x[0], "test string")
+
+
+    def test_wrong_datatype(self):
+        """test using wrong datatype for item"""
+        sf = io.StringIO(general_config)
+        database.init(sf)
+        database.write("DUMMY", 1234)
+        x = database.read("DUMMY")
+        self.assertEqual(x[0], "1234")
+        database.write("PITCH", "123.4")
+        x = database.read("PITCH")
+        self.assertEqual(x[0], 123.4)
+
+
 
 if __name__ == '__main__':
     unittest.main()
