@@ -24,9 +24,11 @@ import fixgw.database as database
 import yaml
 import canfix
 
+meta_replacements = {}
 # This is a list of function closures
 input_mapping = [None] * 1280
 output_mapping = {}
+
 
 # The idea here is that we create arrays and dictionaries for each type of
 # mapping.  These contain closure functions that know how to put the data in
@@ -42,7 +44,12 @@ def getInputFunction(dbKey):
     def InputFunc(cfpar):
         if cfpar.meta:
             try:
-                dbItem.set_aux_value(cfpar.meta, cfpar.value)
+                # Check to see if we have a replacemtn string in the dictionary
+                if cfpar.meta in meta_replacements:
+                    m = meta_replacements[cfpar.meta]
+                else: # Just use the one we were sent
+                    m = cfpar.meta
+                dbItem.set_aux_value(m, cfpar.value)
             except:
                 self.log.warning("Problem setting Aux Value for {0}".format(dbItem.key))
         else:
@@ -53,6 +60,7 @@ def getInputFunction(dbKey):
 
 # This opens the map file and buids the input mapping lists.
 def initialize(mapfile):
+    global meta_replacements
     try:
         f = open(mapfile)
     except:
@@ -69,6 +77,8 @@ def initialize(mapfile):
         if input_mapping[ix] is None:
             input_mapping[ix] = [None] * 256
         input_mapping[ix][each[1]] = getInputFunction(each[2])
+
+    meta_replacements = maps['meta replacements']
 
 
 def inputMap(par):

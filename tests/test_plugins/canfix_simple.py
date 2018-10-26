@@ -82,10 +82,10 @@ ptests = [("PITCH", 0x180, "FF0000D8DC", -90.0, 0.0),
           ("OILP1", 0x220, "FF00005125", 95.53, 0.001),
           ("OILP1.Min", 0x220, "FF00100000", 0.0, 0.001),
           ("OILP1.Max", 0x220, "FF00201027", 100.0, 0.001),
-          ("OILP1.lowWarn", 0x220, "FF0030A00F", 40.0, 0.001),
-          ("OILP1.lowAlarm", 0x220, "FF0040AC0D", 35.0, 0.001),
-          ("OILP1.highWarm", 0x220, "FF0050401F", 80.0, 0.001),
-          ("OILP1.highAlarm", 0x220, "FF00601C25", 95.0, 0.001),
+          ("OILP1.lowWarn", 0x220, "FF0040A00F", 40.0, 0.001),
+          ("OILP1.lowAlarm", 0x220, "FF0050AC0D", 35.0, 0.001),
+          ("OILP1.highWarn", 0x220, "FF0060401F", 80.0, 0.001),
+          ("OILP1.highAlarm", 0x220, "FF00701C25", 95.0, 0.001),
 #          ("OILT1", 0x220, "FF0000", 0.0, 0.001),
 ]
 
@@ -109,7 +109,7 @@ class MainThread(threading.Thread):
     def run(self):
         try:
             for each in ptests:
-                print("Testing {} = {}".format(each[0], each[3]))
+                print("Testing {} = {}".format(each[0], each[3]), end='')
                 msg = can.Message(extended_id = False, arbitration_id = each[1])
                 msg.data = string2data(each[2])
                 self.parent.bus.send(msg)
@@ -120,7 +120,10 @@ class MainThread(threading.Thread):
                 else:
                     val = x[0]
                 if(abs(val-each[3]) > each[4]):
+                    print(" - FAIL!!")
                     raise Exception("{} != {}".format(val, each[3]))
+                else:
+                    print(" - PASS")
 
 
         except Exception as e:

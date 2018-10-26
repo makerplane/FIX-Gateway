@@ -1,6 +1,19 @@
 # This file contains all of the mappings that tell the canfix plugin how
 # to talk to the FIX Gateway database.  This is a YAML file.
 
+# This is a list of replacement strings to map meta data from the CAN-FIX
+# protocol to the actual meta/auxiliary data described in the FGW database
+# definition.  The first is what would be called out in the CAN-FIX protocol
+# and the second is what it will be replaced with when being written to
+# the database.
+
+meta replacements:
+  Low Warn: lowWarn
+  Low Alarm: lowAlarm
+  High Warn: highWarn
+  High Alarm: highAlarm
+
+
 # Input mappings are for data that is read from the CAN-FIX bus and written into
 # the FixGW database.  This list contains the following information...
 
