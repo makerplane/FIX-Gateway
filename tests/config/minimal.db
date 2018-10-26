@@ -1,0 +1,18 @@
+e=1:Engines
+c=6:Cylinders per engine
+t=2:Fuel Tanks
+b=1:Generic Buttons
+r=1:Generic Encoders
+a=8:Generic Analog
+---
+#Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
+IAS:Indicated Airspeed:float:0:1000:knots:0.0:2000:Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
+TAS:True Airspeed:float:0:2000:knots:0.0:2000:
+CAS:True Airspeed:float:0:2000:knots:0.0:2000:
+GS:Ground Speed:float:0:2000:knots:0.0:2000:
+ALT:Indicated Altitude:float:-1000:60000:ft:0.0:2000:
+TALT:True Altitude:float:-1000:60000:ft:0.0:2000:
+DALT:Density Altitude:float:-1000:60000:ft:0.0:2000:
+BARO:Altimeter Setting:float:0:35:inHg:29.92:2000:
+ROLL:Roll Angle:float:-180:180:deg:0.0:200:
+PITCH:Pitch Angle:float:-180:180:deg:0.0:200:
