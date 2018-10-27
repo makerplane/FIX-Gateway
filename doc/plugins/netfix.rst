@@ -20,15 +20,11 @@ Configuration
 
 ::
 
-  # Network FIX Protocol Interface
-  [conn_netfix]
-  load = yes
-  module = plugins.netfix
-  type = server  # Only the server is implemented at this time
-  host = 0.0.0.0
-  port = 3490
-  buffer_size = 1024
-  timeout = 1.0
-
-
-
+  netfix:
+    load: yes
+    module: plugins.netfix
+    type: server
+    host: 0.0.0.0
+    port: 3490
+    buffer_size: 1024
+    timeout: 1.0

@@ -1,0 +1,62 @@
+# This file contains all of the mappings that tell the canfix plugin how
+# to talk to the FIX Gateway database.  This is a YAML file.
+
+# This is a list of replacement strings to map meta data from the CAN-FIX
+# protocol to the actual meta/auxiliary data described in the FGW database
+# definition.  The first is what would be called out in the CAN-FIX protocol
+# and the second is what it will be replaced with when being written to
+# the database.
+
+meta replacements:
+  Low Warn: lowWarn
+  Low Alarm: lowAlarm
+  High Warn: highWarn
+  High Alarm: highAlarm
+
+
+# Input mappings are for data that is read from the CAN-FIX bus and written into
+# the FixGW database.  This list contains the following information...
+
+# CANID - The CAN-FIX ID of the parameter represented by the received message
+# Index - The CAN-FIX index of the parameter
+# FIX DB ID - The FIX Database ID (This should match an individual point
+#             in the database configuration)
+# Priority - The redundancy priority of this point 0 = primary, 1 secondary, etc.
+inputs:
+  # [CANID, Index, FIX DB ID, Priority]
+  - [0x180,0, "PITCH", 0]
+  - [0x181,0, "ROLL", 0]
+  - [0x183,0, "IAS", 0]
+  - [0x184,0, "ALT", 0]
+  - [0x185,0, "HEAD", 0]
+  - [0x186,0, "VS", 0]
+  - [0x200,0, "TACH1", 0]
+  - [0x201,0, "TACH2", 0]
+  - [0x202,0, "PROP1", 0]
+  - [0x203,0, "PROP2", 0]
+  - [0x21E,0, "MAP1", 0]
+  - [0x21F,0, "MAP2", 0]
+  - [0x220,0, "OILP1", 0]
+  - [0x221,0, "OILP2", 0]
+  - [0x222,0, "OILT1", 0]
+  - [0x223,0, "OILT2", 0]
+  - [0x500,0, "CHT11", 0]
+  - [0x500,1, "CHT12", 0]
+  - [0x500,2, "CHT13", 0]
+  - [0x500,3, "CHT14", 0]
+  - [0x501,0, "CHT21", 0]
+  - [0x501,1, "CHT22", 0]
+  - [0x501,2, "CHT23", 0]
+  - [0x501,3, "CHT24", 0]
+  - [0x502,0, "EGT11", 0]
+  - [0x502,1, "EGT12", 0]
+  - [0x502,2, "EGT13", 0]
+  - [0x502,3, "EGT14", 0]
+  - [0x503,0, "EGT21", 0]
+  - [0x503,1, "EGT22", 0]
+  - [0x503,2, "EGT23", 0]
+  - [0x503,3, "EGT24", 0]
+  - [0x226,0, "FUELQ1", 0]
+  - [0x227,0, "FUELQ2", 0]
+  - [0x21A,0, "FUELF1", 0]
+  - [0x21B,0, "FUELF2", 0]

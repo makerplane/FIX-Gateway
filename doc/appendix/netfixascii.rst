@@ -39,7 +39,7 @@ terminated with a newline ('\n' or 0x0A) character.
 The sentence from the client to the server is similar...
 
 ::
-  
+
   ID;xxxx.x;abfs\n
 
 The difference is that the old flag is removed.  If the client
@@ -66,8 +66,10 @@ Commands:
 ``r`` = Read Data - pass the ID or the ID + aux value that you
 want to read.
 
-``@rIAS`` would cause the server to send the normal data sentence
+``@rIAS`` would cause the server to return the normal data sentence
 for Indicated Altitude.
+
+``@rIAS;105.2;0000``
 
 ``@rIAS.Vs`` would cause the server to report the Vs auxilliary data
 if it exists.
@@ -150,4 +152,3 @@ The datapoint will never exceed the min/max that are set in the
 database definition but the min and max that may be in the aux data
 are arbitrary and the server does nothing except type check that
 information.
-

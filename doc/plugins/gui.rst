@@ -2,7 +2,7 @@
 Graphical User Interface Plugin
 ================================================
 
-The GUI pluing is a way to graphically manage and view information in FIX-Gateway.
+The GUI plugin is a way to graphically manage and view information in FIX-Gateway.
 
 
 Requirements
@@ -17,6 +17,6 @@ Configuration
 
 ::
 
-  [conn_gui]
-  load = yes
-  module = plugins.gui
+  gui:
+    load: yes
+    module: plugins.gui

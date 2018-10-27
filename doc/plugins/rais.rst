@@ -1,6 +1,6 @@
-=========================
+====================================================
 RAIS (Redundant Array of Inexpensive Sensors) plugin
-=========================
+====================================================
 
 This FIX gateway plugin takes the output of a RAIS flight sensor pipeline
 and updates the database with the following keys:
