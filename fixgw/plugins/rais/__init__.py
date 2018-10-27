@@ -27,7 +27,7 @@ import fixgw.plugin as plugin
 import importlib
 import threading
 
-from database import callback_add
+from fixgw.database import callback_add
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
