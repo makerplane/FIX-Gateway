@@ -179,6 +179,26 @@ connections:
     rais_server_module: RAIS
     rais_config_path: /home/me/openEFIS/sensors_pubsub.yml
 
+  # Data Coputation
+  compute:
+    load: yes
+    module: fixgw.plugins.compute
+    functions:
+      - function: average
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTAVG1
+      - function: max
+        inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
+        output: CHTMAX1
+      # - function: min
+      #   inputs: []
+      #   output: x
+      # - function: span
+      #   inputs: []
+      #   output: x
+      # - function: TAS
+      # - function: DALT
+
 # Logging configuration - See Python logging.config module documenation
 logging:
   version: 1

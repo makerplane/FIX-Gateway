@@ -303,7 +303,7 @@ def init(f):
 
 # These are the public functions for interacting with the database
 def write(key, value):
-    with __db_lock:
+#    with __db_lock:
         if '.' in key:
             x = key.split('.')
             entry = __database[x[0]]
@@ -314,7 +314,7 @@ def write(key, value):
 
 
 def read(key):
-    with __db_lock:
+#    with __db_lock:
         if '.' in key:
             x = key.split('.')
             entry = __database[x[0]]
@@ -324,7 +324,7 @@ def read(key):
 
 
 def get_raw_item(key):
-    with __db_lock:
+#    with __db_lock:
         try:
             return __database[key]
         except KeyError:
@@ -332,7 +332,7 @@ def get_raw_item(key):
 
 
 def listkeys():
-    with __db_lock:
+#    with __db_lock:
         return list(__database.keys())
 
 
