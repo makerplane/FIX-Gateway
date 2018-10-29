@@ -187,6 +187,9 @@ connections:
       - function: average
         inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
         output: EGTAVG1
+      - function: span
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTSPAN1
       - function: max
         inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
         output: CHTMAX1

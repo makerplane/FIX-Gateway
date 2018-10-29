@@ -173,6 +173,7 @@ class db_item(object):
 
     @tol.setter
     def tol(self, x):
+        if x == '': x = 0
         try:
             self._tol = int(x)
         except ValueError:

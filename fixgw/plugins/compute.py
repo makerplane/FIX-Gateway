@@ -25,7 +25,7 @@ import time
 from collections import OrderedDict
 import fixgw.plugin as plugin
 
-
+# Determines the average of the inputs and writes that to output
 def averageFunction(inputs, output):
     vals = {}
     for each in inputs:
@@ -51,8 +51,107 @@ def averageFunction(inputs, output):
         if i.fail: i.value = 0.0
         i.bad = flag_bad
         i.old = flag_old
-
     return func
+
+
+# Determines the max of the inputs and writes that to output
+def maxFunction(inputs, output):
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+    def func(key, value, parent):
+        nonlocal vals
+        nonlocal output
+        vals[key] = value
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        vmax = None
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            if vmax:
+                if vals[each][0] > vmax: vmax = vals[each][0]
+            else:  # The first time through we just set vmax to the value
+                vmax = vals[each][0]
+            if vals[each][2]: flag_old = True
+            if vals[each][3]: flag_bad = True
+            if vals[each][4]: flag_fail = True
+        i = parent.db_get_item(output)
+        i.value = vmax
+        i.fail= flag_fail
+        if i.fail: i.value = 0.0
+        i.bad = flag_bad
+        i.old = flag_old
+    return func
+
+
+# Determines the min of the inputs and writes that to output
+def minFunction(inputs, output):
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+    def func(key, value, parent):
+        nonlocal vals
+        nonlocal output
+        vals[key] = value
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        vmin = None
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            if vmin:
+                if vals[each][0] < vmin: vmin = vals[each][0]
+            else:  # The first time through we just set vmax to the value
+                vmin = vals[each][0]
+            if vals[each][2]: flag_old = True
+            if vals[each][3]: flag_bad = True
+            if vals[each][4]: flag_fail = True
+        i = parent.db_get_item(output)
+        i.value = vmin
+        i.fail= flag_fail
+        if i.fail: i.value = 0.0
+        i.bad = flag_bad
+        i.old = flag_old
+    return func
+
+# Determines the span between the highest and lowest of the inputs
+# and writes that to output
+def spanFunction(inputs, output):
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+    def func(key, value, parent):
+        nonlocal vals
+        nonlocal output
+        vals[key] = value
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        vmin = None
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            if vmin:
+                if vals[each][0] < vmin: vmin = vals[each][0]
+                if vals[each][0] > vmax: vmax = vals[each][0]
+            else:  # The first time through we just set vmax to the value
+                vmin = vals[each][0]
+                vmax = vals[each][0]
+
+            if vals[each][2]: flag_old = True
+            if vals[each][3]: flag_bad = True
+            if vals[each][4]: flag_fail = True
+        i = parent.db_get_item(output)
+        i.value = vmax - vmin
+        i.fail= flag_fail
+        if i.fail: i.value = 0.0
+        i.bad = flag_bad
+        i.old = flag_old
+    return func
+
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
@@ -62,6 +161,18 @@ class Plugin(plugin.PluginBase):
         for function in self.config["functions"]:
             if function["function"].lower() == 'average':
                 f = averageFunction(function["inputs"], function["output"])
+                for each in function["inputs"]:
+                    self.db_callback_add(each, f, self)
+            if function["function"].lower() == 'max':
+                f = maxFunction(function["inputs"], function["output"])
+                for each in function["inputs"]:
+                    self.db_callback_add(each, f, self)
+            if function["function"].lower() == 'min':
+                f = minFunction(function["inputs"], function["output"])
+                for each in function["inputs"]:
+                    self.db_callback_add(each, f, self)
+            if function["function"].lower() == 'span':
+                f = spanFunction(function["inputs"], function["output"])
                 for each in function["inputs"]:
                     self.db_callback_add(each, f, self)
 
@@ -76,4 +187,4 @@ class Plugin(plugin.PluginBase):
     #     return OrderedDict({"Count":self.thread.count})
 
 # TODO: Add a check for Warns and alarms and annunciate appropriatly
-# TODO:
+# TODO: Add tests for this plugin
