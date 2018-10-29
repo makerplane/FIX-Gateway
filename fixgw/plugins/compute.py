@@ -31,35 +31,26 @@ def averageFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        print("Callback Called")
         nonlocal vals
         nonlocal output
         vals[key] = value
         arrsum = 0
-        flags = ""
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
         for each in vals:
             if vals[each] is None:
                 return  # We don't have one of each yet
             arrsum += vals[each][0]
-            if vals[each][2]: flags += 'O'
-            if vals[each][3]: flags += 'B'
-            if vals[each][4]: flags += 'F'
-
+            if vals[each][2]: flag_old = True
+            if vals[each][3]: flag_bad = True
+            if vals[each][4]: flag_fail = True
         i = parent.db_get_item(output)
         i.value = arrsum / len(vals)
-        if "F" in flags:
-            i.fail = True
-            i.value = 0.0
-        else:
-            i.fail = False
-        if "B" in flags:
-            i.bad = True
-        else:
-            i.bad = False
-        if "O" in flags:
-            i.old = True
-        else:
-            i.old = False
+        i.fail= flag_fail
+        if i.fail: i.value = 0.0
+        i.bad = flag_bad
+        i.old = flag_old
 
     return func
 
