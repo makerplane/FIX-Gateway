@@ -103,10 +103,11 @@ class db_item(object):
     @property
     def value(self):
         with self.lock:
-            if self.age > self.tol and self.tol != 0:
-                self._old = True
-            else:
-                self._old = False
+            if self.tol != 0:
+                if self.age > self.tol:
+                    self._old = True
+                else:
+                    self._old = False
             return (self._value, self._annunciate, self._old, self._bad, self._fail)
 
     # We can set the value in the item with either a value of a tuple that
