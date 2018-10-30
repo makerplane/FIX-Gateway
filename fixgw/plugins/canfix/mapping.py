@@ -24,7 +24,9 @@ import fixgw.database as database
 import yaml
 import canfix
 
-meta_replacements = {}
+meta_replacements_in = {}
+meta_replacements_out = {}
+
 # This is a list of function closures
 input_mapping = [None] * 1280
 output_mapping = {}
@@ -45,8 +47,8 @@ def getInputFunction(dbKey):
         if cfpar.meta:
             try:
                 # Check to see if we have a replacemtn string in the dictionary
-                if cfpar.meta in meta_replacements:
-                    m = meta_replacements[cfpar.meta]
+                if cfpar.meta in meta_replacements_in:
+                    m = meta_replacements_in[cfpar.meta]
                 else: # Just use the one we were sent
                     m = cfpar.meta
                 dbItem.set_aux_value(m, cfpar.value)
@@ -60,7 +62,7 @@ def getInputFunction(dbKey):
 
 # This opens the map file and buids the input mapping lists.
 def initialize(mapfile):
-    global meta_replacements
+    global meta_replacements_in
     try:
         f = open(mapfile)
     except:
@@ -71,14 +73,16 @@ def initialize(mapfile):
 
     # each input mapping item := [CANID, Index, FIX DB ID, Priority]
     for each in maps['inputs']:
-        p = canfix.parameters[each[0]]
+        p = canfix.parameters[each["canid"]]
         # Parameters start at 0x100 so we subtract that offset to index the array
-        ix = each[0] - 0x100
+        ix = each["canid"] - 0x100
         if input_mapping[ix] is None:
             input_mapping[ix] = [None] * 256
-        input_mapping[ix][each[1]] = getInputFunction(each[2])
+        input_mapping[ix][each["index"]] = getInputFunction(each["fixid"])
 
-    meta_replacements = maps['meta replacements']
+    # dictionaries used for converting meta data strings from db to canfix and back
+    meta_replacements_in = maps['meta replacements']
+    meta_replacements_out = {v:k for k,v in meta_replacements_in.items()}
 
 
 def inputMap(par):
