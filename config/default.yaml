@@ -113,9 +113,21 @@ connections:
     load: yes
     module: fixgw.plugins.gui
 
-  test:
+  test1:
     load: no
     module: fixgw.plugins.test
+    key: IAS
+    low: 0.0
+    high: 200.0
+    delay: 1.0
+
+  test2:
+    load: no
+    module: fixgw.plugins.test
+    key: ALT
+    low: 0.0
+    high: 20000.0
+    delay: 1.0
 
   bno055:
     load: no

@@ -29,35 +29,27 @@ class TestThread(threading.Thread):
     def __init__(self, parent):
         super(TestThread, self).__init__()
         self.parent = parent
+        self.getout = False
 
     def run(self):
         starttime = time.time()
         self.parent.log.debug("Starting Thread")
-        for each in range(100000):
-            key = random.choice(self.parent.keylist)
-            if random.choice((True, False)):
-                x = random.random()
-                self.parent.db_write(key, x)
-                self.parent.log.debug("WRITE " + key + " " + str(x))
-            else:
-                x = self.parent.db_read(key)
-                self.parent.log.debug("READ  " + key + " " + str(x))
-        self.parent.log.debug("Stopping Thread " + str(time.time() - starttime))
+        while(True):
+            if self.getout: break
+            low = self.parent.config["low"]
+            high = self.parent.config["high"]
+            x = (random.random() * (high - low)) + low
+            self.parent.db_write(self.parent.config["key"], x)
 
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
         self.t = TestThread(self)
-        self.keylist = []
-        for each in range(100):
-            s = ""
-            for i in range(5):
-                s = s + random.choice(string.ascii_uppercase + string.digits)
-            self.keylist.append(s)
 
     def run(self):
         self.t.start()
 
     def stop(self):
+        self.t.getout = True
         self.t.join()  # Wait for the thread to stop
