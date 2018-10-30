@@ -58,7 +58,10 @@ FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:
 MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:
 VOLT:System Voltage:float:1:16:volt:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
+EGTAVGe:Average Exhaust Gas Temp Engine %e:float:0:1000:degC:0.0:0:
+EGTSPANe:Exhaust Gas Temp Span Engine %e:float:0:1000:degC:0.0:0:
 CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
+CHTMAXe:Maximum Cylinder Head Temp Engine %e:float:0:1000:degC:0.0::
 FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
 TACHe:Engine RPM Engine %e:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 PROPe:Propeller RPM Engine %e:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
