@@ -51,6 +51,11 @@ class MainThread(threading.Thread):
         pushButton4 = QPushButton("BTN 4")
         pushButton5 = QPushButton("BTN 5")
         pushButton6 = QPushButton("BTN 6")
+        self.dial        = QDial()
+        self.dial.setMinimum(0)
+        self.dial.setMaximum(9)
+        self.dial.setWrapping(True)
+        self.dial.setFixedSize (30,30)
 
         tab1 = statusview.StatusView()
         tab1.update()
@@ -64,6 +69,7 @@ class MainThread(threading.Thread):
         hBoxlayout.addWidget(pushButton4)
         hBoxlayout.addWidget(pushButton5)
         hBoxlayout.addWidget(pushButton6)
+        hBoxlayout.addWidget(self.dial)
         pushButton1.pressed.connect (self.btn1_pressed)
         pushButton2.pressed.connect (self.btn2_pressed)
         pushButton3.pressed.connect (self.btn3_pressed)
@@ -76,6 +82,8 @@ class MainThread(threading.Thread):
         pushButton4.released.connect (self.btn4_released)
         pushButton5.released.connect (self.btn5_released)
         pushButton6.released.connect (self.btn6_released)
+        self.dial.valueChanged.connect(self.dialChanged)
+        self._last_dial = self.dial.value()
 
         #Resize width and height
         window.resize(600, 400)
@@ -119,6 +127,17 @@ class MainThread(threading.Thread):
         self.parent.db_write("BTN5", False)
     def btn6_released(self):
         self.parent.db_write("BTN6", False)
+
+    def dialChanged(self, event):
+        val = self.dial.value()
+        diff = val - self._last_dial
+        if diff > 5:
+            diff -= 10
+        elif diff < -5:
+            diff += 10
+        key = "ENC1"
+        self._last_dial = val
+        self.parent.db_write(key, self.parent.db_read(key)[0] + diff)
 
     def stop(self):
         QApplication.quit()
