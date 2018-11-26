@@ -46,7 +46,10 @@ class MainThread(threading.Thread):
 
     def baro_changed(self, key, value, udata):
         assert(key == "BARO")
-        self.baro_publisher.send(value[0])
+        try:
+            self.baro_publisher.send(value[0])
+        except:
+            pass
 
     def run(self):
         callback_add("", "BARO", self.baro_changed, "")
