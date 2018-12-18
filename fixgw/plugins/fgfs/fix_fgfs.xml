@@ -40,14 +40,14 @@
     <name>ALT: Altitude</name>
     <type>double</type>
     <format>%.0f</format>
-    <node>/instrumentation/altimeter/pressure-alt-ft</node>
+    <node>/instrumentation/altimeter/indicated-altitude-ft</node>
    </chunk>
 
    <chunk>
-    <name>TIME: clock</name>
-    <type>string</type>
-    <format>%s</format>
-    <node>/instrumentation/clock/indicated-string</node>
+    <name>VS: VSI</name>
+    <type>float</type>
+    <format>%.1f</format>
+    <node>/instrumentation/vertical-speed-indicator/indicated-speed-fpm</node>
    </chunk>
 
    <chunk>
@@ -124,14 +124,14 @@
    <chunk>
     <name>LAT: Latitude</name>
     <type>double</type>
-    <format>%.4e</format>
+    <format>%.14f</format>
     <node>/instrumentation/gps/indicated-latitude-deg</node>
    </chunk>
 
    <chunk>
     <name>LONG: Longitude</name>
     <type>double</type>
-    <format>%.4e</format>
+    <format>%.14f</format>
     <node>/instrumentation/gps/indicated-longitude-deg</node>
    </chunk>
 
