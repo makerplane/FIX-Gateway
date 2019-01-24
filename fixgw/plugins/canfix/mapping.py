@@ -24,79 +24,90 @@ import fixgw.database as database
 import yaml
 import canfix
 
-meta_replacements_in = {}
-meta_replacements_out = {}
+class Mapping(object):
+    def __init__(self, mapfile):
+        self.meta_replacements_in = {}
+        self.meta_replacements_out = {}
 
-# This is a list of function closures
-input_mapping = [None] * 1280
-output_mapping = {}
+        # This is a list of function closures
+        self.input_mapping = [None] * 1280
+        self.output_mapping = {}
+
+        # Open and parse the YAML mapping file passed to us
+        try:
+            f = open(mapfile)
+        except:
+            log.error("Unable to Open Mapfile - {}".format(mapfile))
+            raise
+        maps = yaml.load(f)
+
+        # dictionaries used for converting meta data strings from db to canfix and back
+        self.meta_replacements_in = maps['meta replacements']
+        self.meta_replacements_out = {v:k for k,v in self.meta_replacements_in.items()}
+
+        # each input mapping item := [CANID, Index, FIX DB ID, Priority]
+        for each in maps['inputs']:
+            p = canfix.protocol.parameters[each["canid"]]
+            # Parameters start at 0x100 so we subtract that offset to index the array
+            ix = each["canid"] - 0x100
+            if self.input_mapping[ix] is None:
+                self.input_mapping[ix] = [None] * 256
+            self.input_mapping[ix][each["index"]] = self.getInputFunction(each["fixid"])
+
+        # We really just assign all the outputs to a dictionary for the main
+        # plugin code to use to assign callbacks.
+        for each in maps['outputs']:
+            output = {'canid':each['canid'], 'index':each['index'], 'owner':each['owner']}
+            self.output_mapping[each['fixid']] = output
 
 
-# The idea here is that we create arrays and dictionaries for each type of
-# mapping.  These contain closure functions that know how to put the data in
-# the right place.  The functions are determined ahead of time for
-# performance reasons which is why we are using closures.
+    # The idea here is that we create arrays and dictionaries for each type of
+    # mapping.  These contain closure functions that know how to put the data in
+    # the right place.  The functions are determined ahead of time for
+    # performance reasons which is why we are using closures.
 
-# This is a closure that holds the information we need to transfer data
-# from the CAN-FIX port to the FIXGW Database
-def getInputFunction(dbKey):
-    dbItem = database.get_raw_item(dbKey)
-    if dbItem == None: return None
+    # This is a closure that holds the information we need to transfer data
+    # from the CAN-FIX port to the FIXGW Database
+    def getInputFunction(self, dbKey):
+        dbItem = database.get_raw_item(dbKey)
+        if dbItem == None: return None
 
-    def InputFunc(cfpar):
-        if cfpar.meta:
-            try:
-                # Check to see if we have a replacemtn string in the dictionary
-                if cfpar.meta in meta_replacements_in:
-                    m = meta_replacements_in[cfpar.meta]
-                else: # Just use the one we were sent
-                    m = cfpar.meta
-                dbItem.set_aux_value(m, cfpar.value)
-            except:
-                self.log.warning("Problem setting Aux Value for {0}".format(dbItem.key))
+        def InputFunc(cfpar):
+            if cfpar.meta:
+                try:
+                    # Check to see if we have a replacemtn string in the dictionary
+                    if cfpar.meta in self.meta_replacements_in:
+                        m = self.meta_replacements_in[cfpar.meta]
+                    else: # Just use the one we were sent
+                        m = cfpar.meta
+                    dbItem.set_aux_value(m, cfpar.value)
+                except:
+                    self.log.warning("Problem setting Aux Value for {0}".format(dbItem.key))
+            else:
+                dbItem.value = (cfpar.value, cfpar.annunciate, cfpar.quality, cfpar.failure)
+
+        return InputFunc
+
+    # def outputCallback(key, value, udata):
+    #     print("{}".format(key))
+
+    # This opens the map file and buids the input mapping lists.
+    # def initialize(self, mapfile):
+
+
+    def inputMap(self, par):
+        """Retrieve the function that should be called for a given parameter"""
+        ix = par.identifier - 0x100
+        im = self.input_mapping[ix] # This should always exist
+        if im is None:
+            return None
+        if par.meta:
+            for func in im:
+                if func is not None:
+                    func(par)
+                #else:
+                    #log.error("Yo you gotta be kidding")
         else:
-            dbItem.value = (cfpar.value, cfpar.annunciate, cfpar.quality, cfpar.failure)
-
-    return InputFunc
-
-
-# This opens the map file and buids the input mapping lists.
-def initialize(mapfile):
-    global meta_replacements_in
-    try:
-        f = open(mapfile)
-    except:
-        log.error("Unable to Open Mapfile - {}".format(mapfile))
-        raise
-    maps = yaml.load(f)
-
-
-    # each input mapping item := [CANID, Index, FIX DB ID, Priority]
-    for each in maps['inputs']:
-        p = canfix.parameters[each["canid"]]
-        # Parameters start at 0x100 so we subtract that offset to index the array
-        ix = each["canid"] - 0x100
-        if input_mapping[ix] is None:
-            input_mapping[ix] = [None] * 256
-        input_mapping[ix][each["index"]] = getInputFunction(each["fixid"])
-
-    # dictionaries used for converting meta data strings from db to canfix and back
-    meta_replacements_in = maps['meta replacements']
-    meta_replacements_out = {v:k for k,v in meta_replacements_in.items()}
-
-
-def inputMap(par):
-    ix = par.identifier - 0x100
-    im = input_mapping[ix] # This should always exist
-    if im is None:
-        return None
-    if par.meta:
-        for func in im:
+            func = im[par.index]
             if func is not None:
                 func(par)
-            #else:
-                #log.error("Yo you gotta be kidding")
-    else:
-        func = im[par.index]
-        if func is not None:
-            func(par)
