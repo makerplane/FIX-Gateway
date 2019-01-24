@@ -92,10 +92,12 @@ class Plugin(plugin.PluginBase):
             raise plugin.PluginFail
 
     def get_status(self):
-        return OrderedDict({"CAN Interface":self.interface,
-                            "CAN Channel":self.channel,
-                            "Frame Count":self.thread.framecount,
-                            "Error Count":self.thread.errorcount})
+        x = OrderedDict()
+        x["CAN Interface"]=self.interface
+        x["CAN Channel"]=self.channel
+        x["Frame Count"]=self.thread.framecount
+        x["Error Count"]=self.thread.errorcount
+        return x
 
 # TODO: Add error reporting in debug mode
 # TODO: Add output parameter mapping

@@ -31,7 +31,6 @@ def get_dict():
     # Add plugin status
     for name in plugins:
         d = OrderedDict({"Running":plugins[name].is_running()})
-
         x = plugins[name].get_status()
         if x: d.update(x)
         result["Connection: " + name] = d
