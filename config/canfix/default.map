@@ -29,6 +29,7 @@ inputs:
   - { canid: 0x184, index: 0, fixid: "ALT", priority: 0 }
   - { canid: 0x185, index: 0, fixid: "HEAD", priority: 0 }
   - { canid: 0x186, index: 0, fixid: "VS", priority: 0 }
+  - { canid: 0x190, index: 0, fixid: "BARO", priority: 0 }
   - { canid: 0x200, index: 0, fixid: "TACH1", priority: 0 }
   - { canid: 0x201, index: 0, fixid: "TACH2", priority: 0 }
   - { canid: 0x202, index: 0, fixid: "PROP1", priority: 0 }
@@ -59,6 +60,9 @@ inputs:
   - { canid: 0x227, index: 0, fixid: "FUELQ2", priority: 0 }
   - { canid: 0x21A, index: 0, fixid: "FUELF1", priority: 0 }
   - { canid: 0x21B, index: 0, fixid: "FUELF2", priority: 0 }
+  - { canid: 0x1C0, index: 0, fixid: "CDI", priority: 0 }
+  - { canid: 0x1C1, index: 0, fixid: "GSI", priority: 0 }
+
 
   # Output mappings are for data that is read from the FixGW database and
   # written to the CAN-FIX bus.  This list contains the following information...

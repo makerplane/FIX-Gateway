@@ -76,12 +76,15 @@ class Plugin(plugin.PluginBase):
         self.interface = config['interface']
         self.channel = config['channel']
         self.device = int(config['device'])
+        self.node = int(config['node'])
         self.mapping = mapping.Mapping(config['mapfile'])
         self.thread = MainThread(self, config)
 
 
     def run(self):
         self.bus = can.ThreadSafeBus(self.channel, bustype = self.interface)
+        for each in self.mapping.output_mapping:
+            self.db_callback_add(each, self.mapping.getOutputFunction(self.bus, each, self.node))
         self.thread.start()
 
     def stop(self):

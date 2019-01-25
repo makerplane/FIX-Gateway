@@ -45,6 +45,16 @@ class Mapping(object):
         self.meta_replacements_in = maps['meta replacements']
         self.meta_replacements_out = {v:k for k,v in self.meta_replacements_in.items()}
 
+        # We really just assign all the outputs to a dictionary for the main
+        # plugin code to use to assign callbacks.
+        for each in maps['outputs']:
+            output = {'canid':each['canid'],
+                      'index':each['index'],
+                      'owner':each['owner'],
+                      'exclude':False,
+                      'lastValue':None}
+            self.output_mapping[each['fixid']] = output
+
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
         for each in maps['inputs']:
             p = canfix.protocol.parameters[each["canid"]]
@@ -53,12 +63,6 @@ class Mapping(object):
             if self.input_mapping[ix] is None:
                 self.input_mapping[ix] = [None] * 256
             self.input_mapping[ix][each["index"]] = self.getInputFunction(each["fixid"])
-
-        # We really just assign all the outputs to a dictionary for the main
-        # plugin code to use to assign callbacks.
-        for each in maps['outputs']:
-            output = {'canid':each['canid'], 'index':each['index'], 'owner':each['owner']}
-            self.output_mapping[each['fixid']] = output
 
 
     # The idea here is that we create arrays and dictionaries for each type of
@@ -72,7 +76,20 @@ class Mapping(object):
         dbItem = database.get_raw_item(dbKey)
         if dbItem == None: return None
 
+        # The output exclusion keeps us from constantly sending updates on the
+        # CAN Bus when the change that we recieved was from the CAN Bus.
+        # Basically when the input function is called we'll first exclude
+        # the output then make the change.  The output callback will be
+        # called but will do nothing but reset the exclusion flag.
+        if dbKey in self.output_mapping:
+            output_exclude = True
+        else:
+            output_exclude = False
+
         def InputFunc(cfpar):
+            if output_exclude:
+                self.output_mapping[dbItem.key]['exclude'] = True
+                self.output_mapping[dbItem.key]["lastValue"] = cfpar.value
             if cfpar.meta:
                 try:
                     # Check to see if we have a replacemtn string in the dictionary
@@ -88,8 +105,35 @@ class Mapping(object):
 
         return InputFunc
 
-    # def outputCallback(key, value, udata):
-    #     print("{}".format(key))
+    # Returns a closure that should be used as the callback for database item
+    # changes that should be written to the CAN Bus
+    def getOutputFunction(self, bus, dbKey, node):
+
+        def outputCallback(key, value, udata):
+            m = self.output_mapping[dbKey]
+            # If the exclude flag is set we just recieved the value
+            # from the bus so we don't turn around and write it back out
+            if m['exclude']:
+                m['exclude'] = False
+                return
+            if m["owner"]:
+                # If we are the owner we send a regular parameter update
+                pass
+            else:
+                # If we are not the owner we don't worry about the flags or
+                # sending values that have not changed.
+                if value[0] == m["lastValue"]:
+                    return
+                m["lastValue"] = value[0]
+                p = canfix.ParameterSet(parameter=m["canid"], value=value[0])
+                p.sendNode = node
+                # print(p.msg)
+                # print("Output Callback {} = {}".format(key, value))
+                bus.send(p.msg)
+                # print(bus)
+                # print(self.output_mapping[dbKey])
+
+        return outputCallback
 
     # This opens the map file and buids the input mapping lists.
     # def initialize(self, mapfile):
