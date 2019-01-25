@@ -7,12 +7,13 @@ This plugin is used to allow FIX-Gateway to communicate with this simulator.
 
 http://www.flightgear.org/
 
-The plugin uses FlightGear's *Generic* protocol.  This protocol is customizable by the
-user by way of an XML file.  We've included an XML file for this purpose.  The file
-included is called ``fix_fgfs.xml``  The fix_fgfs.xml file should be moved to the
-FG_ROOT/Protocols directory which should be in one of the following locations...
+The plugin uses FlightGear's *Generic* protocol.  This protocol is customizable
+by the user by way of an XML file.  We've included an XML file for this purpose.
+The file included is called ``fix_fgfs.xml``  The fix_fgfs.xml file should be
+linked or copied to the FG_ROOT/Protocols directory which should be in one of
+the following locations...
 
-- LINUX: ``/usr/share/games/flightgear/``
+- LINUX: ``/usr/share/FlightGear/data/``
 - OSX: ``/Applications/FlightGear.app/Contents/Resources/data/``
 - WINDOWS: ``c:\Program Files\FlightGear\data\``
 
@@ -22,7 +23,7 @@ To launch FlightGear using this protocol file use the following command
 
 ::
 
-  >fgfs --generic=socket,bi,10,localhost,5500,udp,fix_fgfs
+  >fgfs --generic=socket,out,10,localhost,5500,udp,fix_fgfs
 
 This plugin also needs to know the location of this file so there is a directive in the
 configuration file for setting this location.  It is very important that both FlightGear
@@ -41,7 +42,7 @@ Configuration
     module: plugins.fgfs
     # This should be the same as $FG_ROOT on your system.  It is used to help
     # fixgw find the xml configuration files
-    fg_root: /usr/share/games/flightgear/
+    fg_root: /usr/share/FlightGear/data/
     # fg_root: /Applications/FlightGear.app/Contents/Resources/data/
     # fg_root: c:\Program Files\FlightGear\data\
 

@@ -24,6 +24,8 @@ HEAD:Current Aircraft Magnetic Heading:float:0:359.9:deg:0.0:2000:
 TRACK:Current Aircraft Bearing:float:0:359.9:deg:0.0:2000:
 TRACKM:Current Aircraft Magnetic Bearing:float:0:359.9:deg:0.0:2000:
 COURSE:Selected Course:float:0:359.9:deg:0.0:2000:
+CDI:Course Deviation Indicator:float:-1:1::0:2000:
+GSI:Glideslope Indicator:float:-1:1::0:2000:
 XTRACK:Cross Track Error:float:0:100:nM:0.0:2000:
 OAT:Outside Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 CAT:Cabine Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
