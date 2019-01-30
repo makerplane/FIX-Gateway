@@ -205,6 +205,10 @@ connections:
       - function: max
         inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
         output: CHTMAX1
+      - function: sum
+        inputs: ["FUELQ1", "FUELQ2"]
+        output: FUELQT
+
       # - function: min
       #   inputs: []
       #   output: x

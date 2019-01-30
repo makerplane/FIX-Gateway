@@ -46,7 +46,41 @@ def averageFunction(inputs, output):
             if vals[each][4]: flag_fail = True
         i = parent.db_get_item(output)
         i.value = arrsum / len(vals)
-        i.fail= flag_fail
+        i.fail = flag_fail
+        if i.fail: i.value = 0.0
+        i.bad = flag_bad
+        i.old = flag_old
+    return func
+
+
+def sumFunction(inputs, output):
+    """Determines the sum of the inputs and writes that to output"""
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+    def func(key, value, parent):
+        print("SUM Callback Called {} {}".format(key, value))
+        nonlocal vals
+        nonlocal output
+        vals[key] = value
+        arrsum = 0
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            try:
+                arrsum += vals[each][0]
+                if vals[each][2]: flag_old = True
+                if vals[each][3]: flag_bad = True
+                if vals[each][4]: flag_fail = True
+            except TypeError:
+                print("WTF {} {}".format(key, value))
+                raise
+        i = parent.db_get_item(output)
+        i.value = arrsum
+        i.fail = flag_fail
         if i.fail: i.value = 0.0
         i.bad = flag_bad
         i.old = flag_old
@@ -157,23 +191,22 @@ class Plugin(plugin.PluginBase):
     #     super(Plugin, self).__init__(name, config)
 
     def run(self):
+        # This directory of functions are functions that aggregate a list
+        # of inputs and produce a single output.
+        aggregate_functions = {"average":averageFunction,
+                               "sum":sumFunction,
+                               "max":maxFunction,
+                               "min":minFunction,
+                               "span":spanFunction
+                               }
+
         for function in self.config["functions"]:
-            if function["function"].lower() == 'average':
-                f = averageFunction(function["inputs"], function["output"])
+            fname = function["function"].lower()
+            if fname in aggregate_functions:
+                f = aggregate_functions[fname](function["inputs"], function["output"])
                 for each in function["inputs"]:
                     self.db_callback_add(each, f, self)
-            elif function["function"].lower() == 'max':
-                f = maxFunction(function["inputs"], function["output"])
-                for each in function["inputs"]:
-                    self.db_callback_add(each, f, self)
-            elif function["function"].lower() == 'min':
-                f = minFunction(function["inputs"], function["output"])
-                for each in function["inputs"]:
-                    self.db_callback_add(each, f, self)
-            elif function["function"].lower() == 'span':
-                f = spanFunction(function["inputs"], function["output"])
-                for each in function["inputs"]:
-                    self.db_callback_add(each, f, self)
+
             else:
                 self.log.warning("Unknown function - {}".format(function["function"]))
 
