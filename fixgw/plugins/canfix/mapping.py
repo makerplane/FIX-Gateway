@@ -32,12 +32,13 @@ class Mapping(object):
         # This is a list of function closures
         self.input_mapping = [None] * 1280
         self.output_mapping = {}
+        self.log = None # Should set from parent plugin
 
         # Open and parse the YAML mapping file passed to us
         try:
             f = open(mapfile)
         except:
-            log.error("Unable to Open Mapfile - {}".format(mapfile))
+            self.log.error("Unable to Open Mapfile - {}".format(mapfile))
             raise
         maps = yaml.load(f)
 

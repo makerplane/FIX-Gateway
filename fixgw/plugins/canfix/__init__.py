@@ -78,6 +78,7 @@ class Plugin(plugin.PluginBase):
         self.device = int(config['device'])
         self.node = int(config['node'])
         self.mapping = mapping.Mapping(config['mapfile'])
+        self.mapping.log = self.log
         self.thread = MainThread(self, config)
 
 
