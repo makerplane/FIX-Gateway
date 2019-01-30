@@ -101,7 +101,7 @@ connections:
     #channel: /dev/ttyUSB0
 
     # This file controls the
-    mapfile: config/canfix/default.map
+    mapfile: config/canfix/map.yaml
     # The following is our Node Identification Information
     # See the CAN-FIX Protocol Specification for more information
     node: 145     # CAN-FIX Node ID
