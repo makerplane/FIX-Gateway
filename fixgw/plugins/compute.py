@@ -30,6 +30,7 @@ def averageFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
         nonlocal output
         vals[key] = value
@@ -59,7 +60,7 @@ def sumFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        print("SUM Callback Called {} {}".format(key, value))
+        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
         nonlocal output
         vals[key] = value
@@ -93,6 +94,7 @@ def maxFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
         nonlocal output
         vals[key] = value
@@ -125,6 +127,7 @@ def minFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
         nonlocal output
         vals[key] = value
@@ -157,6 +160,7 @@ def spanFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
         nonlocal output
         vals[key] = value
