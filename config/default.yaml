@@ -101,7 +101,7 @@ connections:
     #channel: /dev/ttyUSB0
 
     # This file controls the
-    mapfile: config/canfix/default.map
+    mapfile: config/canfix/map.yaml
     # The following is our Node Identification Information
     # See the CAN-FIX Protocol Specification for more information
     node: 145     # CAN-FIX Node ID
@@ -113,9 +113,21 @@ connections:
     load: yes
     module: fixgw.plugins.gui
 
-  test:
+  test1:
     load: no
     module: fixgw.plugins.test
+    key: IAS
+    low: 0.0
+    high: 200.0
+    delay: 1.0
+
+  test2:
+    load: no
+    module: fixgw.plugins.test
+    key: ALT
+    low: 0.0
+    high: 20000.0
+    delay: 1.0
 
   bno055:
     load: no
@@ -178,6 +190,33 @@ connections:
     rais_directory: /home/me/openEFIS
     rais_server_module: RAIS
     rais_config_path: /home/me/openEFIS/sensors_pubsub.yml
+
+  # Data Coputation
+  compute:
+    load: yes
+    module: fixgw.plugins.compute
+    functions:
+      - function: average
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTAVG1
+      - function: span
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTSPAN1
+      - function: max
+        inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
+        output: CHTMAX1
+      - function: sum
+        inputs: ["FUELQ1", "FUELQ2"]
+        output: FUELQT
+
+      # - function: min
+      #   inputs: []
+      #   output: x
+      # - function: span
+      #   inputs: []
+      #   output: x
+      # - function: TAS
+      # - function: DALT
 
 # Logging configuration - See Python logging.config module documenation
 logging:

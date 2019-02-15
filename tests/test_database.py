@@ -337,3 +337,7 @@ class TestDatabase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+# TODO: Test that a blank in TOL will result in no timeout.
+# TODO: Test that we can set the "OLD" flag if the timeout is zero

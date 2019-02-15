@@ -28,7 +28,7 @@ CDI:Course Deviation Indicator:float:-1:1::0:2000:
 GSI:Glideslope Indicator:float:-1:1::0:2000:
 XTRACK:Cross Track Error:float:0:100:nM:0.0:2000:
 OAT:Outside Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-CAT:Cabine Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+CAT:Cabin Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 OATW:Outside Air Temperature Warning:int:0:5:warninglevel:0:0:2000
 ROLL:Roll Angle:float:-180:180:deg:0.0:200:
 PITCH:Pitch Angle:float:-90:90:deg:0.0:200:
@@ -53,21 +53,27 @@ ALONG:Longitudinal Acceleration:float:-30:30:g:0.0:200:
 THRe:Throttle Control Engine %e:float:0:1:%/100:0.0:1000:
 MIXe:Mixture Control Engine %e:float:0:1:%/100:0.0:1000:
 OILPe:Oil Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-OILTe:Oil Temperature Engine %e:float:0:300:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+OILTe:Oil Temperature Engine %e:float:0:150:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 H2OTe:Coolant Temperature Engine %e:float:0:200:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 FUELPe:Fuel Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:
 MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:
 VOLT:System Voltage:float:1:16:volt:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
+EGTAVGe:Average Exhaust Gas Temp Engine %e:float:0:1000:degC:0.0:0:
+EGTSPANe:Exhaust Gas Temp Span Engine %e:float:0:1000:degC:0.0:0:
 CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
+CHTMAXe:Maximum Cylinder Head Temp Engine %e:float:0:1000:degC:0.0::
 FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
+FUELQT:Total Fuel Quantity:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
 TACHe:Engine RPM Engine %e:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 PROPe:Propeller RPM Engine %e:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 LAT:Latitude:float:-90:90:deg:0.0:2000:
 LONG:Longitude:float:-180:180:deg:0:2000:
-TIMEZ:Zulu Time String:str:::::2000:
+TIMEZS:Zulu Time String:str:::::2000:
 TIMEZH:Zulu Time Hour:int:0:23::0:2000:
 TIMEZM:Zulu Time Minute:int:0:59::0:2000:
 TIMEZS:Zulu Time Second:int:0:59::0:2000:
-TIMEL:Local Time String:str:::::0:
+TIMELS:Local Time String:str:::::0:
+TIMEZ:Time Zone:float:-12:12::0::
+FTIME:Flight Time:float:0:1000::0::

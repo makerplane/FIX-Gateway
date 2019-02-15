@@ -29,20 +29,21 @@ from . import mapping
 class MainThread(threading.Thread):
     def __init__(self, parent, config):
         super(MainThread, self).__init__()
-        self.interface = config['interface']
-        self.channel = config['channel']
-        self.device = int(config['device'])
+        # self.interface = config['interface']
+        # self.channel = config['channel']
+        # self.device = int(config['device'])
 
         self.getout = False
         self.parent = parent
         self.log = parent.log
-        self.bus = can.interface.Bus(self.channel, bustype = self.interface)
+        self.mapping = parent.mapping
         self.framecount = 0
         self.errorcount = 0
-        mapping.initialize(config['mapfile'])
 
 
     def run(self):
+        self.bus = self.parent.bus
+
         while(True):
             try:
                 msg = self.bus.recv(1.0)
@@ -55,7 +56,7 @@ class MainThread(threading.Thread):
                     else:
                         #self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
                         if isinstance(cfobj, canfix.Parameter):
-                            mapping.inputMap(cfobj)
+                            self.mapping.inputMap(cfobj)
                         else:
                             # TODO What to do with the other types
                             pass
@@ -72,9 +73,19 @@ class MainThread(threading.Thread):
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
+        self.interface = config['interface']
+        self.channel = config['channel']
+        self.device = int(config['device'])
+        self.node = int(config['node'])
+        self.mapping = mapping.Mapping(config['mapfile'])
+        self.mapping.log = self.log
         self.thread = MainThread(self, config)
 
+
     def run(self):
+        self.bus = can.ThreadSafeBus(self.channel, bustype = self.interface)
+        for each in self.mapping.output_mapping:
+            self.db_callback_add(each, self.mapping.getOutputFunction(self.bus, each, self.node))
         self.thread.start()
 
     def stop(self):
@@ -85,8 +96,12 @@ class Plugin(plugin.PluginBase):
             raise plugin.PluginFail
 
     def get_status(self):
-        return OrderedDict({"Frame Count":self.thread.framecount,
-                            "Error Count":self.thread.errorcount})
+        x = OrderedDict()
+        x["CAN Interface"]=self.interface
+        x["CAN Channel"]=self.channel
+        x["Frame Count"]=self.thread.framecount
+        x["Error Count"]=self.thread.errorcount
+        return x
 
 # TODO: Add error reporting in debug mode
 # TODO: Add output parameter mapping
