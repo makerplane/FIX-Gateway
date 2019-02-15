@@ -77,3 +77,4 @@ TIMEZS:Zulu Time Second:int:0:59::0:2000:
 TIMELS:Local Time String:str:::::0:
 TIMEZ:Time Zone:float:-12:12::0::
 FTIME:Flight Time:float:0:1000::0::
+DIM:Panel Dimmer Level:int:0:100::100::

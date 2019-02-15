@@ -217,6 +217,11 @@ connections:
       #   output: x
       # - function: TAS
       # - function: DALT
+  dimmer:
+    load: yes
+    module: fixgw.plugins.dimmer
+    DimmerDevice: /sys/class/backlight/intel_backlight/brightness
+    Multiplier: 1.0
 
 # Logging configuration - See Python logging.config module documenation
 logging:
