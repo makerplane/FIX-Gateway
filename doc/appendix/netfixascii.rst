@@ -8,7 +8,7 @@ Net-FIX ASCII Protocol Description
 This is a description of the Net-FIX ASCII Protocol.  This is an
 implementation of FIX over a network using simple ASCII sentences.
 
-Data points are transmitted in colon ';' delited strings that begin
+Data points are transmitted in colon ';' delimited strings that begin
 with the FIX identifier and are followed by the data.
 
 The data sentence from the server to the client is formed like this...
@@ -103,7 +103,7 @@ with the identical message, or the ! followed by an error code.
 configured.  The list may be huge and as such may be returned in
 more than one response.  The client should be prepared for
 multiple responses.  The response will include the total number of
-Identifiers to expect then the current index.  The Identifiers will
+Identifiers to expect as well as the current index.  The Identifiers will
 not be in any kind of order.  Identifiers would be separated with commas ','
 
 The response might look like this...

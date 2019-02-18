@@ -35,7 +35,14 @@ import fixgw.netfix as netfix
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-
+def printData(x):
+    flags = ""
+    if len(x) == 3:
+        if 'a' in x[2]: flags += " Annuc"
+        if 'o' in x[2]: flags += " Old"
+        if 'f' in x[2]: flags += " Fail"
+        if 'b' in x[2]: flags += " Bad"
+    print("{} = {}{}".format(x[0],x[1],flags))
 
 class Command(cmd.Cmd):
     def __init__(self, client):
@@ -92,25 +99,13 @@ class Command(cmd.Cmd):
     def do_poll(self, line):
         """Poll\nContinuously prints updates to the given key"""
         args = line.split(" ")
-        print("Subscribe({})".format(str(args)))
-        # try:
-        #     self.plugin.db_callback_add(args[0], self.callback_function)
-        # except KeyError:
-        #     print(("Unknown Key " + args[0]))
-
-    # def do_unsub(self, line):
-    #     """Unsubscribe\nRemove subscription to updates"""
-    #     args = line.split(" ")
-    #     print("Unsubscribe({})".format(str(args)))
-    #     # try:
-        #     self.plugin.db_callback_del(args[0])
-        # except KeyError:
-        #     print(("Unknown Key " + args[0]))
-
-    def do_stop(self, line):
-        """Stop\nStop polling the item"""
-        args = line.split(" ")
-        print("Stop({})".format(str(args)))
+        self.client.setDataCallback(printData)
+        for each in args:
+            self.client.subscribe(each)
+        input()
+        for each in args:
+            self.client.unsubscribe(each)
+        self.client.clearDataCallback()
 
 
     def do_flag(self, line):
@@ -167,7 +162,7 @@ def main():
     parser.add_argument('--interactive', '-i', action='store_true',
                         help='Keep running after commands are executed')
     args, unknown_args = parser.parse_known_args()
-
+    log = logging.getLogger()
     if args.debug:
         log.level = logging.DEBUG
 
