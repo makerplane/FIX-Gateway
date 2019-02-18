@@ -175,6 +175,11 @@ def main():
         cmd.prompt = args.prompt
     else:
         cmd.prompt = ""
+    if args.execute:
+        s = " ".join(args.execute)
+        cmd.onecmd(s)
+        if not args.interactive:
+            exit(0)
     cmd.cmdloop()
 
     c.disconnect()
