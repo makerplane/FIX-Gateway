@@ -24,6 +24,7 @@ try:
     import queue
 except:
     import Queue as queue
+from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
@@ -192,6 +193,14 @@ class Client:
             res = self.cthread.cmdqueue.get(timeout = 1.0)
         except queue.Empty:
             return None
+
+    def getStatus(self):
+        self.cthread.send("@xstatus\n".encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+        except queue.Empty:
+            return None
+        return res[1][7:]
 
 
 if __name__ == "__main__":

@@ -27,7 +27,9 @@ try:
 except:
     import Queue as queue
 from collections import OrderedDict
+import json
 import fixgw.plugin as plugin
+import fixgw.status as status
 
 
 # This holds the data and functions that are needed by both connection threads.
@@ -93,6 +95,12 @@ class Connection(object):
             current += len(message.split(','))
 
 
+    def __server_specific(self, d):
+        if d == "status":
+            s = json.dumps(status.get_dict())
+            self.queue.put("@xstatus;{}\n".format(s).encode())
+
+
     def handle_request(self, d):
         if d[0] == '@': # It's a command frame
             if d[1] == 'l':
@@ -129,6 +137,8 @@ class Connection(object):
                     self.queue.put("@u{0}!001\n".format(id).encode())
             elif d[1] == 'q':
                 self.__send_report(id)
+            elif d[1] == 'x':
+                self.__server_specific(d[2:])
         else:  # If no '@' then it must be a value update
             try:
                 x = d.strip().split(';')

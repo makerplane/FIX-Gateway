@@ -26,10 +26,13 @@ import socket
 import readline
 import cmd
 import sys
+import json
+from collections import OrderedDict
 import logging
 logging.basicConfig()
 
 import fixgw.netfix as netfix
+import fixgw.status as status
 
 # Used to print to stderr
 def eprint(*args, **kwargs):
@@ -130,9 +133,14 @@ class Command(cmd.Cmd):
         #     x.secondary = bit
 
     def do_status(self, line):
-        """status\nRead status information"""
-        # print(status.get_string())
-        print("Status")
+        """status <json>\nRead status information.  If the 'json' argument is
+added the output will be in JSON format."""
+        res = self.client.getStatus()
+        if line == 'json':
+            print(res)
+        else:
+            d = json.loads(res, object_pairs_hook=OrderedDict)
+            print(status.dict2string(d))
 
     def do_quit(self, line):
         """quit\nExit Plugin"""
@@ -175,6 +183,11 @@ def main():
         cmd.prompt = args.prompt
     else:
         cmd.prompt = ""
+    if args.execute:
+        s = " ".join(args.execute)
+        cmd.onecmd(s)
+        if not args.interactive:
+            exit(0)
     cmd.cmdloop()
 
     c.disconnect()
