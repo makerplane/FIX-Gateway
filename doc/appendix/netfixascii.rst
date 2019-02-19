@@ -135,6 +135,25 @@ Server response.
 *tol* = an integer indicating the time to live of the point in milliseconds.
 *aux* = a comma separated list of the auxillary data points.  ("min,max,lowWarn,lowAlarm")
 
+``x`` = Server Specific Command - This is used to send specific commands to a
+particular server.
+
+``@x<cmd>`` sends the <cmd> command to a server.
+
+``@x<cmd>;<arguments>;...`` sends the <cmd> command to a server with some number
+of arguments separated by ';'.
+
+Server response.
+
+::
+
+  @x<cmd>;<response>
+
+Currently FIX-Gateway uses this command for retreiving the status.  The command
+is...
+
+``@xstatus`` and the server will respond with a JSON string representing
+the status of the server.
 
 The client/server is asynchronous so the client does not have to wait
 for a response from the server before sending another command.  Data
