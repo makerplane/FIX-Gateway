@@ -58,6 +58,7 @@ class Connection(object):
     def __send_report(self, id):
         try:
             x = self.parent.db_get_item(id)
+            if not x: raise KeyError
             a = ""
             for each in x.aux:
                 if len(a) > 0:
@@ -119,7 +120,7 @@ class Connection(object):
                         f = "1" if val[4] else "0"
                         s = "@r{0};{1};{2}{3}{4}{5}\n".format(id, val[0],a, o, b, f)
                     else:
-                        s = "{0};{1}\n".format(id, val)
+                        s = "@r{0};{1}\n".format(id, val)
                     self.queue.put(s.encode())
                 except KeyError:
                     self.queue.put("@r{0}!001\n".format(id).encode())

@@ -75,12 +75,40 @@ class Command(cmd.Cmd):
 
     def do_list(self, line):
         """list\nList Database Keys"""
-        print("List")
+        list = self.client.getList()
+        list.sort()
+        for each in list:
+            print(each)
 
     def do_report(self, line):
         """Report [key]\nDetailed item information report"""
         args = line.split(" ")
-        print("Report({})".format(str(args)))
+        if len(args) < 1:
+            print("Missing Argument")
+        else:
+            try:
+                res = self.client.getReport(args[0])
+                val = self.client.read(args[0])
+                print(res[1])
+                print("Type:  {0}".format(res[2]))
+                print("Value: {0}".format(val[1]))
+                print("Q:     {0}".format(val[2]))
+                print("Min:   {0}".format(res[3]))
+                print("Max:   {0}".format(res[4]))
+                print("Units: {0}".format(res[5]))
+                print("TOL:   {0}".format(res[6]))
+                if res[7]:
+                    print("Auxillary Data:")
+                    x = res[7].split(',')
+                    for aux in x:
+                        val = self.client.read("{}.{}".format(args[0], aux))
+                        if val[1] == 'None': s = ""
+                        else: s = val[1]
+                        print("  {0} = {1}".format(aux, s))
+
+            except netfix.ResponseError as e:
+                print(e)
+
         # try:
         #     x = self.plugin.db_get_item(args[0])
         #     print(x.description)

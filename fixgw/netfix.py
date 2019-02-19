@@ -28,6 +28,9 @@ from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
+class ResponseError(Exception):
+    pass
+
 # This is the main communication thread of the FIX Gateway client.
 class ClientThread(threading.Thread):
     def __init__(self, host, port):
@@ -137,13 +140,17 @@ def decodeDataString(d):
     x = d.split(';')
     id = x[0]
     v = x[1]
-    f = "" # Quality Flags
-    if x[2][0] == '1': f += "a"
-    if x[2][1] == '1': f += "o"
-    if x[2][2] == '1': f += "b"
-    if x[2][3] == '1': f += "f"
-    return (id,v,f)
+    if len(x) == 3:
+        f = "" # Quality Flags
+        if x[2][0] == '1': f += "a"
+        if x[2][1] == '1': f += "o"
+        if x[2][2] == '1': f += "b"
+        if x[2][3] == '1': f += "f"
+        return (id,v,f)
+    else:
+        return (id, v)
 
+# TODO: Deal with returned errors
 
 class Client:
     def __init__(self, host, port, timeout=1.0):
@@ -167,6 +174,31 @@ class Client:
 
     def clearDataCallback(self):
         self.cthread.dataCallback = None
+
+    def getList(self):
+        self.cthread.send("@l{}\n".format(id).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+        except queue.Empty:
+            return None
+        # TODO: Deal with partial list responses
+        a = res[1].split(';')
+        return a[2].split(',')
+
+    def getReport(self, id):
+        self.cthread.send("@q{}\n".format(id).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+            if '!' in res[1]:
+                e = res[1].split('!')
+                if e[1] == '001':
+                    raise ResponseError("Key Not Found {}".format(e[0]))
+                else:
+                    raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
+        except queue.Empty:
+            return None
+        a = res[1].split(';')
+        return a
 
     def read(self, id):
         self.cthread.send("@r{}\n".format(id).encode())
