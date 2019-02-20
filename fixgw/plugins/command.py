@@ -109,7 +109,7 @@ class Command(cmd.Cmd):
         elif args[1].lower()[0] == 'a':
             x.annunciate = bit
         elif args[1].lower()[0] == 's':
-            x.secondary = bit
+            x.secfail = bit
 
     def do_status(self, line):
         """status\nRead status information"""

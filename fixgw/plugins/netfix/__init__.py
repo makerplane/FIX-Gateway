@@ -50,10 +50,11 @@ class Connection(object):
             o = "1" if value[2] else "0"
             b = "1" if value[3] else "0"
             f = "1" if value[4] else "0"
-            s = "{0};{1};{2}{3}{4}{5}\n".format(id, value[0],a, o, b, f)
+            s = "1" if value[5] else "0"
+            st = "{0};{1};{2}{3}{4}{5}{6}\n".format(id, value[0],a, o, b, f, s)
         else:
-            s = "{0};{1}\n".format(id, value)
-        self.queue.put(s.encode())
+            st = "{0};{1}\n".format(id, value)
+        self.queue.put(st.encode())
 
     def __send_report(self, id):
         try:
@@ -118,10 +119,11 @@ class Connection(object):
                         o = "1" if val[2] else "0"
                         b = "1" if val[3] else "0"
                         f = "1" if val[4] else "0"
-                        s = "@r{0};{1};{2}{3}{4}{5}\n".format(id, val[0],a, o, b, f)
+                        s = "1" if val[5] else "0"
+                        st = "@r{0};{1};{2}{3}{4}{5}{6}\n".format(id, val[0],a, o, b, f, s)
                     else:
-                        s = "@r{0};{1}\n".format(id, val)
-                    self.queue.put(s.encode())
+                        st = "@r{0};{1}\n".format(id, val)
+                    self.queue.put(st.encode())
                 except KeyError:
                     self.queue.put("@r{0}!001\n".format(id).encode())
             elif d[1] == 's':
@@ -152,6 +154,8 @@ class Connection(object):
                     f = x[2][2]
                     if len(x[2]) == 4:
                         s = x[2][3]
+                    else:
+                        s = '0'
                     if a and a == '1':
                         item.annunciate = True
                     elif a and a == '0':
@@ -164,6 +168,10 @@ class Connection(object):
                         item.fail = True
                     elif f and f == '0':
                         item.fail = False
+                    if s and s == '1':
+                        item.secfail = True
+                    elif s and s == '0':
+                        item.secfail = False
                     # TODO Finish dealing with secondary quality flag
                 self.parent.db_write(x[0], x[1])
             except Exception as e:

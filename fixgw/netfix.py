@@ -61,6 +61,7 @@ class ClientThread(threading.Thread):
                 if x[2][1] == "1": s += "o";
                 if x[2][2] == "1": s += "b";
                 if x[2][3] == "1": s += "f";
+                if x[2][4] == "1": s += "s";
                 x[2] = s
             self.dataqueue.put(x)
             if self.dataCallback:
@@ -146,6 +147,7 @@ def decodeDataString(d):
         if x[2][1] == '1': f += "o"
         if x[2][2] == '1': f += "b"
         if x[2][3] == '1': f += "f"
+        if x[2][4] == '1': f += "s"
         return (id,v,f)
     else:
         return (id, v)
@@ -208,9 +210,14 @@ class Client:
             return None
         return decodeDataString(res[1])
 
-    def write(self, id, value):
-        s = "{};{};00000\n".format(id, value)
-        self.cthread.send(s.encode())
+    def write(self, id, value, flags=""):
+        a = "1" if 'a' in flags else "0"
+        b = "1" if 'b' in flags else "0"
+        f = "1" if 'f' in flags else "0"
+        s = "1" if 's' in flags else "0"
+        sendStr = "{0};{1};{2}{3}{4}{5}\n".format(id, value, a, b, f, s)
+        #s = "{};{};00000\n".format(id, value)
+        self.cthread.send(sendStr.encode())
 
     def subscribe(self, id):
         self.cthread.send("@s{}\n".format(id).encode())

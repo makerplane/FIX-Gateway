@@ -45,6 +45,7 @@ def printData(x):
         if 'o' in x[2]: flags += " Old"
         if 'f' in x[2]: flags += " Fail"
         if 'b' in x[2]: flags += " Bad"
+        if 's' in x[2]: flags += " SecFail"
     print("{} = {}{}".format(x[0],x[1],flags))
 
 class Command(cmd.Cmd):
@@ -62,6 +63,7 @@ class Command(cmd.Cmd):
             if 'o' in x[2]: flags += " Old"
             if 'f' in x[2]: flags += " Fail"
             if 'b' in x[2]: flags += " Bad"
+            if 's' in x[2]: flags += " SecFail"
 
         print(x[1]+flags)
 
@@ -109,23 +111,6 @@ class Command(cmd.Cmd):
             except netfix.ResponseError as e:
                 print(e)
 
-        # try:
-        #     x = self.plugin.db_get_item(args[0])
-        #     print(x.description)
-        #     print("Type:  {0}".format(x.typestring))
-        #     print("Value: {0}".format(str(x.value[0])))
-        #     print("Q:     {0}".format(str(x.value[1:])))
-        #     print("Min:   {0}".format(str(x.min)))
-        #     print("Max:   {0}".format(str(x.max)))
-        #     print("Units: {0}".format(x.units))
-        #     print("TOL:   {0}".format(str(x.tol)))
-        #     print("Auxillary Data:")
-        #     for each in x.aux:
-        #         if each: print("  {0} = {1}".format(each,str(x.aux[each])))
-        #     for each in x.callbacks:
-        #         print("Callback function defined: {0}".format(each[0]))
-        # except KeyError:
-        #     print(("Unknown Key " + args[0]))
 
     def do_poll(self, line):
         """Poll\nContinuously prints updates to the given key"""
