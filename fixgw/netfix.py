@@ -233,6 +233,24 @@ class Client:
         except queue.Empty:
             return None
 
+    def flag(self, id, flag, setting):
+        if setting: s = '1'
+        else:       s = '0'
+        self.cthread.send("@f{};{};{}\n".format(id, flag.lower(), s).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+            if '!' in res[1]:
+                e = res[1].split('!')
+                if e[1] == '001':
+                    raise ResponseError("Key Not Found {}".format(e[0]))
+                elif e[1] == '002':
+                    raise ResponseError("Unknown Flag {}".format(flag))
+                else:
+                    raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
+        except queue.Empty:
+            return None
+
+
     def getStatus(self):
         self.cthread.send("@xstatus\n".encode())
         try:

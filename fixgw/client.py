@@ -128,7 +128,15 @@ class Command(cmd.Cmd):
         """flag [key] [abfs] [true/false]\nSet or clear quality flags"""
         args = line.split(" ")
         print("flag({})".format(str(args)))
-        # if len(args) < 3:
+        if len(args) < 3:
+            print("Missing Argument")
+        else:
+            bit = True if args[2].lower() in ["true", "high", "1", "yes", "set"] else False
+            try:
+                self.client.flag(args[0], args[1][0], bit)
+            except netfix.ResponseError as e:
+                print(e)
+            # if len(args) < 3:
         #     print("Not Enough Arguments") # TODO print usage??
         #     return
         # try:

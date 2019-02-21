@@ -103,11 +103,32 @@ class Connection(object):
             self.queue.put("@xstatus;{}\n".format(s).encode())
 
 
+    def __flag(self, d):
+        a = d.split(';')
+        try:
+            item = self.parent.db_get_item(a[0])
+        except KeyError:
+            self.queue.put("@f{0}!001\n".format(d[0]).encode())
+            return
+        if a[1] not in ['a', 'f', 'b', 's', 'o']:
+            self.queue.put("@f{0}!002\n".format(d[0]).encode())
+            return
+        if a[2] not in ['1', '0']:
+            self.queue.put("@f{0}!003\n".format(d[0]).encode())
+            return
+        bit = (a[2] == '1')
+        if a[1] == 'a': item.annunciate = bit
+        elif a[1] == 'o': item.old = bit
+        elif a[1] == 'b': item.bad = bit
+        elif a[1] == 'f': item.fail = bit
+        elif a[1] == 's': item.secfail = bit
+        self.queue.put("@f{0}\n".format(d).encode())
+
+
     def handle_request(self, d):
         if d[0] == '@': # It's a command frame
             if d[1] == 'l':
                 self.__send_list()
-                #print("List ID's")
                 return
             else:
                 id = d[2:].strip()
@@ -142,6 +163,8 @@ class Connection(object):
                 self.__send_report(id)
             elif d[1] == 'x':
                 self.__server_specific(d[2:])
+            elif d[1] == 'f':
+                self.__flag(d[2:])
         else:  # If no '@' then it must be a value update
             try:
                 x = d.strip().split(';')
@@ -172,7 +195,6 @@ class Connection(object):
                         item.secfail = True
                     elif s and s == '0':
                         item.secfail = False
-                    # TODO Finish dealing with secondary quality flag
                 self.parent.db_write(x[0], x[1])
             except Exception as e:
                 # We pretty much ignore this stuff for now
@@ -181,6 +203,7 @@ class Connection(object):
     # Callback function used for subscriptions
     def subscription_handler(self, id, value, udata):
         self.__send_value(id, value)
+
 
 # Two threads are started for each connection.  This one is for receiving the data
 class ReceiveThread(threading.Thread):
