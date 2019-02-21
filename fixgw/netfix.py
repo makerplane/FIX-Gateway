@@ -259,6 +259,9 @@ class Client:
             return None
         return res[1][7:]
 
+    def stop(self):
+        self.cthread.send("@xkill\n".encode())
+
 
 if __name__ == "__main__":
     logging.basicConfig()

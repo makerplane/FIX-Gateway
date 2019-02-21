@@ -101,6 +101,11 @@ class Connection(object):
         if d == "status":
             s = json.dumps(status.get_dict())
             self.queue.put("@xstatus;{}\n".format(s).encode())
+        elif d == "kill":
+            self.queue.put("@xkill\n".encode())
+            self.parent.quit()
+        else:
+            self.queue.put("@x{}!001".format(d))
 
 
     def __flag(self, d):

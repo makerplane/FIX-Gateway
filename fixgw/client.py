@@ -163,6 +163,10 @@ added the output will be in JSON format."""
             d = json.loads(res, object_pairs_hook=OrderedDict)
             print(status.dict2string(d))
 
+    def do_stop(self, line):
+        """Shutdown Server"""
+        self.client.stop()
+
     def do_quit(self, line):
         """quit\nExit Plugin"""
         return True
