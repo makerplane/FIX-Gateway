@@ -1,15 +1,9 @@
 Add some tags to indicate some status information so that EFIS displays and
 other equipment can have access to that.
 
-DATABASE LOCKING!!!  Multithreaded app / single database??? Duh??!!
-
 Finsh FlightGear Plugin.  Need to add conversion functions.  Finish the
 XML file to try and get most of the data.  Also need to set the input
 protocol up so that we can write to FlightGear
-
-Add composite data points.  Things like Min, Max, Sum, Average, Span etc.
-Could be used for things like summing the total fuel on board or determining
-the Average EGT.
 
 Airdata plugin.  This plugin would calculate things like TAS, wind direction
 Density altitude etc.  It would also be a good example of a plugin that used
@@ -49,10 +43,6 @@ GUI Plugin
 CAN-FIX Plugin
 
   Add mandatory Node Specific Message responses
-
-  Finish input mapping
-
-  Add output mapping
 
   Add node status information.
 
