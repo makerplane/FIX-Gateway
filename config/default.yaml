@@ -11,8 +11,9 @@ database file: "{CONFIG}/default.db"
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-  - "{CONFIG}/c170b.ini"
-  - "{CONFIG}/fg_172.ini"
+  - "{CONFIG}/default.ini"
+  # - "{CONFIG}/c170b.ini"
+  # - "{CONFIG}/fg_172.ini"
 
 # Connections:
 # if 'load' is 'yes' the connection plugin will be loaded at program start

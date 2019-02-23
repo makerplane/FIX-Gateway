@@ -35,8 +35,13 @@ import fixgw.status as status
 import fixgw.plugin as plugin
 
 config_filename = "default.yaml"
-path_options = ['config', '/usr/local/etc/fixgw', '/usr/etc/fixgw', '/etc/fixgw']
-
+user_home = os.path.expanduser("~")
+prefix_path = sys.prefix
+path_options = ['{USER}/.makerplane/fixgw/config',
+                '{PREFIX}/local/etc/fixgw',
+                '{PREFIX}/etc/fixgw',
+                '/etc/fixgw',
+                'config']
 
 # This dictionary holds the modules for each plugin that we load
 plugin_mods = {}
@@ -54,12 +59,13 @@ def load_plugin(name, module, config):
 
 
 def main():
-    config_path = "."
+    config_path = None
     # Look for our configuration file in the list of directories
     for directory in path_options:
         # store the first match that we find
-        if os.path.isfile("{}/{}".format(directory, config_filename)):
-            config_path = directory
+        d = directory.format(USER=user_home, PREFIX=prefix_path)
+        if os.path.isfile("{}/{}".format(d, config_filename)):
+            config_path = d
             break
 
     config_file = "{}/{}".format(config_path, config_filename)
@@ -78,8 +84,11 @@ def main():
     # if we passed in a configuration file on the command line...
     if args.config_file:
         cf = args.config_file
-    else: # otherwise use the default
+    elif config_path is not None: # otherwise use the default
         cf = open(config_file)
+    else:
+        # Look in the package for the configuration
+        pass
     config = yaml.load(cf)
 
     # Either load the config file given as a command line argument or
