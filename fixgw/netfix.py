@@ -24,6 +24,7 @@ try:
     import queue
 except:
     import Queue as queue
+from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
@@ -41,21 +42,26 @@ class ClientThread(threading.Thread):
         # This Queue will hold command responses
         self.cmdqueue = queue.Queue()
         self.connectedEvent = threading.Event()
+        self.dataCallback = None
 
     def handle_request(self, d):
+        log.debug("Response - {}".format(d))
         if d[0] == '@':
             self.cmdqueue.put([d[1], d[2:]])
         else:
             x = d.split(";")
-            if len(x) != 3:
+            if len(x) != 3 and len(x) != 2:
                 log.error("Bad Data Sentence Received")
-            s = ""
-            if x[2][0] == "1": s += "a";
-            if x[2][1] == "1": s += "o";
-            if x[2][2] == "1": s += "b";
-            if x[2][3] == "1": s += "f";
-            x[2] = s
+            if len(x) == 3:
+                s = ""
+                if x[2][0] == "1": s += "a";
+                if x[2][1] == "1": s += "o";
+                if x[2][2] == "1": s += "b";
+                if x[2][3] == "1": s += "f";
+                x[2] = s
             self.dataqueue.put(x)
+            if self.dataCallback:
+                self.dataCallback(x)
 
     def run(self):
         log.debug("ClientThread - Starting")
@@ -156,6 +162,11 @@ class Client:
     def isConnected(self):
         return self.cthread.connectedEvent.is_set()
 
+    def setDataCallback(self, func):
+        self.cthread.dataCallback = func
+
+    def clearDataCallback(self):
+        self.cthread.dataCallback = None
 
     def read(self, id):
         self.cthread.send("@r{}\n".format(id).encode())
@@ -168,6 +179,28 @@ class Client:
     def write(self, id, value):
         s = "{};{};00000\n".format(id, value)
         self.cthread.send(s.encode())
+
+    def subscribe(self, id):
+        self.cthread.send("@s{}\n".format(id).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+        except queue.Empty:
+            return None
+
+    def unsubscribe(self, id):
+        self.cthread.send("@u{}\n".format(id).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+        except queue.Empty:
+            return None
+
+    def getStatus(self):
+        self.cthread.send("@xstatus\n".encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+        except queue.Empty:
+            return None
+        return res[1][7:]
 
 
 if __name__ == "__main__":

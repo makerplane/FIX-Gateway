@@ -1,7 +1,7 @@
 e=1:Engines
 c=6:Cylinders per engine
 t=2:Fuel Tanks
-b=6:Generic Buttons
+b=16:Generic Buttons
 r=1:Generic Encoders
 a=8:Generic Analog
 ---
@@ -56,25 +56,26 @@ OILPe:Oil Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,l
 OILTe:Oil Temperature Engine %e:float:0:150:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 H2OTe:Coolant Temperature Engine %e:float:0:200:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 FUELPe:Fuel Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:
-MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:
+FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:Min,Max
+MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:Min,Max
 VOLT:System Voltage:float:1:16:volt:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
-EGTAVGe:Average Exhaust Gas Temp Engine %e:float:0:1000:degC:0.0:0:
-EGTSPANe:Exhaust Gas Temp Span Engine %e:float:0:1000:degC:0.0:0:
-CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
-CHTMAXe:Maximum Cylinder Head Temp Engine %e:float:0:1000:degC:0.0::
+EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:Min,Max
+EGTAVGe:Average Exhaust Gas Temp Engine %e:float:0:1000:degC:0.0:0:Min,Max
+EGTSPANe:Exhaust Gas Temp Span Engine %e:float:0:1000:degC:0.0:0:Min,Max
+CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+CHTMAXe:Maximum Cylinder Head Temp Engine %e:float:0:1000:degC:0.0::Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
 FUELQT:Total Fuel Quantity:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
 TACHe:Engine RPM Engine %e:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 PROPe:Propeller RPM Engine %e:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 LAT:Latitude:float:-90:90:deg:0.0:2000:
 LONG:Longitude:float:-180:180:deg:0:2000:
-TIMEZS:Zulu Time String:str:::::2000:
+TIMEZ:Zulu Time String:str:::::2000:
 TIMEZH:Zulu Time Hour:int:0:23::0:2000:
 TIMEZM:Zulu Time Minute:int:0:59::0:2000:
 TIMEZS:Zulu Time Second:int:0:59::0:2000:
-TIMELS:Local Time String:str:::::0:
-TIMEZ:Time Zone:float:-12:12::0::
+TIMEL:Local Time String:str:::::0:
+TZONE:Time Zone:float:-12:12::0::
 FTIME:Flight Time:float:0:1000::0::
 DIM:Panel Dimmer Level:int:0:100::100::
+HOBBS1:Total Engine Time %e:float:0:100000:Hours:0::

@@ -33,6 +33,8 @@ class Mapping(object):
         self.input_mapping = [None] * 1280
         self.output_mapping = {}
         self.log = None # Should set from parent plugin
+        self.sendcount = 0
+
 
         # Open and parse the YAML mapping file passed to us
         try:
@@ -131,6 +133,7 @@ class Mapping(object):
                 # print(p.msg)
                 # print("Output Callback {} = {}".format(key, value))
                 bus.send(p.msg)
+                self.sendcount += 1
                 # print(bus)
                 # print(self.output_mapping[dbKey])
 

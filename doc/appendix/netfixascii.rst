@@ -8,7 +8,7 @@ Net-FIX ASCII Protocol Description
 This is a description of the Net-FIX ASCII Protocol.  This is an
 implementation of FIX over a network using simple ASCII sentences.
 
-Data points are transmitted in colon ';' delited strings that begin
+Data points are transmitted in colon ';' delimited strings that begin
 with the FIX identifier and are followed by the data.
 
 The data sentence from the server to the client is formed like this...
@@ -103,7 +103,7 @@ with the identical message, or the ! followed by an error code.
 configured.  The list may be huge and as such may be returned in
 more than one response.  The client should be prepared for
 multiple responses.  The response will include the total number of
-Identifiers to expect then the current index.  The Identifiers will
+Identifiers to expect as well as the current index.  The Identifiers will
 not be in any kind of order.  Identifiers would be separated with commas ','
 
 The response might look like this...
@@ -135,6 +135,25 @@ Server response.
 *tol* = an integer indicating the time to live of the point in milliseconds.
 *aux* = a comma separated list of the auxillary data points.  ("min,max,lowWarn,lowAlarm")
 
+``x`` = Server Specific Command - This is used to send specific commands to a
+particular server.
+
+``@x<cmd>`` sends the <cmd> command to a server.
+
+``@x<cmd>;<arguments>;...`` sends the <cmd> command to a server with some number
+of arguments separated by ';'.
+
+Server response.
+
+::
+
+  @x<cmd>;<response>
+
+Currently FIX-Gateway uses this command for retreiving the status.  The command
+is...
+
+``@xstatus`` and the server will respond with a JSON string representing
+the status of the server.
 
 The client/server is asynchronous so the client does not have to wait
 for a response from the server before sending another command.  Data

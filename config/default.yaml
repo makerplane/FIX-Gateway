@@ -113,6 +113,24 @@ connections:
     load: yes
     module: fixgw.plugins.gui
 
+  system:
+    load: yes
+    module: fixgw.plugins.system
+    time:
+      enable: yes
+      keys: # Database keys to write the time
+        gmt_seconds: TIMEZS
+        gmt_minutes: TIMEZM
+        gmt_hours: TIMEZH
+        gmt_string: TIMEZ
+        local_seconds:
+        local_minutes:
+        local_hours:
+        local_string: TIMEL
+      gmt_format: "%H:%M:%SZ" # Zulu time format string
+      local_format: "%H:%M:%S %Z" # Local time format string
+
+
   test1:
     load: no
     module: fixgw.plugins.test

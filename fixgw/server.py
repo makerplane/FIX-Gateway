@@ -67,7 +67,7 @@ def main():
     parser.add_argument('--debug', '-d', action='store_true',
                         help='Run in debug mode')
     parser.add_argument('--verbose', '-v', action='store_true',
-                        help='Run in debug mode')
+                        help='Run in verbose mode')
     parser.add_argument('--config-file', type=argparse.FileType('r'),
                         help='Alternate configuration file')
     parser.add_argument('--log-config', type=argparse.FileType('r'),
