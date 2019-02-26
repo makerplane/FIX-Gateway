@@ -39,7 +39,7 @@ connections:
     prompt: "FIX:"
     # If set quiting the command interpreter plugin
     # will end execution of the program
-    quit: yes
+    quit: no
 
   # FlightGear Flight Simulator Module
   # To start FlightGear with these paramaters, use the following command...
@@ -96,7 +96,7 @@ connections:
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
-    channel: vcan0
+    channel: can0
     #interface: serial
     #channel: /dev/ttyUSB0
 
@@ -110,26 +110,8 @@ connections:
     model: 0      # Model Number
 
   gui:
-    load: yes
+    load: no
     module: fixgw.plugins.gui
-
-  system:
-    load: yes
-    module: fixgw.plugins.system
-    time:
-      enable: yes
-      keys: # Database keys to write the time
-        gmt_seconds: TIMEZS
-        gmt_minutes: TIMEZM
-        gmt_hours: TIMEZH
-        gmt_string: TIMEZ
-        local_seconds:
-        local_minutes:
-        local_hours:
-        local_string: TIMEL
-      gmt_format: "%H:%M:%SZ" # Zulu time format string
-      local_format: "%H:%M:%S %Z" # Local time format string
-
 
   test1:
     load: no
@@ -238,7 +220,7 @@ connections:
   dimmer:
     load: yes
     module: fixgw.plugins.dimmer
-    DimmerDevice: /sys/class/backlight/intel_backlight/brightness
+    DimmerDevice: /sys/class/backlight/backlight/brightness
     Multiplier: 1.0
 
 # Logging configuration - See Python logging.config module documenation

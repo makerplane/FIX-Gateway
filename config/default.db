@@ -77,4 +77,5 @@ TIMEZS:Zulu Time Second:int:0:59::0:2000:
 TIMEL:Local Time String:str:::::0:
 TZONE:Time Zone:float:-12:12::0::
 FTIME:Flight Time:float:0:1000::0::
+DIM:Panel Dimmer Level:int:0:100::100::
 HOBBS1:Total Engine Time %e:float:0:100000:Hours:0::
