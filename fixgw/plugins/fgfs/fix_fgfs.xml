@@ -16,6 +16,13 @@
    </chunk>
 
    <chunk>
+    <name>TAS: True Airspeed</name>
+    <type>double</type>
+    <format>%.1f</format>
+    <node>/instrumentation/airspeed-indicator/true-speed-kt</node>
+   </chunk>
+
+   <chunk>
     <name>PITCH: pitch att (deg)</name>
     <type>float</type>
     <format>%.1f</format>
@@ -48,6 +55,27 @@
     <type>float</type>
     <format>%.1f</format>
     <node>/instrumentation/vertical-speed-indicator/indicated-speed-fpm</node>
+   </chunk>
+
+   <chunk>
+    <name>ALAT: AccelerationLateral</name>
+    <type>double</type>
+    <format>%.11f</format>
+    <node>/accelerations/pilot/y-accel-fps_sec</node>
+   </chunk>
+
+   <chunk>
+    <name>TRACK: Current Aircraft Bearing</name>
+    <type>double</type>
+    <format>%.1f</format>
+    <node>/orientation/track-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>TRACKM: Current Aircraft Magnetic Bearing</name>
+    <type>double</type>
+    <format>%.1f</format>
+    <node>/orientation/track-magnetic-deg</node>
    </chunk>
 
    <chunk>
@@ -141,16 +169,14 @@
     <format>%.1f</format>
     <node>/environment/temperature-degc</node>
    </chunk>
-  </output>
 
-  <input>
     <chunk>
       <name>BARO: Altimeter Setting</name>
       <type>double</type>
       <format>%.2f</format>
       <node>/instrumentation/altimeter/setting-inhg</node>
     </chunk>
-  </input>
+  </output>
 
  </generic>
 
