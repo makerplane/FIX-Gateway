@@ -5,10 +5,10 @@ import os
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
-datafiles = [('config', ['config/default.yaml', 'config/default.db', 'config/default.ini','config/fg_172.ini']),
-             ('config/canfix', ['config/canfix/map.yaml']),
+datafiles = [('fixgw/config', ['config/default.yaml', 'config/default.db', 'config/default.ini','config/fg_172.ini']),
+             ('fixgw/config/canfix', ['config/canfix/map.yaml']),
 #             ('share/fixgw/doc', ['doc/_build/FIXGateway-html.tar.gz', 'doc/_build/latex/FIXGateway.pdf']),
-             ('share/fixgw', ['fixgw/plugins/fgfs/fix_fgfs.xml']),
+             ('fixgw/share/fixgw', ['fixgw/plugins/fgfs/fix_fgfs.xml']),
 ]
 
 
@@ -21,12 +21,12 @@ setuptools.setup(
     long_description=long_description,
     #long_description_content_type="text/x-rst",
     url="https://github.com/makerplane/FIX-Gateway",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=["tests.*", "tests"]),
     #package_data = {'fixgw':['config/*']},
     install_requires = ['pyyaml',],
     #data_files = datafiles,
     #scripts = ['bin/fixgw', 'bin/fixgwc'],
-    package_data= {'fixgw': ["config/default.yaml"]},
+    #package_data= {'fixgw': ["config/default.yaml"]},
     include_package_data= True,
     entry_points = {
         'console_scripts': ['fixgw=fixgw.server:main', 'fixgwc=fixgw.client:main'],
