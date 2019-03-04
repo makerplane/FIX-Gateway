@@ -38,35 +38,35 @@ not communicate with any of the FIX protocols.  Examples of use are...
 General Description
 -------------------
 
-FIX Gateway is a plug-in based program written in Python.  Which plug-ins are
-loaded is determined by the configuration file during the program start.  Each
-of the plug-ins communicates with a central database of data items.  Each data
-item represents a distinct aircraft data point.  Airspeed, altitude or oil
-pressure are simple examples but control positions and radio frequencies are
-also examples.
+FIX Gateway is a plug-in based program written in Python.  There is a central
+database that is a repository for all of the information in the system.  A
+plug-in would be loaded for each particular type of connection that is needed.
+Each of these plug-ins communicates with the central database.  Each data item
+represents a distinct aircraft data point.  Airspeed, altitude or oil pressure
+are simple examples.
 
 The database is determined by a database configuration file that is read during
 start up.  The user can modify this file if need be to customize the database
 for specific needs.
 
-Possible Applications
----------------------
-The primary use case for FIX Gateway is to integrate all the disparate flight
-information in the aircraft for display on an Electronic Flight Information
-System (EFIS).  PyEFIS is a Python based EFIS that is being developed in concert
-with FGW.  This allows the EFIS designers to not have to worry about all the
-data interfaces that may be necessary and concentrate on development of the
-EFIS.  FGW supplies a common interface through a network connection that
-abstracts the data so the EFIS does not care whether the data comes from a
-flight simulator, a real airplane or is just being managed manually by the
-programmer.
+The plug-ins which would be loaded are determined by the main configuration file.
 
-Once the EFIS program is finished and installed in the airplane it needn't be
-modified to get actual aircraft data.  Only FGW configuration needs to be
-changed.
+Possible Applications --------------------- The primary use case for FIX Gateway
+is to integrate all the disparate flight information in the aircraft for display
+on an Electronic Flight Information System (EFIS).  PyEFIS is a Python based
+EFIS that is being developed in concert with FGW.  This allows the EFIS
+designers to ignore all of the data interfaces that may be necessary and
+concentrate on development of the EFIS.  FGW supplies a common interface through
+a socket connection that abstracts the data so the EFIS does not care whether
+the data comes from a flight simulator, a real airplane or is just being managed
+manually by the programmer.
+
+Once the EFIS program is finished and installed in the airplane it need not be
+modified to get actual aircraft data.  Only the FGW configuration would need to
+be changed
 
 Another use for FGW is to make it easy to integrate flight simulator data into
-other system.  The EFIS could be used as an instrument for the flight simulator.
+other systems.  The EFIS could be used as an instrument for the flight simulator.
 The entire aircraft panel could be duplicated in the EFIS/FGW and removed from
 the flight simulator itself.  Interface to real equipment is simplified.  Since
 FGW is written in Python it's quite easy to write a custom plug-in to read data

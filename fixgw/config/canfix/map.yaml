@@ -17,7 +17,7 @@ meta replacements:
 # Input mappings are for data that is read from the CAN-FIX bus and written into
 # the FixGW database.  This list contains the following information...
 
-# caid  - The CAN-FIX ID of the parameter represented by the received message
+# canid  - The CAN-FIX ID of the parameter represented by the received message
 # index - The CAN-FIX index of the parameter
 # fixid - The FIX Database ID (This should match an individual point
 #         in the database configuration)
@@ -71,7 +71,7 @@ inputs:
   # Output mappings are for data that is read from the FixGW database and
   # written to the CAN-FIX bus.  This list contains the following information...
 
-  # caid  - The CAN-FIX ID of the parameter represented by the received message
+  # canid  - The CAN-FIX ID of the parameter represented by the received message
   # index - The CAN-FIX index of the parameter
   # fixid - The FIX Database ID (This should match an individual point
   #         in the database configuration)
