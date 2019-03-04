@@ -35,8 +35,13 @@ import fixgw.status as status
 import fixgw.plugin as plugin
 
 config_filename = "default.yaml"
-path_options = ['config', '/usr/local/etc/fixgw', '/usr/etc/fixgw', '/etc/fixgw']
-
+user_home = os.path.expanduser("~")
+prefix_path = sys.prefix
+path_options = ['{USER}/.makerplane/fixgw/config',
+                '{PREFIX}/local/etc/fixgw',
+                '{PREFIX}/etc/fixgw',
+                '/etc/fixgw',
+                'fixgw/config']
 
 # This dictionary holds the modules for each plugin that we load
 plugin_mods = {}
@@ -53,13 +58,33 @@ def load_plugin(name, module, config):
     plugins[name] = plugin_mods[name].Plugin(name, config)
 
 
+# This function recursively walks the given directory in the installed
+# package and creates a mirror of it in basedir.
+def create_config_dir(basedir):
+    # Look in the package for the configuration
+    import pkg_resources as pr
+    package = 'fixgw'
+    def copy_dir(d):
+        os.makedirs(basedir + "/" + d, exist_ok=True)
+        for each in pr.resource_listdir(package, d):
+            filename = d + "/" + each
+            if pr.resource_isdir(package, filename):
+                copy_dir(filename)
+            else:
+                s = pr.resource_string(package, filename)
+                with open(basedir + "/" + filename, "wb") as f:
+                    f.write(s)
+    copy_dir('config')
+
+
 def main():
-    config_path = "."
+    config_path = None
     # Look for our configuration file in the list of directories
     for directory in path_options:
         # store the first match that we find
-        if os.path.isfile("{}/{}".format(directory, config_filename)):
-            config_path = directory
+        d = directory.format(USER=user_home, PREFIX=prefix_path)
+        if os.path.isfile("{}/{}".format(d, config_filename)):
+            config_path = d
             break
 
     config_file = "{}/{}".format(config_path, config_filename)
@@ -78,8 +103,17 @@ def main():
     # if we passed in a configuration file on the command line...
     if args.config_file:
         cf = args.config_file
-    else: # otherwise use the default
+    elif config_path is not None: # otherwise use the default
         cf = open(config_file)
+    else:
+        # If all else fails copy the configuration from the package
+        # to ~/.makerplane/fixgw/config
+        create_config_dir("{USER}/.makerplane/fixgw".format(USER=user_home))
+        # Reset this stuff like we found it
+        config_path = "{USER}/.makerplane/fixgw/config".format(USER=user_home)
+        config_file = "{}/{}".format(config_path, config_filename)
+        cf = open(config_file)
+
     config = yaml.load(cf)
 
     # Either load the config file given as a command line argument or
@@ -142,7 +176,6 @@ def main():
                 logging.critical("Unable to load module - " + module + ": " + str(e))
                 if args.debug:
                     raise
-
 
     status.initialize(plugins)
 

@@ -3,12 +3,12 @@ The Main Database
 =============================
 
 The central feature of FIX-Gateway is the **database**.  The database is essentially just
-a table of information stored in memory.  All the data from all the plugins must pass through
+a table of information stored in memory.  All the data from all the plug-ins must pass through
 the database for the system to become functional.  One plugin may be reading the Airspeed from
 a sensor and would write this data to the database.  Another plugin may be communicating the
-airspeed to and EFIS or other type of indicator.
+airspeed to an EFIS or other type of indicator.
 
-Each item in the database is identified by a key.  The key is a short string the is unique for
+Each item in the database is identified by a key.  The key is a short string that is unique for
 each entry in the database.  An example would be ``IAS`` which is for indicated airspeed.
 
 The value of the entry is not the only piece of information stored in the database.  There are also

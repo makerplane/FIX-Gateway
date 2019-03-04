@@ -45,6 +45,7 @@ def printData(x):
         if 'o' in x[2]: flags += " Old"
         if 'f' in x[2]: flags += " Fail"
         if 'b' in x[2]: flags += " Bad"
+        if 's' in x[2]: flags += " SecFail"
     print("{} = {}{}".format(x[0],x[1],flags))
 
 class Command(cmd.Cmd):
@@ -62,6 +63,7 @@ class Command(cmd.Cmd):
             if 'o' in x[2]: flags += " Old"
             if 'f' in x[2]: flags += " Fail"
             if 'b' in x[2]: flags += " Bad"
+            if 's' in x[2]: flags += " SecFail"
 
         print(x[1]+flags)
 
@@ -75,29 +77,40 @@ class Command(cmd.Cmd):
 
     def do_list(self, line):
         """list\nList Database Keys"""
-        print("List")
+        list = self.client.getList()
+        list.sort()
+        for each in list:
+            print(each)
 
     def do_report(self, line):
         """Report [key]\nDetailed item information report"""
         args = line.split(" ")
-        print("Report({})".format(str(args)))
-        # try:
-        #     x = self.plugin.db_get_item(args[0])
-        #     print(x.description)
-        #     print("Type:  {0}".format(x.typestring))
-        #     print("Value: {0}".format(str(x.value[0])))
-        #     print("Q:     {0}".format(str(x.value[1:])))
-        #     print("Min:   {0}".format(str(x.min)))
-        #     print("Max:   {0}".format(str(x.max)))
-        #     print("Units: {0}".format(x.units))
-        #     print("TOL:   {0}".format(str(x.tol)))
-        #     print("Auxillary Data:")
-        #     for each in x.aux:
-        #         if each: print("  {0} = {1}".format(each,str(x.aux[each])))
-        #     for each in x.callbacks:
-        #         print("Callback function defined: {0}".format(each[0]))
-        # except KeyError:
-        #     print(("Unknown Key " + args[0]))
+        if len(args) < 1:
+            print("Missing Argument")
+        else:
+            try:
+                res = self.client.getReport(args[0])
+                val = self.client.read(args[0])
+                print(res[1])
+                print("Type:  {0}".format(res[2]))
+                print("Value: {0}".format(val[1]))
+                print("Q:     {0}".format(val[2]))
+                print("Min:   {0}".format(res[3]))
+                print("Max:   {0}".format(res[4]))
+                print("Units: {0}".format(res[5]))
+                print("TOL:   {0}".format(res[6]))
+                if res[7]:
+                    print("Auxillary Data:")
+                    x = res[7].split(',')
+                    for aux in x:
+                        val = self.client.read("{}.{}".format(args[0], aux))
+                        if val[1] == 'None': s = ""
+                        else: s = val[1]
+                        print("  {0} = {1}".format(aux, s))
+
+            except netfix.ResponseError as e:
+                print(e)
+
 
     def do_poll(self, line):
         """Poll\nContinuously prints updates to the given key"""
@@ -115,7 +128,15 @@ class Command(cmd.Cmd):
         """flag [key] [abfs] [true/false]\nSet or clear quality flags"""
         args = line.split(" ")
         print("flag({})".format(str(args)))
-        # if len(args) < 3:
+        if len(args) < 3:
+            print("Missing Argument")
+        else:
+            bit = True if args[2].lower() in ["true", "high", "1", "yes", "set"] else False
+            try:
+                self.client.flag(args[0], args[1][0], bit)
+            except netfix.ResponseError as e:
+                print(e)
+            # if len(args) < 3:
         #     print("Not Enough Arguments") # TODO print usage??
         #     return
         # try:
@@ -141,6 +162,10 @@ added the output will be in JSON format."""
         else:
             d = json.loads(res, object_pairs_hook=OrderedDict)
             print(status.dict2string(d))
+
+    def do_stop(self, line):
+        """Shutdown Server"""
+        self.client.stop()
 
     def do_quit(self, line):
         """quit\nExit Plugin"""

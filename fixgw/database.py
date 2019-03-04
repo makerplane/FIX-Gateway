@@ -50,6 +50,7 @@ class db_item(object):
         self._old = False
         self._bad = False
         self._fail = False
+        self._secfail = False
         self._max = None
         self._min = None
         self._tol = 100     # Time to live in milliseconds.  Any older and quality is bad
@@ -108,7 +109,7 @@ class db_item(object):
                     self._old = True
                 else:
                     self._old = False
-            return (self._value, self._annunciate, self._old, self._bad, self._fail)
+            return (self._value, self._annunciate, self._old, self._bad, self._fail, self._secfail)
 
     # We can set the value in the item with either a value of a tuple that
     # contains the property flags as well.  (value, annunc, bad, fail)
@@ -229,6 +230,19 @@ class db_item(object):
             last = self._fail
             self._fail = bool(x)
         if self._fail != last:
+            self.send_callbacks()
+
+    @property
+    def secfail(self):
+        with self.lock:
+            return self._fail
+
+    @secfail.setter
+    def secfail(self, x):
+        with self.lock:
+            last = self._secfail
+            self._secfail = bool(x)
+        if self._secfail != last:
             self.send_callbacks()
 
 

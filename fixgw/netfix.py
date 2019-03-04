@@ -28,6 +28,9 @@ from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
+class ResponseError(Exception):
+    pass
+
 # This is the main communication thread of the FIX Gateway client.
 class ClientThread(threading.Thread):
     def __init__(self, host, port):
@@ -58,6 +61,7 @@ class ClientThread(threading.Thread):
                 if x[2][1] == "1": s += "o";
                 if x[2][2] == "1": s += "b";
                 if x[2][3] == "1": s += "f";
+                if x[2][4] == "1": s += "s";
                 x[2] = s
             self.dataqueue.put(x)
             if self.dataCallback:
@@ -137,13 +141,18 @@ def decodeDataString(d):
     x = d.split(';')
     id = x[0]
     v = x[1]
-    f = "" # Quality Flags
-    if x[2][0] == '1': f += "a"
-    if x[2][1] == '1': f += "o"
-    if x[2][2] == '1': f += "b"
-    if x[2][3] == '1': f += "f"
-    return (id,v,f)
+    if len(x) == 3:
+        f = "" # Quality Flags
+        if x[2][0] == '1': f += "a"
+        if x[2][1] == '1': f += "o"
+        if x[2][2] == '1': f += "b"
+        if x[2][3] == '1': f += "f"
+        if x[2][4] == '1': f += "s"
+        return (id,v,f)
+    else:
+        return (id, v)
 
+# TODO: Deal with returned errors
 
 class Client:
     def __init__(self, host, port, timeout=1.0):
@@ -168,6 +177,31 @@ class Client:
     def clearDataCallback(self):
         self.cthread.dataCallback = None
 
+    def getList(self):
+        self.cthread.send("@l{}\n".format(id).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+        except queue.Empty:
+            return None
+        # TODO: Deal with partial list responses
+        a = res[1].split(';')
+        return a[2].split(',')
+
+    def getReport(self, id):
+        self.cthread.send("@q{}\n".format(id).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+            if '!' in res[1]:
+                e = res[1].split('!')
+                if e[1] == '001':
+                    raise ResponseError("Key Not Found {}".format(e[0]))
+                else:
+                    raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
+        except queue.Empty:
+            return None
+        a = res[1].split(';')
+        return a
+
     def read(self, id):
         self.cthread.send("@r{}\n".format(id).encode())
         try:
@@ -176,9 +210,14 @@ class Client:
             return None
         return decodeDataString(res[1])
 
-    def write(self, id, value):
-        s = "{};{};00000\n".format(id, value)
-        self.cthread.send(s.encode())
+    def write(self, id, value, flags=""):
+        a = "1" if 'a' in flags else "0"
+        b = "1" if 'b' in flags else "0"
+        f = "1" if 'f' in flags else "0"
+        s = "1" if 's' in flags else "0"
+        sendStr = "{0};{1};{2}{3}{4}{5}\n".format(id, value, a, b, f, s)
+        #s = "{};{};00000\n".format(id, value)
+        self.cthread.send(sendStr.encode())
 
     def subscribe(self, id):
         self.cthread.send("@s{}\n".format(id).encode())
@@ -194,6 +233,24 @@ class Client:
         except queue.Empty:
             return None
 
+    def flag(self, id, flag, setting):
+        if setting: s = '1'
+        else:       s = '0'
+        self.cthread.send("@f{};{};{}\n".format(id, flag.lower(), s).encode())
+        try:
+            res = self.cthread.cmdqueue.get(timeout = 1.0)
+            if '!' in res[1]:
+                e = res[1].split('!')
+                if e[1] == '001':
+                    raise ResponseError("Key Not Found {}".format(e[0]))
+                elif e[1] == '002':
+                    raise ResponseError("Unknown Flag {}".format(flag))
+                else:
+                    raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
+        except queue.Empty:
+            return None
+
+
     def getStatus(self):
         self.cthread.send("@xstatus\n".encode())
         try:
@@ -201,6 +258,9 @@ class Client:
         except queue.Empty:
             return None
         return res[1][7:]
+
+    def stop(self):
+        self.cthread.send("@xkill\n".encode())
 
 
 if __name__ == "__main__":

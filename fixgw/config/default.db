@@ -59,6 +59,7 @@ FUELPe:Fuel Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn
 FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:Min,Max
 MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:Min,Max
 VOLT:System Voltage:float:1:16:volt:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+CURRNT:Bus Current:float:1:16:amps:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:Min,Max
 EGTAVGe:Average Exhaust Gas Temp Engine %e:float:0:1000:degC:0.0:0:Min,Max
 EGTSPANe:Exhaust Gas Temp Span Engine %e:float:0:1000:degC:0.0:0:Min,Max
