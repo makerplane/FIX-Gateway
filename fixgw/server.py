@@ -42,6 +42,7 @@ path_options = ['{USER}/.makerplane/fixgw/config',
                 '{PREFIX}/etc/fixgw',
                 '/etc/fixgw',
                 'fixgw/config']
+config_path = None
 
 # This dictionary holds the modules for each plugin that we load
 plugin_mods = {}
@@ -55,6 +56,8 @@ def load_plugin(name, module, config):
     # sent to the plugin.
     for each in ["load", "module"]:
         del config[each]
+    # Add some global information to the config
+    config["CONFIGPATH"] = config_path
     plugins[name] = plugin_mods[name].Plugin(name, config)
 
 
@@ -78,7 +81,7 @@ def create_config_dir(basedir):
 
 
 def main():
-    config_path = None
+    global config_path
     # Look for our configuration file in the list of directories
     for directory in path_options:
         # store the first match that we find

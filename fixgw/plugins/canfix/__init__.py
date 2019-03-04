@@ -75,7 +75,8 @@ class Plugin(plugin.PluginBase):
         self.channel = config['channel']
         self.device = int(config['device'])
         self.node = int(config['node'])
-        self.mapping = mapping.Mapping(config['mapfile'])
+        mapfilename = config['mapfile'].format(CONFIG=config['CONFIGPATH'])
+        self.mapping = mapping.Mapping(mapfilename)
         self.mapping.log = self.log
         self.thread = MainThread(self, config)
         self.recvcount = 0
