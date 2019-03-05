@@ -39,6 +39,7 @@ class UDPClient(threading.Thread):
         self.sock.settimeout(2.0)
         self.sock.bind((UDP_IP, UDP_PORT))
         self.getout = False
+        self.msg_recv = 0
 
     def save_data(self, data):
         l = data.split(var_sep)
@@ -58,6 +59,7 @@ class UDPClient(threading.Thread):
                             buff += d
                         else:
                             self.save_data(buff)
+                            self.msg_recv += 1
                             buff = ""
             except socket.timeout:
                 pass
@@ -146,3 +148,11 @@ class Plugin(plugin.PluginBase):
             self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
+
+    def get_status(self):
+        d = {"Properties":len(items),
+             "Messages": {
+                 "Received": self.thread.clientThread.msg_recv,
+                 "Sent": 0 }
+            }
+        return d

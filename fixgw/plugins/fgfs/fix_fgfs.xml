@@ -16,6 +16,13 @@
    </chunk>
 
    <chunk>
+    <name>TAS: True Airspeed</name>
+    <type>double</type>
+    <format>%.1f</format>
+    <node>/instrumentation/airspeed-indicator/true-speed-kt</node>
+   </chunk>
+
+   <chunk>
     <name>PITCH: pitch att (deg)</name>
     <type>float</type>
     <format>%.1f</format>
@@ -51,6 +58,28 @@
    </chunk>
 
    <chunk>
+    <name>ALAT: AccelerationLateral</name>
+    <type>double</type>
+    <format>%.11f</format>
+    <node>/accelerations/pilot/y-accel-fps_sec</node>
+    <factor>0.031070336391437</factor>
+   </chunk>
+
+   <chunk>
+    <name>TRACK: Current Aircraft Bearing</name>
+    <type>double</type>
+    <format>%.1f</format>
+    <node>/orientation/track-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>TRACKM: Current Aircraft Magnetic Bearing</name>
+    <type>double</type>
+    <format>%.1f</format>
+    <node>/orientation/track-magnetic-deg</node>
+   </chunk>
+
+   <chunk>
     <name>VOLT: Voltage</name>
     <type>float</type>
     <format>%.1f</format>
@@ -69,14 +98,15 @@
     <type>float</type>
     <format>%.2f</format>
     <node>/engines/engine/mp-inhg</node>
-    <converter>ToC</converter>
    </chunk>
 
    <chunk>
-    <name>OILT1: Oil Temp F</name>
-    <type>float</type>
-    <format>%.1f</format>
-    <node>/engines/engine[0]/oil-temperature-degf</node>
+     <name>OILT1: Oil Temp F</name>
+     <type>float</type>
+     <format>%.1f</format>
+     <node>/engines/engine[0]/oil-temperature-degf</node>
+     <offset>-32</offset>
+     <factor>0.55555555555555555</factor>
    </chunk>
 
    <chunk>
@@ -87,10 +117,21 @@
    </chunk>
 
    <chunk>
-    <name>EGT11: Exhaust Gas Temperature</name>
-    <type>double</type>
-    <format>%.1f</format>
-    <node>/engines/engine/egt-degc-fix</node>
+     <name>EGT11: Exhaust Gas Temperature</name>
+     <type>double</type>
+     <format>%.1f</format>
+     <node>/engines/engine/egt-degf</node>
+     <offset>-32</offset>
+     <factor>0.55555555555555555</factor>
+   </chunk>
+
+   <chunk>
+     <name>CHT11: Cylinder Head Temperature</name>
+     <type>double</type>
+     <format>%.1f</format>
+     <node>/engines/engine/cht-degf</node>
+     <offset>-32</offset>
+     <factor>0.55555555555555555</factor>
    </chunk>
 
    <chunk>
@@ -140,17 +181,17 @@
     <type>double</type>
     <format>%.1f</format>
     <node>/environment/temperature-degc</node>
+    <offset>-32</offset>
+    <factor>0.55555555555555555</factor>
    </chunk>
-  </output>
 
-  <input>
     <chunk>
       <name>BARO: Altimeter Setting</name>
       <type>double</type>
       <format>%.2f</format>
       <node>/instrumentation/altimeter/setting-inhg</node>
     </chunk>
-  </input>
+  </output>
 
  </generic>
 
