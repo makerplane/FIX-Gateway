@@ -53,6 +53,9 @@ Python higher than 3.6.  It may run on versions of Python 2.x but Python 2.x
 support is deprecated and it's expected that FIX Gateway will eventually stop
 working with these older versions of Python.
 
+If the ``psutil`` package is installed the server will be able to report
+system and performance status.
+
 Many of the plugins will require other dependencies.  See the individual plugin
 documentation for information about those.  We'll discuss some of the more
 common ones.

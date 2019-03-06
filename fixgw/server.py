@@ -41,7 +41,8 @@ path_options = ['{USER}/.makerplane/fixgw/config',
                 '{PREFIX}/local/etc/fixgw',
                 '{PREFIX}/etc/fixgw',
                 '/etc/fixgw',
-                'fixgw/config']
+                'fixgw/config',
+                '']
 config_path = None
 
 # This dictionary holds the modules for each plugin that we load
@@ -134,6 +135,7 @@ def main():
     if args.debug:
         log.setLevel(logging.DEBUG)
     log.info("Starting FIX Gateway")
+    log.info("Configuration Found at {}".format(config_file))
 
 
     # Open database definition file and send to database initialization
@@ -180,7 +182,9 @@ def main():
                 if args.debug:
                     raise
 
-    status.initialize(plugins)
+    ss = {"Configuration File": config_file,
+          "Configuration Path": config_path}
+    status.initialize(plugins, ss)
 
     def sig_int_handler(signum, frame):
         plugin.jobQueue.put("QUIT")
