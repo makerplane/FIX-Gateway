@@ -37,8 +37,11 @@ virtualenv you can issue the command...
 
   sudo pip3 install .
 
-from the root directory of the source repository.  **Caution** This feature is
-still in development and may not work consistently.
+from the root directory of the source repository.
+
+After installing with pip3 two helper scripts will be installed in the user's
+search path.  These are ``fixgw`` and ``fixgwc`` for the server and client
+repectively.  Once installed properly these commands can be used from anywhere.
 
 Requirements
 ------------
@@ -68,13 +71,27 @@ Basic Configuration
 -------------------
 
 FIX Gateway is configured through a configuration file named ``default.yaml``
-that is located in the config/ subdirectory of the distribution, or installed into
-the proper place on the filesystem (eg. ``/usr/local/etc/fixgw``).  The
-configuration uses `YAML` as it's  configuration language.
+that is located in the fixgw/config/ subdirectory of the distribution, or
+installed into the proper place on the filesystem.  The configuration uses
+`YAML` as it's  configuration language. Upon startup the server searches a
+predefined set of directories, looking for the  configuration file.  If the
+configuration is not found the program will attempt to install default
+configuration files into the ``.makerplane`` directory in the users home folder.
+If that fails the server will report an error and fail to start.
 
-The **database file** option tells FGW where to find the database definition file. This
-file tells FGW how to build the internal database.  For details on the format of the
-database definition file see the :doc:`database` section.
+When the server finds the configuration file it remembers where and writes that
+path to an internal variable that can be retrieved with ``{CONFIG}`` in other
+parts of the configuration.
+
+The first place the server will look for configuration is in the
+``~/.makerplane/fixgw/config`` directory.  This is where individual user
+configurations should be stored.  For machine wide configurations the system
+directories such as ``/etc/fixgw`` or ``/usr/local/etc/fixgw`` can be used as
+well.
+
+The **database file** option tells FGW where to find the database definition
+file. This file tells FGW how to build the internal database.  For details on
+the format of the database definition file see the :doc:`database` section.
 
 ::
 

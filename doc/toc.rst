@@ -6,10 +6,11 @@ FIX Gateway documentation
    :maxdepth: 2
    :glob:
    :caption: Contents:
-   
+
    intro
    getting_started
    database
+   client
    plugin
    plugins/toc
    appendix/toc
