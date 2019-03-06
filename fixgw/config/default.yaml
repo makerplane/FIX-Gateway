@@ -44,14 +44,14 @@ connections:
 
   # FlightGear Flight Simulator Module
   # To start FlightGear with these paramaters, use the following command...
-  #   >fgfs --generic=socket,bi,10,localhost,5500,udp,fix_fgfs
+  #   >fgfs --generic=socket,out,10,localhost,5500,udp,fix_fgfs --generic=socket,in,1,,5501,udp,fix_sgfs
   # The fix_fgfs.xml file should be in the FG_ROOT/Protocols directory which should be
   # in one of the following locations...
   # LINUX: /usr/share/games/flightgear/
   # OSX: /Applications/FlightGear.app/Contents/Resources/data/
   # WINDOWS: c:\Program Files\FlightGear\data\
   fgfs:
-    load: no
+    load: yes
     module: fixgw.plugins.fgfs
     # This should be the same as $FG_ROOT on your system.  It is used to help
     # fixgw find the xml configuration files
@@ -64,11 +64,14 @@ connections:
     # the same file.
     xml_file: fix_fgfs.xml
     # UDP Address and Ports used for communication to FlightGear.
-    host: localhost
+    # Host address to listen on
+    recv_host: localhost
     # port used for the -out argument to FlightGear
-    out_port: 5500
+    recv_port: 5500
+    # host address where FlightGear is running
+    send_host: localhost
     # port used for the -in argument to FlightGear
-    in_port: 5501
+    send_port: 5501
     # Update rate for sending data to FlightGear
     rate: 10  # updates / second
 
@@ -93,7 +96,7 @@ connections:
 
   # CAN-FIX
   canfix:
-    load: yes
+    load: no
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan

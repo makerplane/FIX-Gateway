@@ -177,22 +177,38 @@
    </chunk>
 
    <chunk>
-    <name>OAT: Outside Air Temperature</name>
-    <type>double</type>
-    <format>%.1f</format>
-    <node>/environment/temperature-degc</node>
-    <offset>-32</offset>
-    <factor>0.55555555555555555</factor>
+        <name>OAT: Outside Air Temperature</name>
+        <type>double</type>
+        <format>%.1f</format>
+        <node>/environment/temperature-degc</node>
    </chunk>
 
-    <chunk>
-      <name>BARO: Altimeter Setting</name>
-      <type>double</type>
-      <format>%.2f</format>
-      <node>/instrumentation/altimeter/setting-inhg</node>
-    </chunk>
   </output>
 
- </generic>
+
+<input>
+    <line_separator>newline</line_separator>
+    <var_separator>,</var_separator>
+    <chunk>
+        <name>BARO: Altimeter Setting</name>
+        <type>double</type>
+        <format>%.2f</format>
+        <node>/instrumentation/altimeter/setting-inhg</node>
+    </chunk>
+    <chunk>
+        <name>THR1: Throttle Control Engine 1</name>
+        <type>double</type>
+        <format>%.2f</format>
+        <node>/controls/engines/engine/throttle</node>
+    </chunk>
+    <chunk>
+        <name>MIX1: Mixture Control Engine 1</name>
+        <type>double</type>
+        <format>%.2f</format>
+        <node>/controls/engines/engine/mixture</node>
+    </chunk>
+</input>
+
+</generic>
 
 </PropertyList>
