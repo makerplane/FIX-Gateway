@@ -42,7 +42,7 @@ path_options = ['{USER}/.makerplane/fixgw/config',
                 '{PREFIX}/etc/fixgw',
                 '/etc/fixgw',
                 'fixgw/config',
-                '']
+                '.']
 config_path = None
 
 # This dictionary holds the modules for each plugin that we load
@@ -107,6 +107,7 @@ def main():
     # if we passed in a configuration file on the command line...
     if args.config_file:
         cf = args.config_file
+        config_file = cf.name
     elif config_path is not None: # otherwise use the default
         cf = open(config_file)
     else:
@@ -114,10 +115,10 @@ def main():
         # to ~/.makerplane/fixgw/config
         create_config_dir("{USER}/.makerplane/fixgw".format(USER=user_home))
         # Reset this stuff like we found it
-        config_path = "{USER}/.makerplane/fixgw/config".format(USER=user_home)
-        config_file = "{}/{}".format(config_path, config_filename)
+        config_file = "{USER}/.makerplane/fixgw/config/{FILE}".format(USER=user_home, FILE=config_filename)
         cf = open(config_file)
 
+    config_path = os.path.dirname(cf.name)
     config = yaml.load(cf)
 
     # Either load the config file given as a command line argument or
