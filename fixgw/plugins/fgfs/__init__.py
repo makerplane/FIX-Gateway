@@ -203,10 +203,15 @@ class Plugin(plugin.PluginBase):
 
     def get_status(self):
         d = OrderedDict()
-        d["Listening on"] = "{}:{}".format(self.thread.clientThread.host, self.thread.clientThread.port)
-        d["Sending to"] = "{}:{}".format(self.thread.host, self.thread.port)
-        d["Properties"] = OrderedDict([("Receiving",len(recv_items)),
-                                       ("Sending",len(send_items))])
-        d["Messages"] = OrderedDict([("Received", self.thread.clientThread.msg_recv),
-                                     ("Sent", self.thread.msg_sent)])
+        # For stuff that might fail we just ignore the errors and get what we get
+        try:
+            d["Listening on"] = "{}:{}".format(self.thread.clientThread.host, self.thread.clientThread.port)
+            d["Sending to"] = "{}:{}".format(self.thread.host, self.thread.port)
+            d["Properties"] = OrderedDict([("Receiving",len(recv_items)),
+                                           ("Sending",len(send_items))])
+            d["Messages"] = OrderedDict([("Received", self.thread.clientThread.msg_recv),
+                                         ("Sent", self.thread.msg_sent)])
+        except:
+            pass
+
         return d
