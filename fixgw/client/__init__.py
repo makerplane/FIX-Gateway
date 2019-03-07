@@ -33,16 +33,6 @@ from . import command
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-def printData(x):
-    flags = ""
-    if len(x) == 3:
-        if 'a' in x[2]: flags += " Annuc"
-        if 'o' in x[2]: flags += " Old"
-        if 'f' in x[2]: flags += " Fail"
-        if 'b' in x[2]: flags += " Bad"
-        if 's' in x[2]: flags += " SecFail"
-    print("{} = {}{}".format(x[0],x[1],flags))
-
 
 def main():
     parser = argparse.ArgumentParser(description='FIX Gateway')
