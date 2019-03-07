@@ -113,7 +113,7 @@ class MainThread(threading.Thread):
                 msg = can.Message(extended_id = False, arbitration_id = each[1])
                 msg.data = string2data(each[2])
                 self.parent.bus.send(msg)
-                time.sleep(0.01)
+                time.sleep(0.03)
                 x = self.parent.db_read(each[0])
                 if '.' in each[0]:
                     val = x

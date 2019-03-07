@@ -31,7 +31,7 @@ class TestProcess(unittest.TestCase):
 
     def test_MinimalSuccess(self):
         """Minimal Process start/stop test"""
-        p = subprocess.Popen(["python3", "fixgw.py", "--config-file", "tests/config/minimal.yaml"])
+        p = subprocess.Popen(["python3", "fixgw.py", "--debug", "--config-file", "tests/config/minimal.yaml"])
         time.sleep(0.1)
         p.terminate()
         x = p.wait()
