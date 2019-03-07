@@ -58,4 +58,13 @@ Test database failures.
 
 Figure out a way to test the netfix protocol
 
+Test all the error codes in netfix protocol for each command
+
 Figure out a way to test the client and client module
+
+
+=====================
+Documentation
+=====================
+
+Document and netfix error codes and specify them generally

@@ -129,6 +129,22 @@ class Connection(object):
         elif a[1] == 's': item.secfail = bit
         self.queue.put("@f{0}\n".format(d).encode())
 
+    # This is a command that simply writes the value.  It does not change the
+    # flags like the normal data write sentence would.  It also has a return
+    # value.
+    def __writeValue(self, d):
+        a = d.split(';')
+        try:
+            item = self.parent.db_get_item(a[0])
+        except KeyError:
+            self.queue.put("@w{0}!001\n".format(d[0]).encode())
+            return
+        try:
+            item.value = a[1]
+        except:
+            self.queue.put("@w{0}!002\n".format(d[0]).encode())
+        self.queue.put("@w{}\n".format(d).encode())
+
 
     def handle_request(self, d):
         if d[0] == '@': # It's a command frame
@@ -170,6 +186,9 @@ class Connection(object):
                 self.__server_specific(d[2:])
             elif d[1] == 'f':
                 self.__flag(d[2:])
+            elif d[1] == 'w':
+                self.__writeValue(d[2:])
+
         else:  # If no '@' then it must be a value update
             try:
                 x = d.strip().split(';')

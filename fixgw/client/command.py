@@ -54,7 +54,7 @@ class Command(cmd.Cmd):
             print("Missing Argument")
         else:
             try:
-                self.client.write(*args)
+                self.client.writeValue(*args)
             except netfix.SendError as e:
                 print("Problem Sending Request -", e)
                 return

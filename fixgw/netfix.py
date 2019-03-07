@@ -138,6 +138,7 @@ class ClientThread(threading.Thread):
     def getResponse(self, c, timeout = 1.0):
         # TODO use the c argument to determine if the one that we get
         # is correct and ignore or requeue any that we don't care about.
+        # TODO Check for errors and report those as well
         if not self.isConnected():
             raise ResponseError("Not Connected to Server")
         try:
@@ -245,7 +246,10 @@ class Client:
                 raise ResponseError("Unknown Flag {}".format(flag))
             else:
                 raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
-    
+
+    def writeValue(self, id, value):
+        self.cthread.send("@w{};{}\n".format(id, value).encode())
+        res = self.cthread.getResponse('w')
 
     def getStatus(self):
         self.cthread.send("@xstatus\n".encode())
