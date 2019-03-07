@@ -31,6 +31,9 @@ log = logging.getLogger(__name__)
 class ResponseError(Exception):
     pass
 
+class SendError(Exception):
+    pass
+
 # This is the main communication thread of the FIX Gateway client.
 class ClientThread(threading.Thread):
     def __init__(self, host, port):
@@ -129,12 +132,23 @@ class ClientThread(threading.Thread):
     def connectWait(self, timeout = 1.0):
         return self.connectedEvent.wait(timeout)
 
-    def send(self, s):
-        # TODO: Deal with errors gracefully
+    def isConnected(self):
+        return self.connectedEvent.isSet()
+
+    def getResponse(self, c, timeout = 1.0):
+        # TODO use the c argument to determine if the one that we get
+        # is correct and ignore or requeue any that we don't care about.
+        if not self.isConnected():
+            raise ResponseError("Not Connected to Server")
         try:
-            self.s.send(s)
-        except Exception as e:
-            log.error(e)
+            return self.cmdqueue.get(timeout = 1.0)
+        except queue.Empty:
+            raise ResponseError("Timeout waiting on data")
+
+    def send(self, s):
+        if not self.isConnected():
+            raise SendError("Not Connected to Server")
+        self.s.send(s)
 
 
 def decodeDataString(d):
@@ -169,7 +183,7 @@ class Client:
         # TODO: Block unit disconnected.
 
     def isConnected(self):
-        return self.cthread.connectedEvent.is_set()
+        return self.cthread.isConnected()
 
     def setDataCallback(self, func):
         self.cthread.dataCallback = func
@@ -179,35 +193,26 @@ class Client:
 
     def getList(self):
         self.cthread.send("@l{}\n".format(id).encode())
-        try:
-            res = self.cthread.cmdqueue.get(timeout = 1.0)
-        except queue.Empty:
-            return None
+        res = self.cthread.getResponse('l')
         # TODO: Deal with partial list responses
         a = res[1].split(';')
         return a[2].split(',')
 
     def getReport(self, id):
         self.cthread.send("@q{}\n".format(id).encode())
-        try:
-            res = self.cthread.cmdqueue.get(timeout = 1.0)
-            if '!' in res[1]:
-                e = res[1].split('!')
-                if e[1] == '001':
-                    raise ResponseError("Key Not Found {}".format(e[0]))
-                else:
-                    raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
-        except queue.Empty:
-            return None
+        res = self.cthread.getResponse('q')
+        if '!' in res[1]:
+            e = res[1].split('!')
+            if e[1] == '001':
+                raise ResponseError("Key Not Found {}".format(e[0]))
+            else:
+                raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
         a = res[1].split(';')
         return a
 
     def read(self, id):
         self.cthread.send("@r{}\n".format(id).encode())
-        try:
-            res = self.cthread.cmdqueue.get(timeout = 1.0)
-        except queue.Empty:
-            return None
+        res = self.cthread.getResponse('r')
         return decodeDataString(res[1])
 
     def write(self, id, value, flags=""):
@@ -221,46 +226,35 @@ class Client:
 
     def subscribe(self, id):
         self.cthread.send("@s{}\n".format(id).encode())
-        try:
-            res = self.cthread.cmdqueue.get(timeout = 1.0)
-        except queue.Empty:
-            return None
+        res = self.cthread.getResponse('s')
 
     def unsubscribe(self, id):
         self.cthread.send("@u{}\n".format(id).encode())
-        try:
-            res = self.cthread.cmdqueue.get(timeout = 1.0)
-        except queue.Empty:
-            return None
+        res = self.cthread.getResponse('u')
 
     def flag(self, id, flag, setting):
         if setting: s = '1'
         else:       s = '0'
         self.cthread.send("@f{};{};{}\n".format(id, flag.lower(), s).encode())
-        try:
-            res = self.cthread.cmdqueue.get(timeout = 1.0)
-            if '!' in res[1]:
-                e = res[1].split('!')
-                if e[1] == '001':
-                    raise ResponseError("Key Not Found {}".format(e[0]))
-                elif e[1] == '002':
-                    raise ResponseError("Unknown Flag {}".format(flag))
-                else:
-                    raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
-        except queue.Empty:
-            return None
-
+        res = self.cthread.getResponse('f')
+        if '!' in res[1]:
+            e = res[1].split('!')
+            if e[1] == '001':
+                raise ResponseError("Key Not Found {}".format(e[0]))
+            elif e[1] == '002':
+                raise ResponseError("Unknown Flag {}".format(flag))
+            else:
+                raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
+    
 
     def getStatus(self):
         self.cthread.send("@xstatus\n".encode())
-        try:
-            res = self.cthread.cmdqueue.get(timeout = 1.0)
-        except queue.Empty:
-            return None
+        res = self.cthread.getResponse('x')
         return res[1][7:]
 
     def stop(self):
         self.cthread.send("@xkill\n".encode())
+        res = self.cthread.getResponse('x')
 
 
 if __name__ == "__main__":

@@ -56,7 +56,14 @@ class Command(cmd.Cmd):
     def do_read(self, line):
         """read [key] [value]\nRead the value from the database given the key"""
         args = line.split(" ")
-        x = self.client.read(args[0])
+        try:
+            x = self.client.read(args[0])
+        except netfix.SendError as e:
+            print("Problem Sending Request -", e)
+            return
+        except netfix.ResponseError as e:
+            print("Problem Receiving Response -", e)
+            return
         flags = ""
         if x[2]: # Do we have any flags?
             if 'a' in x[2]: flags += " Annuc"
@@ -73,11 +80,27 @@ class Command(cmd.Cmd):
         if len(args) < 2:
             print("Missing Argument")
         else:
-            self.client.write(*args)
+            try:
+                self.client.write(*args)
+            except netfix.SendError as e:
+                print("Problem Sending Request -", e)
+                return
+            except netfix.ResponseError as e:
+                print("Problem Receiving Response -", e)
+                return
+
 
     def do_list(self, line):
         """list\nList Database Keys"""
-        list = self.client.getList()
+        try:
+            list = self.client.getList()
+        except netfix.SendError as e:
+            print("Problem Sending Request -", e)
+            return
+        except netfix.ResponseError as e:
+            print("Problem Receiving Response -", e)
+            return
+
         list.sort()
         for each in list:
             print(each)
@@ -108,8 +131,12 @@ class Command(cmd.Cmd):
                         else: s = val[1]
                         print("  {0} = {1}".format(aux, s))
 
+            except netfix.SendError as e:
+                print("Problem Sending Request -", e)
+                return
             except netfix.ResponseError as e:
-                print(e)
+                print("Problem Receiving Response -", e)
+                return
 
 
     def do_poll(self, line):
@@ -127,36 +154,31 @@ class Command(cmd.Cmd):
     def do_flag(self, line):
         """flag [key] [abfs] [true/false]\nSet or clear quality flags"""
         args = line.split(" ")
-        print("flag({})".format(str(args)))
         if len(args) < 3:
             print("Missing Argument")
         else:
             bit = True if args[2].lower() in ["true", "high", "1", "yes", "set"] else False
             try:
                 self.client.flag(args[0], args[1][0], bit)
+            except netfix.SendError as e:
+                print("Problem Sending Request -", e)
+                return
             except netfix.ResponseError as e:
-                print(e)
-            # if len(args) < 3:
-        #     print("Not Enough Arguments") # TODO print usage??
-        #     return
-        # try:
-        #     x = self.plugin.db_get_item(args[0])
-        # except KeyError:
-        #     print("Unknown Key " + args[0])
-        # bit = True if args[2].lower() in ["true", "high", "1", "yes"] else False
-        # if args[1].lower()[0] == 'b':
-        #     x.bad = bit
-        # elif args[1].lower()[0] == 'f':
-        #     x.fail = bit
-        # elif args[1].lower()[0] == 'a':
-        #     x.annunciate = bit
-        # elif args[1].lower()[0] == 's':
-        #     x.secondary = bit
+                print("Problem Receiving Response -", e)
+                return
 
     def do_status(self, line):
         """status <json>\nRead status information.  If the 'json' argument is
 added the output will be in JSON format."""
-        res = self.client.getStatus()
+        try:
+            res = self.client.getStatus()
+        except netfix.SendError as e:
+            print("Problem Sending Request -", e)
+            return
+        except netfix.ResponseError as e:
+            print("Problem Receiving Response -", e)
+            return
+
         if line == 'json':
             print(res)
         else:
@@ -165,7 +187,15 @@ added the output will be in JSON format."""
 
     def do_stop(self, line):
         """Shutdown Server"""
-        self.client.stop()
+        try:
+            self.client.stop()
+        except netfix.SendError as e:
+            print("Problem Sending Request -", e)
+            return
+        except netfix.ResponseError as e:
+            print("Problem Receiving Response -", e)
+            return
+
 
     def do_quit(self, line):
         """quit\nExit Plugin"""
