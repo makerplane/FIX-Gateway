@@ -20,44 +20,34 @@
 
 import sys
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+
+from . import connection
+from .mainWindow import Ui_MainWindow
 
 # from . import table
-# from . import statusview
+from . import statusModel
 # from . import simulate
 
-class GUI():
-    def __init__(self, client):
-        self.client = client
+class MainWindow(QMainWindow, Ui_MainWindow):
+    def __init__(self, *args, **kwargs):
+        super(MainWindow, self).__init__(*args, **kwargs)
+        self.setupUi(self)
+        #self.client = client
+        self.statusview = statusModel.StatusView()
+        self.layoutStatus.addWidget(self.statusview)
 
-    def run(self):
-        app = QApplication(sys.argv)
-        window = QTabWidget()
+        self.show()
 
-        # tab1 = statusview.StatusView()
-        # tab1.update()
-        # tab2 = table.DataTable(window)
-        # tab3 = QWidget()
 
-        hBoxlayout	= QHBoxLayout()
 
-        #Resize width and height
-        window.resize(600, 400)
+def main(client):
+    connection.initialize(client)
+    app = QApplication(sys.argv)
+    app.setApplicationName("FIX Gateway Client")
 
-        #Set Layout for Third Tab Page
-        # tab3.setLayout(hBoxlayout)
-        #
-        # window.addTab(tab1,"Status")
-        # window.addTab(tab2,"Data")
-        # window.addTab(tab3,"Sim")
+    window = MainWindow()
 
-        window.setWindowTitle('FIX Gateway')
-        window.show()
-
-        return app.exec_()
+    return app.exec_()

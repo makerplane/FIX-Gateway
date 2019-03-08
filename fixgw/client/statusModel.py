@@ -15,15 +15,14 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 #  USA.import plugin
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+import json
+from collections import OrderedDict
 
 import fixgw.status as status
+from . import connection
 
 # TODO get the dictionary and convert to a tree view instead of just text
 
@@ -37,12 +36,16 @@ class StatusView(QScrollArea):
         self.timer = QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.update)
-        #self.timer.start()
+        self.update()
 
     def update(self):
         self.textBox.clear()
-        s = status.get_string()
-        self.textBox.setText(s)
+        try:
+            res = connection.client.getStatus()
+        except:
+            setl.textBox.setText("")
+        d = json.loads(res, object_pairs_hook=OrderedDict)
+        self.textBox.setText(status.dict2string(d, spaces=8))
 
     def showEvent(self, QShowEvent):
         self.timer.start()

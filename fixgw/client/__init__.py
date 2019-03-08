@@ -74,8 +74,7 @@ def main():
     # Run in Graphical mode if set
     if args.gui:
         from . import gui
-        gui = gui.GUI(c)
-        sys.exit(gui.run())
+        sys.exit(gui.main(c))
     else:
         cmd.cmdloop()
 
