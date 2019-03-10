@@ -447,7 +447,7 @@ class Database(object):
                 raise  # Send the exception up otherwise
 
     def get_item_list(self):
-        return self.__items.keys()
+        return list(self.__items.keys())
 
     def set_value(self, key, value):
         self.__items[key].value = value

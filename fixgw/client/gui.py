@@ -27,7 +27,7 @@ from PyQt5.QtWidgets import *
 from . import connection
 from .mainWindow import Ui_MainWindow
 
-# from . import table
+from . import table
 from . import statusModel
 # from . import simulate
 
@@ -38,6 +38,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.client = client
         self.statusview = statusModel.StatusView()
         self.layoutStatus.addWidget(self.statusview)
+        self.dataview = table.DataTable()
+        self.layoutData.addWidget(self.dataview)
 
         self.show()
 

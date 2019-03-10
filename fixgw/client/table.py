@@ -15,43 +15,57 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 #  USA.import plugin
 
-import fixgw.database as database
-
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
+from . import connection
+
 class DataTable(QTableWidget):
     def __init__(self, parent=None):
         super(DataTable, self).__init__(parent)
-        cols = ["Description", "Value", "Set", "A", "O", "B", "F"]
+        cols = ["Description", "Value", "A", "O", "B", "F", "S"]
         self.setColumnCount(len(cols))
         self.setHorizontalHeaderLabels(cols)
-        self.dblist = database.listkeys()
+        self.dblist = connection.db.get_item_list()
         self.dblist.sort()
         self.setRowCount(len(self.dblist))
         self.setVerticalHeaderLabels(self.dblist)
         for i, key in enumerate(self.dblist):
-            item = database.get_raw_item(key)
+            item = connection.db.get_item(key)
             cell = QTableWidgetItem(item.description)
             cell.setFlags(Qt.ItemIsEnabled)
             self.setItem(i, 0, cell)
-            cell = QTableWidgetItem(str(item.value[0]))
+            cell = QTableWidgetItem(str(item.value))
             cell.setFlags(Qt.ItemIsEnabled)
             self.setItem(i, 1, cell)
 
+            cell = QTableWidgetItem()
+            cell.setFlags(Qt.ItemIsEnabled)
+            cell.setTextAlignment(Qt.AlignRight)
+            self.setItem(i, 2, cell)
+            cb = QCheckBox(self)
+            self.setCellWidget(i, 2, cb)
+
+        #self.cellClicked.connect(self.clickifcated)
+        #self.itemSelectionChanged.connect(self.whatsup)
         self.resizeColumnsToContents()
         self.timer = QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.update)
 
         #self.resizeRowsToContents()
+    # def whatsup(self):
+    #     print("Dude")
+    #
+    # def clickifcated(self, x, y):
+    #     print("You Clicked {},{}".format(x,y))
 
     def update(self):
         for i, key in enumerate(self.dblist):
-            x = database.read(key)
+            x = connection.db.get_value(key)
             y = self.item(i,1)
-            y.setText(str(x[0]))
+            y.setText(str(x))
 
     def showEvent(self, QShowEvent):
         self.timer.start()

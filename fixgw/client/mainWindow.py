@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -30,16 +30,13 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.tabStatus, "")
         self.tabData = QtWidgets.QWidget()
         self.tabData.setObjectName("tabData")
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.tabData)
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.tableView = QtWidgets.QTableView(self.tabData)
-        self.tableView.setObjectName("tableView")
-        self.horizontalLayout_3.addWidget(self.tableView)
+        self.layoutData = QtWidgets.QHBoxLayout(self.tabData)
+        self.layoutData.setObjectName("layoutData")
         self.tabWidget.addTab(self.tabData, "")
         self.tabSimulate = QtWidgets.QWidget()
         self.tabSimulate.setObjectName("tabSimulate")
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.tabSimulate)
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.layoutSimulate = QtWidgets.QHBoxLayout(self.tabSimulate)
+        self.layoutSimulate.setObjectName("layoutSimulate")
         self.tabWidget.addTab(self.tabSimulate, "")
         self.horizontalLayout.addWidget(self.tabWidget)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -55,7 +52,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menu_File.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
