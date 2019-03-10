@@ -42,12 +42,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.show()
 
 
-
 def main(client):
     connection.initialize(client)
     app = QApplication(sys.argv)
     app.setApplicationName("FIX Gateway Client")
 
     window = MainWindow()
-
-    return app.exec_()
+    x = app.exec_()
+    connection.stop()
+    return x

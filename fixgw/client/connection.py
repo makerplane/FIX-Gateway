@@ -17,17 +17,23 @@
 #  This module contains all of the functions that interact with the server
 #  for the GUI client.
 
-#import logging
-
+import fixgw.netfix.db
 
 client = None
-#log = None
+db = None
 
 def initialize(c):
     global client
-#    global log
+    global db
     client = c
-#    log = logging.getLogger(__name__)
+    db = fixgw.netfix.db.Database(client)
+
+def stop():
+    global client
+    global db
+    #client.
+    db.stop()
+
 
 
 # def read(self, id):

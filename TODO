@@ -1,3 +1,12 @@
+=================================
+Bugs
+=================================
+Typing write ANLG1. 0.5 causes a bad data update to be sent
+
+=================================
+Features
+=================================
+
 Airdata plugin.  This plugin would calculate things like TAS, wind direction
 Density altitude etc.  It would also be a good example of a plugin that used
 only the callback mechanism instead of needing a thread.
@@ -46,9 +55,9 @@ CAN-FIX Plugin
   Add node status information.
 
 
-=====================
+=================================
 Testing
-=====================
+=================================
 
 Further testing of the CAN-FIX plugin
 
@@ -63,8 +72,10 @@ Test all the error codes in netfix protocol for each command
 Figure out a way to test the client and client module
 
 
-=====================
+=================================
 Documentation
-=====================
+=================================
 
 Document and netfix error codes and specify them generally
+
+Document using the netfix client package fixgw.netfix

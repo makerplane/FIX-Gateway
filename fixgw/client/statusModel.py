@@ -22,6 +22,7 @@ import json
 from collections import OrderedDict
 
 import fixgw.status as status
+import fixgw.netfix
 from . import connection
 
 # TODO get the dictionary and convert to a tree view instead of just text
@@ -32,6 +33,7 @@ class StatusView(QScrollArea):
         self.setWidgetResizable(True)
         self.textBox = QLabel(self)
         self.setWidget(self.textBox)
+        self.connected = False
 
         self.timer = QTimer()
         self.timer.setInterval(1000)
@@ -39,13 +41,25 @@ class StatusView(QScrollArea):
         self.update()
 
     def update(self):
-        self.textBox.clear()
-        try:
-            res = connection.client.getStatus()
-        except:
-            setl.textBox.setText("")
-        d = json.loads(res, object_pairs_hook=OrderedDict)
-        self.textBox.setText(status.dict2string(d, spaces=8))
+        if not self.connected:
+            if connection.client.isConnected():
+                self.connected = True
+        else:
+            self.textBox.clear()
+            try:
+                res = connection.client.getStatus()
+            except fixgw.netfix.NotConnectedError:
+                self.connected = False
+                return
+            except Exception as e:
+                self.textBox.setText("")
+                print("statusModel.update()", e)
+                return
+            d = json.loads(res, object_pairs_hook=OrderedDict)
+            s = status.dict2string(d, spaces=8) + '\n'
+            for key in connection.db.get_item_list():
+                s += "{} = {}\n".format(key, connection.db.get_value(key))
+            self.textBox.setText(s)
 
     def showEvent(self, QShowEvent):
         self.timer.start()

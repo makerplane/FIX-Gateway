@@ -41,6 +41,7 @@ class Connection(object):
         self.log = parent.log
         self.queue = queue.Queue()
         self.buffer_size = int(parent.config['buffer_size']) if ('buffer_size' in parent.config) and parent.config['buffer_size'] else 1024
+        self.subcount = 0
 
 
     # This sends a standard Net-FIX value update message to the queue.
@@ -172,12 +173,14 @@ class Connection(object):
                 try:
                     self.parent.db_callback_add(id, self.subscription_handler)
                     self.queue.put("@s{0}\n".format(id).encode())
+                    self.subcount += 1
                 except KeyError:
                     self.queue.put("@s{0}!001\n".format(id).encode())
             elif d[1] == 'u':
                 try:
                     self.parent.db_callback_del(id, self.subscription_handler)
                     self.queue.put("@u{0}\n".format(id).encode())
+                    self.subcount -= 1
                 except KeyError:
                     self.queue.put("@u{0}!001\n".format(id).encode())
             elif d[1] == 'q':
@@ -386,7 +389,8 @@ class ServerThread(threading.Thread):
         for i, t in enumerate(self.threads):
             c = {"Client":t[0].addr,
                  "Messages Received":t[0].msg_recv,
-                 "Messages Sent":t[1].msg_sent}
+                 "Messages Sent":t[1].msg_sent,
+                 "Subscriptions":t[0].co.subcount}
             d["Connection {0}".format(i)] = c
         return d
 
