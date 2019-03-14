@@ -39,7 +39,7 @@ connections:
     prompt: "FIX:"
     # If set quiting the command interpreter plugin
     # will end execution of the program
-    quit: yes
+    quit: no
 
   # FlightGear Flight Simulator Module
   # To start FlightGear with these paramaters, use the following command...
@@ -96,7 +96,7 @@ connections:
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
-    channel: vcan0
+    channel: can0
     #interface: serial
     #channel: /dev/ttyUSB0
 
@@ -110,7 +110,7 @@ connections:
     model: 0      # Model Number
 
   gui:
-    load: yes
+    load: no
     module: fixgw.plugins.gui
 
   test1:
@@ -217,6 +217,11 @@ connections:
       #   output: x
       # - function: TAS
       # - function: DALT
+  dimmer:
+    load: yes
+    module: fixgw.plugins.dimmer
+    DimmerDevice: /sys/class/backlight/backlight/brightness
+    Multiplier: 1.0
 
 # Logging configuration - See Python logging.config module documenation
 logging:

@@ -25,14 +25,16 @@ import yaml
 import canfix
 
 class Mapping(object):
-    def __init__(self, mapfile):
+    def __init__(self, mapfile, log=None):
         self.meta_replacements_in = {}
         self.meta_replacements_out = {}
 
         # This is a list of function closures
         self.input_mapping = [None] * 1280
         self.output_mapping = {}
-        self.log = None # Should set from parent plugin
+        self.log = log
+        self.sendcount = 0
+
 
         # Open and parse the YAML mapping file passed to us
         try:
@@ -131,6 +133,7 @@ class Mapping(object):
                 # print(p.msg)
                 # print("Output Callback {} = {}".format(key, value))
                 bus.send(p.msg)
+                self.sendcount += 1
                 # print(bus)
                 # print(self.output_mapping[dbKey])
 

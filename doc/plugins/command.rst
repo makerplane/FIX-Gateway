@@ -58,7 +58,7 @@ Unsubscribes from the given key.  Stops the update of the given key.
 
 ``status``
 
-Prints the plugin's status to the screen
+Prints the status to the screen
 
 ``quit``
 ``exit``

@@ -199,19 +199,19 @@ class TestDatabase(unittest.TestCase):
 
         database.callback_add("test", "PITCH", test_cb, None)
         database.write("PITCH", -11.4)
-        self.assertEqual(rval, ("PITCH", (-11.4, False, False, False, False)))
+        self.assertEqual(rval, ("PITCH", (-11.4, False, False, False, False, False)))
         database.write("PITCH", 10.2)
-        self.assertEqual(rval, ("PITCH", (10.2, False, False, False, False)))
+        self.assertEqual(rval, ("PITCH", (10.2, False, False, False, False, False)))
         i = database.get_raw_item("PITCH")
         i.fail = True
-        self.assertEqual(rval, ("PITCH", (10.2, False, False, False, True)))
+        self.assertEqual(rval, ("PITCH", (10.2, False, False, False, True, False)))
         i.annunciate = True
-        self.assertEqual(rval, ("PITCH", (10.2, True, False, False, True)))
+        self.assertEqual(rval, ("PITCH", (10.2, True, False, False, True, False)))
         i.bad = True
-        self.assertEqual(rval, ("PITCH", (10.2, True, False, True, True)))
+        self.assertEqual(rval, ("PITCH", (10.2, True, False, True, True, False)))
         time.sleep(0.250)
         database.update() # force the update
-        self.assertEqual(rval, ("PITCH", (10.2, True, True, True, True)))
+        self.assertEqual(rval, ("PITCH", (10.2, True, True, True, True, False)))
 
 
     def test_timeout_lifetime(self):
@@ -220,13 +220,13 @@ class TestDatabase(unittest.TestCase):
         database.init(sf)
         database.write("PITCH", -11.4)
         x = database.read("PITCH")
-        self.assertEqual(x, (-11.4, False, False, False, False))
+        self.assertEqual(x, (-11.4, False, False, False, False, False))
         time.sleep(0.250)
         x = database.read("PITCH")
-        self.assertEqual(x, (-11.4, False, True, False, False))
+        self.assertEqual(x, (-11.4, False, True, False, False, False))
         database.write("PITCH", -11.4)
         x = database.read("PITCH")
-        self.assertEqual(x, (-11.4, False, False, False, False))
+        self.assertEqual(x, (-11.4, False, False, False, False, False))
 
 
     def test_description_units(self):
@@ -254,25 +254,25 @@ class TestDatabase(unittest.TestCase):
         i = database.get_raw_item("OILP1")
         database.write("OILP1", 15.4)
         x = database.read("OILP1")
-        self.assertEqual(x, (15.4, False, False, False, False))
+        self.assertEqual(x, (15.4, False, False, False, False, False))
         i.annunciate = True
         x = database.read("OILP1")
-        self.assertEqual(x, (15.4, True, False, False, False))
+        self.assertEqual(x, (15.4, True, False, False, False, False))
         i.annunciate = False
         x = database.read("OILP1")
-        self.assertEqual(x, (15.4, False, False, False, False))
+        self.assertEqual(x, (15.4, False, False, False, False, False))
         i.fail = True
         x = database.read("OILP1")
-        self.assertEqual(x, (15.4, False, False, False, True))
+        self.assertEqual(x, (15.4, False, False, False, True, False))
         i.fail = False
         x = database.read("OILP1")
-        self.assertEqual(x, (15.4, False, False, False, False))
+        self.assertEqual(x, (15.4, False, False, False, False, False))
         i.bad = True
         x = database.read("OILP1")
-        self.assertEqual(x, (15.4, False, False, True, False))
+        self.assertEqual(x, (15.4, False, False, True, False, False))
         i.bad = False
         x = database.read("OILP1")
-        self.assertEqual(x, (15.4, False, False, False, False))
+        self.assertEqual(x, (15.4, False, False, False, False, False))
 
 
     def test_string_datatype(self):

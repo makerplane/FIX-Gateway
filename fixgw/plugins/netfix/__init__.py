@@ -27,7 +27,9 @@ try:
 except:
     import Queue as queue
 from collections import OrderedDict
+import json
 import fixgw.plugin as plugin
+import fixgw.status as status
 
 
 # This holds the data and functions that are needed by both connection threads.
@@ -39,6 +41,7 @@ class Connection(object):
         self.log = parent.log
         self.queue = queue.Queue()
         self.buffer_size = int(parent.config['buffer_size']) if ('buffer_size' in parent.config) and parent.config['buffer_size'] else 1024
+        self.output_inhibit = False
 
 
     # This sends a standard Net-FIX value update message to the queue.
@@ -48,14 +51,16 @@ class Connection(object):
             o = "1" if value[2] else "0"
             b = "1" if value[3] else "0"
             f = "1" if value[4] else "0"
-            s = "{0};{1};{2}{3}{4}{5}\n".format(id, value[0],a, o, b, f)
+            s = "1" if value[5] else "0"
+            st = "{0};{1};{2}{3}{4}{5}{6}\n".format(id, value[0],a, o, b, f, s)
         else:
-            s = "{0};{1}\n".format(id, value)
-        self.queue.put(s.encode())
+            st = "{0};{1}\n".format(id, value)
+        self.queue.put(st.encode())
 
     def __send_report(self, id):
         try:
             x = self.parent.db_get_item(id)
+            if not x: raise KeyError
             a = ""
             for each in x.aux:
                 if len(a) > 0:
@@ -93,11 +98,43 @@ class Connection(object):
             current += len(message.split(','))
 
 
+    def __server_specific(self, d):
+        if d == "status":
+            s = json.dumps(status.get_dict())
+            self.queue.put("@xstatus;{}\n".format(s).encode())
+        elif d == "kill":
+            self.queue.put("@xkill\n".encode())
+            self.parent.quit()
+        else:
+            self.queue.put("@x{}!001".format(d))
+
+
+    def __flag(self, d):
+        a = d.split(';')
+        try:
+            item = self.parent.db_get_item(a[0])
+        except KeyError:
+            self.queue.put("@f{0}!001\n".format(d[0]).encode())
+            return
+        if a[1] not in ['a', 'f', 'b', 's', 'o']:
+            self.queue.put("@f{0}!002\n".format(d[0]).encode())
+            return
+        if a[2] not in ['1', '0']:
+            self.queue.put("@f{0}!003\n".format(d[0]).encode())
+            return
+        bit = (a[2] == '1')
+        if a[1] == 'a': item.annunciate = bit
+        elif a[1] == 'o': item.old = bit
+        elif a[1] == 'b': item.bad = bit
+        elif a[1] == 'f': item.fail = bit
+        elif a[1] == 's': item.secfail = bit
+        self.queue.put("@f{0}\n".format(d).encode())
+
+
     def handle_request(self, d):
         if d[0] == '@': # It's a command frame
             if d[1] == 'l':
                 self.__send_list()
-                #print("List ID's")
                 return
             else:
                 id = d[2:].strip()
@@ -109,10 +146,11 @@ class Connection(object):
                         o = "1" if val[2] else "0"
                         b = "1" if val[3] else "0"
                         f = "1" if val[4] else "0"
-                        s = "@r{0};{1};{2}{3}{4}{5}\n".format(id, val[0],a, o, b, f)
+                        s = "1" if val[5] else "0"
+                        st = "@r{0};{1};{2}{3}{4}{5}{6}\n".format(id, val[0],a, o, b, f, s)
                     else:
-                        s = "{0};{1}\n".format(id, val)
-                    self.queue.put(s.encode())
+                        st = "@r{0};{1}\n".format(id, val)
+                    self.queue.put(st.encode())
                 except KeyError:
                     self.queue.put("@r{0}!001\n".format(id).encode())
             elif d[1] == 's':
@@ -129,6 +167,10 @@ class Connection(object):
                     self.queue.put("@u{0}!001\n".format(id).encode())
             elif d[1] == 'q':
                 self.__send_report(id)
+            elif d[1] == 'x':
+                self.__server_specific(d[2:])
+            elif d[1] == 'f':
+                self.__flag(d[2:])
         else:  # If no '@' then it must be a value update
             try:
                 x = d.strip().split(';')
@@ -141,19 +183,33 @@ class Connection(object):
                     f = x[2][2]
                     if len(x[2]) == 4:
                         s = x[2][3]
+                    else:
+                        s = '0'
                     if a and a == '1':
+                        self.output_inhibit = True
                         item.annunciate = True
                     elif a and a == '0':
+                        self.output_inhibit = True
                         item.annunciate = False
                     if b and b == '1':
+                        self.output_inhibit = True
                         item.bad = True
                     elif b and b == '0':
+                        self.output_inhibit = True
                         item.bad = False
                     if f and f == '1':
+                        self.output_inhibit = True
                         item.fail = True
                     elif f and f == '0':
+                        self.output_inhibit = True
                         item.fail = False
-                    # TODO Finish dealing with secondary quality flag
+                    if s and s == '1':
+                        self.output_inhibit = True
+                        item.secfail = True
+                    elif s and s == '0':
+                        self.output_inhibit = True
+                        item.secfail = False
+                self.output_inhibit = True
                 self.parent.db_write(x[0], x[1])
             except Exception as e:
                 # We pretty much ignore this stuff for now
@@ -161,7 +217,11 @@ class Connection(object):
 
     # Callback function used for subscriptions
     def subscription_handler(self, id, value, udata):
-        self.__send_value(id, value)
+        if self.output_inhibit:
+            self.output_inhibit = False
+        else:
+            self.__send_value(id, value)
+
 
 # Two threads are started for each connection.  This one is for receiving the data
 class ReceiveThread(threading.Thread):

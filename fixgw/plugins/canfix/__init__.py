@@ -37,8 +37,6 @@ class MainThread(threading.Thread):
         self.parent = parent
         self.log = parent.log
         self.mapping = parent.mapping
-        self.framecount = 0
-        self.errorcount = 0
 
 
     def run(self):
@@ -48,7 +46,7 @@ class MainThread(threading.Thread):
             try:
                 msg = self.bus.recv(1.0)
                 if msg:
-                    self.framecount += 1
+                    self.parent.recvcount += 1
                     try:
                         cfobj = canfix.parseMessage(msg)
                     except ValueError as e:
@@ -77,9 +75,11 @@ class Plugin(plugin.PluginBase):
         self.channel = config['channel']
         self.device = int(config['device'])
         self.node = int(config['node'])
-        self.mapping = mapping.Mapping(config['mapfile'])
-        self.mapping.log = self.log
+        mapfilename = config['mapfile'].format(CONFIG=config['CONFIGPATH'])
+        self.mapping = mapping.Mapping(mapfilename, self.log)
         self.thread = MainThread(self, config)
+        self.recvcount = 0
+        self.errorcount = 0
 
 
     def run(self):
@@ -99,8 +99,9 @@ class Plugin(plugin.PluginBase):
         x = OrderedDict()
         x["CAN Interface"]=self.interface
         x["CAN Channel"]=self.channel
-        x["Frame Count"]=self.thread.framecount
-        x["Error Count"]=self.thread.errorcount
+        x["Received Frames"]=self.recvcount
+        x["Sent Frames"]=self.mapping.sendcount
+        x["Error Count"]=self.errorcount
         return x
 
 # TODO: Add error reporting in debug mode
