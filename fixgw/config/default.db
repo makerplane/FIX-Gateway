@@ -27,7 +27,7 @@ COURSE:Selected Course:float:0:359.9:deg:0.0:2000:
 CDI:Course Deviation Indicator:float:-1:1::0:2000:
 GSI:Glideslope Indicator:float:-1:1::0:2000:
 XTRACK:Cross Track Error:float:0:100:nM:0.0:2000:
-OAT:Outside Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+OAT:Outside Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn
 CAT:Cabin Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 OATW:Outside Air Temperature Warning:int:0:5:warninglevel:0:0:2000
 ROLL:Roll Angle:float:-180:180:deg:0.0:200:
@@ -58,8 +58,8 @@ H2OTe:Coolant Temperature Engine %e:float:0:200:degC:0.0:2000:Min,Max,lowWarn,hi
 FUELPe:Fuel Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:Min,Max
 MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:Min,Max
-VOLT:System Voltage:float:1:16:volt:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-CURRNT:Bus Current:float:1:16:amps:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+VOLT:System Voltage:float:0:18:volt:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
+CURRNT:Bus Current:float:0:60:amps:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
 EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:Min,Max
 EGTAVGe:Average Exhaust Gas Temp Engine %e:float:0:1000:degC:0.0:0:Min,Max
 EGTSPANe:Exhaust Gas Temp Span Engine %e:float:0:1000:degC:0.0:0:Min,Max
