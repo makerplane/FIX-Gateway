@@ -10,7 +10,7 @@ ANLGa:Generic Analog %a:float:0:1:%/100:0.0:2000:
 BTNb:Generic Button %b:bool:0:1::False:0:
 ENCr:Generic Encoder %r:int:-32768:32767:Pulses:0:0:
 IAS:Indicated Airspeed:float:0:1000:knots:0.0:2000:Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
-IASW:Indicated Airspeed Warning:int:0:5:warninglevel:0:0:2000
+IASW:Indicated Airspeed Warning:int:0:5:warninglevel:0:2000:
 TAS:True Airspeed:float:0:2000:knots:0.0:2000:
 CAS:True Airspeed:float:0:2000:knots:0.0:2000:
 GS:Ground Speed:float:0:2000:knots:0.0:2000:
@@ -29,13 +29,13 @@ GSI:Glideslope Indicator:float:-1:1::0:2000:
 XTRACK:Cross Track Error:float:0:100:nM:0.0:2000:
 OAT:Outside Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn
 CAT:Cabin Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-OATW:Outside Air Temperature Warning:int:0:5:warninglevel:0:0:2000
+OATW:Outside Air Temperature Warning:int:0:5:warninglevel:0:2000:
 ROLL:Roll Angle:float:-180:180:deg:0.0:200:
 PITCH:Pitch Angle:float:-90:90:deg:0.0:200:
-ORISYSW:Orientation System Warning:int:0:5:warninglevel:0:0:2000
-GYROW:Gyroscope sensor Warning:int:0:5:warninglevel:0:0:2000
-ACCELW:Acceleration sensor Warning:int:0:5:warninglevel:0:0:2000
-MAGW:Magnetic sensor Warning:int:0:5:warninglevel:0:0:2000
+ORISYSW:Orientation System Warning:int:0:5:warninglevel:0:2000:
+GYROW:Gyroscope sensor Warning:int:0:5:warninglevel:0:2000:
+ACCELW:Acceleration sensor Warning:int:0:5:warninglevel:0:2000:
+MAGW:Magnetic sensor Warning:int:0:5:warninglevel:0:2000:
 PITCHSET:Pitch angle setting:float:-180:180:deg:0.0:200:
 YAW:Yaw Angle:float:-180:180:deg:0.0:200:
 AOA:Angle of attack:float:-180:180:deg:0.0:200:Min,Max,0g,Warn,Stall

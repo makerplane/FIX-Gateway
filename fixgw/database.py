@@ -18,6 +18,8 @@ import logging
 from datetime import datetime
 import threading
 import time
+import yaml
+import copy
 
 __database = {}
 
@@ -62,8 +64,7 @@ class db_item(object):
     # initialize the auxiliary data dictionary.  aux should be a comma delimited
     # string of the items to include.
     def init_aux(self, aux):
-        l = aux.split(',')
-        for each in l:
+        for each in aux:
             self.aux[each.strip()] = None
 
     def get_aux_list(self):
@@ -248,7 +249,7 @@ class db_item(object):
 
 # These are support functions for loading the initial database
 def check_for_variables(entry):
-    for ch in entry[0]:
+    for ch in entry['key']:
         if ch.islower(): return ch
     return None
 
@@ -257,33 +258,33 @@ def check_for_variables(entry):
 def expand_entry(entry, var, count):
     l = []
     for i in range(count):
-        newentry = list(entry) #.copy()
-        newentry[0] = newentry[0].replace(var, str(i+1))
-        newentry[1] = newentry[1].replace('%' + var, str(i+1))
+        newentry = copy.deepcopy(entry)
+        newentry['key'] = newentry['key'].replace(var, str(i+1))
+        newentry['description'] = newentry['description'].replace('%' + var, str(i+1))
         ch = check_for_variables(newentry)
         if ch:
-            l.extend(expand_entry(newentry,ch,variables[ch]))
+            l.extend(expand_entry(newentry, ch, variables[ch]))
         else:
             l.append(newentry)
     return l
 
 
 def add_item(entry):
-    log.debug("Adding - " + entry[1])
+    log.debug("Adding - " + entry['description'])
     try:
-        newitem = db_item(entry[0], entry[2])
+        newitem = db_item(entry['key'], entry['type'])
     except:
-        log.error("Failure to add entry - " + entry[0])
+        log.error("Failure to add entry - " + entry['key'])
         return None
 
-    newitem.description = entry[1]
-    newitem.min = entry[3]
-    newitem.max = entry[4]
-    newitem.units = entry[5]
-    newitem.tol = entry[7]
-    newitem.value = entry[6]
-    newitem.init_aux(entry[8])
-    __database[entry[0]] = newitem
+    newitem.description = entry.get('description', '')
+    newitem.min = entry.get('min', None)
+    newitem.max = entry.get('max', None)
+    newitem.units = entry.get('units', '')
+    newitem.tol = entry.get('tol', 0)
+    newitem.value = entry.get('initial', None)
+    newitem.init_aux(entry.get('aux', []))
+    __database[entry['key']] = newitem
     return newitem
 
 
@@ -299,28 +300,21 @@ def init(f):
 
     state = "var"
 
-    for line in f:
-        sline = line.strip()
-        if sline and sline[0] != '#':  # Skip blank lines and comments
-            entry = sline.split(":")
-            if entry[0][:3] == "---":
-                state = "db"
-                log.debug("Database Variables: " + str(variables))
-                continue
-            if state == "var":
-                v = entry[0].split('=')
-                variables[v[0].strip().lower()] = int(v[1].strip())
-            if state == "db":
-                ch = check_for_variables(entry)
-                if ch:
-                    try:
-                        entries = expand_entry(entry, ch, variables[ch])
-                        for each in entries:
-                            add_item(each)
-                    except KeyError:
-                        log.error("Variable {0} not set for {1}".format(ch, entry[1]))
-                else:
-                    add_item(entry)
+    db = yaml.load(f)
+    for key, value in db['variables'].items():
+        variables[key] = int(value)
+    for entry in db['entries']:
+        ch = check_for_variables(entry)
+        if ch:
+            try:
+                entries = expand_entry(entry, ch, variables[ch])
+                for each in entries:
+                    add_item(each)
+            except KeyError:
+                log.error("Variable {0} not set for {1}".format(ch, entry['key']))
+        else:
+            add_item(entry)
+    
     f.close()
     t = UpdateThread(update, 1.0)
     t.daemon = True
