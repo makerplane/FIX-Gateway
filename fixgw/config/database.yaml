@@ -1,10 +1,10 @@
 variables:
-  a: 8
-  b: 16
-  c: 6
-  e: 1
-  r: 1
-  t: 2
+  e: 1  # Engines
+  c: 6  # Cylinders
+  a: 8  # Generic Analogs
+  b: 16 # Generic Buttons
+  r: 1  # Encoders
+  t: 2  # Fuel Tanks
 
 entries:
 - key: ANLGa

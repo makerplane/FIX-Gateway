@@ -270,17 +270,20 @@ def expand_entry(entry, var, count):
 
 
 def add_item(entry):
-    log.debug("Adding - " + entry['description'])
+
+    log.debug("Adding - {}".format(entry.get('description', '')))
     try:
         newitem = db_item(entry['key'], entry['type'])
     except:
         log.error("Failure to add entry - " + entry['key'])
         return None
 
-    newitem.description = entry.get('description', '')
+    x = entry.get('description', '')
+    newitem.description = x if x != None else ''
     newitem.min = entry.get('min', None)
     newitem.max = entry.get('max', None)
-    newitem.units = entry.get('units', '')
+    x = entry.get('units', '')
+    newitem.units = x if x != None else ''
     newitem.tol = entry.get('tol', 0)
     newitem.value = entry.get('initial', None)
     newitem.init_aux(entry.get('aux', []))
@@ -314,7 +317,7 @@ def init(f):
                 log.error("Variable {0} not set for {1}".format(ch, entry['key']))
         else:
             add_item(entry)
-    
+
     f.close()
     t = UpdateThread(update, 1.0)
     t.daemon = True
