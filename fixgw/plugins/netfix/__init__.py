@@ -42,6 +42,7 @@ class Connection(object):
         self.queue = queue.Queue()
         self.buffer_size = int(parent.config['buffer_size']) if ('buffer_size' in parent.config) and parent.config['buffer_size'] else 1024
         self.subcount = 0
+        self.output_inhibit = False
 
 
     # This sends a standard Net-FIX value update message to the queue.
@@ -207,21 +208,30 @@ class Connection(object):
                     else:
                         s = '0'
                     if a and a == '1':
+                        self.output_inhibit = True
                         item.annunciate = True
                     elif a and a == '0':
+                        self.output_inhibit = True
                         item.annunciate = False
                     if b and b == '1':
+                        self.output_inhibit = True
                         item.bad = True
                     elif b and b == '0':
+                        self.output_inhibit = True
                         item.bad = False
                     if f and f == '1':
+                        self.output_inhibit = True
                         item.fail = True
                     elif f and f == '0':
+                        self.output_inhibit = True
                         item.fail = False
                     if s and s == '1':
+                        self.output_inhibit = True
                         item.secfail = True
                     elif s and s == '0':
+                        self.output_inhibit = True
                         item.secfail = False
+                self.output_inhibit = True
                 self.parent.db_write(x[0], x[1])
             except Exception as e:
                 # We pretty much ignore this stuff for now
@@ -229,7 +239,10 @@ class Connection(object):
 
     # Callback function used for subscriptions
     def subscription_handler(self, id, value, udata):
-        self.__send_value(id, value)
+        if self.output_inhibit:
+            self.output_inhibit = False
+        else:
+            self.__send_value(id, value)
 
 
 # Two threads are started for each connection.  This one is for receiving the data

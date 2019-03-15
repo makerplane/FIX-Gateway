@@ -29,10 +29,19 @@ def averageFunction(inputs, output):
     vals = {}
     for each in inputs:
         vals[each] = None
+
     def func(key, value, parent):
-        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
-        nonlocal output
+        o = parent.db_get_item(output)
+        # This is to set the aux data in the output to one of the inputs
+        if type(value) != tuple:
+            x = key.split('.')
+            # we use the first input in the list to set the aux values
+            if x[0] == inputs[0]:
+                if o.get_aux_value(x[1]) != value:
+                    o.set_aux_value(x[1], value)
+            return
+
         vals[key] = value
         arrsum = 0
         flag_old = False
@@ -45,12 +54,11 @@ def averageFunction(inputs, output):
             if vals[each][2]: flag_old = True
             if vals[each][3]: flag_bad = True
             if vals[each][4]: flag_fail = True
-        i = parent.db_get_item(output)
-        i.value = arrsum / len(vals)
-        i.fail = flag_fail
-        if i.fail: i.value = 0.0
-        i.bad = flag_bad
-        i.old = flag_old
+        o.value = arrsum / len(vals)
+        o.fail = flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
     return func
 
 
@@ -79,12 +87,12 @@ def sumFunction(inputs, output):
             except TypeError:
                 print("WTF {} {}".format(key, value))
                 raise
-        i = parent.db_get_item(output)
-        i.value = arrsum
-        i.fail = flag_fail
-        if i.fail: i.value = 0.0
-        i.bad = flag_bad
-        i.old = flag_old
+        o = parent.db_get_item(output)
+        o.value = arrsum
+        o.fail = flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
     return func
 
 
@@ -94,9 +102,16 @@ def maxFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
-        nonlocal output
+        # This is to set the aux data in the output to one of the inputs
+        o = parent.db_get_item(output)
+        if type(value) != tuple:
+            x = key.split('.')
+            # we use the first input in the list to set the aux values
+            if x[0] == inputs[0]:
+                if o.get_aux_value(x[1]) != value:
+                    o.set_aux_value(x[1], value)
+            return
         vals[key] = value
         flag_old = False
         flag_bad = False
@@ -112,12 +127,11 @@ def maxFunction(inputs, output):
             if vals[each][2]: flag_old = True
             if vals[each][3]: flag_bad = True
             if vals[each][4]: flag_fail = True
-        i = parent.db_get_item(output)
-        i.value = vmax
-        i.fail= flag_fail
-        if i.fail: i.value = 0.0
-        i.bad = flag_bad
-        i.old = flag_old
+        o.value = vmax
+        o.fail= flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
     return func
 
 
@@ -127,9 +141,16 @@ def minFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
-        nonlocal output
+        # This is to set the aux data in the output to one of the inputs
+        o = parent.db_get_item(output)
+        if type(value) != tuple:
+            x = key.split('.')
+            # we use the first input in the list to set the aux values
+            if x[0] == inputs[0]:
+                if o.get_aux_value(x[1]) != value:
+                    o.set_aux_value(x[1], value)
+            return
         vals[key] = value
         flag_old = False
         flag_bad = False
@@ -145,12 +166,11 @@ def minFunction(inputs, output):
             if vals[each][2]: flag_old = True
             if vals[each][3]: flag_bad = True
             if vals[each][4]: flag_fail = True
-        i = parent.db_get_item(output)
-        i.value = vmin
-        i.fail= flag_fail
-        if i.fail: i.value = 0.0
-        i.bad = flag_bad
-        i.old = flag_old
+        o.value = vmin
+        o.fail= flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
     return func
 
 # Determines the span between the highest and lowest of the inputs
@@ -160,9 +180,8 @@ def spanFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        if type(value) != tuple: return # This might be a meta data update
         nonlocal vals
-        nonlocal output
+        if type(value) != tuple: return # This might be a meta data update
         vals[key] = value
         flag_old = False
         flag_bad = False
@@ -181,12 +200,12 @@ def spanFunction(inputs, output):
             if vals[each][2]: flag_old = True
             if vals[each][3]: flag_bad = True
             if vals[each][4]: flag_fail = True
-        i = parent.db_get_item(output)
-        i.value = vmax - vmin
-        i.fail= flag_fail
-        if i.fail: i.value = 0.0
-        i.bad = flag_bad
-        i.old = flag_old
+        o = parent.db_get_item(output)
+        o.value = vmax - vmin
+        o.fail= flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
     return func
 
 

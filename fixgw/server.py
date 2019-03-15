@@ -119,7 +119,7 @@ def main():
         cf = open(config_file)
 
     config_path = os.path.dirname(cf.name)
-    config = yaml.load(cf)
+    config = yaml.safe_load(cf)
 
     # Either load the config file given as a command line argument or
     # look in the configuration for the logging object
