@@ -987,6 +987,16 @@ class TestDatabase(unittest.TestCase):
         x = database.read("BTN1")
         self.assertEqual(x[0], False)
 
+    def test_similar_aux_items(self):
+        """it would be easy for a single aux array to be pointed to
+           by different database items."""
+        sf = io.StringIO(variable_config)
+        database.init(sf)
+        database.write("EGT11.Max", 700)
+        database.write("EGT12.Max", 800)
+        x = database.read("EGT11.Max")
+        y = database.read("EGT12.Max")
+        self.assertNotEqual(y, x)
 
 if __name__ == '__main__':
     unittest.main()
