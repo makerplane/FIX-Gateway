@@ -303,7 +303,7 @@ def init(f):
 
     state = "var"
 
-    db = yaml.load(f)
+    db = yaml.safe_load(f)
     for key, value in db['variables'].items():
         variables[key] = int(value)
     for entry in db['entries']:
