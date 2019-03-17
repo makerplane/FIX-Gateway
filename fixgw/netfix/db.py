@@ -326,6 +326,7 @@ class UpdateThread(threading.Thread):
         self.interval = interval
         self.getout = False
         self.function = function
+        self.daemon = True
 
     def run(self):
         while not self.getout:
@@ -348,18 +349,23 @@ class Database(object):
         self.init_event = threading.Event()
         self.connected = False
         if self.client.isConnected():
-            self.connected = True
             self.initialize()
+            self.connected = True
         self.client.setConnectCallback(self.connectFunction)
         self.client.setDataCallback(self.dataFunction)
         self.timer = UpdateThread(self.update)
         self.timer.start()
+
+        # Callback functions
+        self.connectCallback = None
 
     # These are the callbacks that we use to get events from teh client
     # This function is called when the connection state of the client
     # changes.  It recievs a True when connected and False when disconnected
     def connectFunction(self, x):
         self.connected = x
+        if self.connectCallback != None:
+            self.connectCallback(x)
 
     def update(self):
         if self.connected and self.__items == {}:

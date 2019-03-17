@@ -51,5 +51,4 @@ def main(client):
 
     window = MainWindow()
     x = app.exec_()
-    connection.stop()
     return x

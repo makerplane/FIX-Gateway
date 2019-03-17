@@ -62,7 +62,6 @@ class DataTable(QTableWidget):
 
     def keySelected(self, x):
         key = self.verticalHeaderItem(x).text()
-        print("You Clicked {}".format(key))
         d = dbItemDialog.ItemDialog(self)
         d.setKey(key)
         d.show()
