@@ -314,8 +314,6 @@ class DB_Item(object):
                 self.bad = True if 'b' in report[2] else False
                 self.fail = True if 'f' in report[2] else False
                 self.secFail = True if 's' in report[2] else False
-            #except:
-            #    raise
             finally:
                 self.supressWrite = False
 

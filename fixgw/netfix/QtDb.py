@@ -33,7 +33,6 @@ import fixgw.netfix.db
 
 # This class represents a single data point in the database.
 class QtDB_Item(QObject):
-    # Callback Functions
     valueChanged = pyqtSignal(object)
     valueWrite = pyqtSignal(object)
     annunciateChanged = pyqtSignal(bool)
@@ -53,6 +52,47 @@ class QtDB_Item(QObject):
         self._item = item
 
         log.debug("Creating Qt Item {0}".format(key))
+        item.valueChanged = self.valueChangedFunc
+        item.valueWrite = self.valueWriteFunc
+        item.annunciateChanged = self.annunciateChangedFunc
+        item.oldChanged = self.oldChangedFunc
+        item.badChanged = self.badChangedFunc
+        item.failChanged = self.failChangedFunc
+        item.secFailCahnged = self.secFailChangedFunc
+        item.auxChanged = self.auxChangedFunc
+        item.reportReceived = self.reportReceivedFunc
+        item.destroyed = self.destroyedFunc
+
+
+    def valueChangedFunc(value):
+        self.valueChanged.emit(value)
+
+    def valueWriteFunc(value):
+        self.valueWrite.emit(value)
+
+    def annunciateChangedFunc(value):
+        self.annunciateChanged.emit(value)
+
+    def oldChangedFunc(value):
+        self.oldChanged.emit(value)
+
+    def badChangedFunc(value):
+        self.badChanged(value)
+
+    def failChangedFunc(value):
+        self.failChanged(value)
+
+    def secFailChangedFunc(value):
+        self.secFailChanged.emit(value)
+
+    def auxChangedFunc(value):
+        self.auxChanged.emit(value)
+
+    def reportReceivedFunc(value):
+        self.reportReceived(value)
+
+    def destroyedFunc(value):
+        self.destroyed(value)
 
     def __str__(self):
         s = "{} = {}".format(self.key, self._value)
