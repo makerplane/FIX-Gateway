@@ -20,6 +20,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 from . import connection
+from . import dbItemDialog
 
 class DataTable(QTableWidget):
     def __init__(self, parent=None):
@@ -31,8 +32,12 @@ class DataTable(QTableWidget):
         self.dblist.sort()
         self.setRowCount(len(self.dblist))
         self.setVerticalHeaderLabels(self.dblist)
+        #self.verticalHeader().hide()
         for i, key in enumerate(self.dblist):
             item = connection.db.get_item(key)
+            #cell = QTableWidgetItem(key)
+            #cell.setFlags(Qt.ItemIsEnabled)
+            #self.setItem(i, 0, cell)
             cell = QTableWidgetItem(item.description)
             cell.setFlags(Qt.ItemIsEnabled)
             self.setItem(i, 0, cell)
@@ -42,7 +47,6 @@ class DataTable(QTableWidget):
 
             cell = QTableWidgetItem()
             cell.setFlags(Qt.ItemIsEnabled)
-            cell.setTextAlignment(Qt.AlignRight)
             self.setItem(i, 2, cell)
             cb = QCheckBox(self)
             self.setCellWidget(i, 2, cb)
@@ -53,13 +57,15 @@ class DataTable(QTableWidget):
         self.timer = QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.update)
+        self.verticalHeader().sectionDoubleClicked.connect(self.keySelected)
 
-        #self.resizeRowsToContents()
-    # def whatsup(self):
-    #     print("Dude")
-    #
-    # def clickifcated(self, x, y):
-    #     print("You Clicked {},{}".format(x,y))
+
+    def keySelected(self, x):
+        key = self.verticalHeaderItem(x).text()
+        print("You Clicked {}".format(key))
+        d = dbItemDialog.ItemDialog(self)
+        d.setKey(key)
+        d.show()
 
     def update(self):
         for i, key in enumerate(self.dblist):

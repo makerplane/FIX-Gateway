@@ -25,7 +25,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 from . import connection
-from .mainWindow import Ui_MainWindow
+from .ui.main_ui import Ui_MainWindow
 
 from . import table
 from . import statusModel

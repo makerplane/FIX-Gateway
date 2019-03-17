@@ -57,8 +57,8 @@ class StatusView(QScrollArea):
                 return
             d = json.loads(res, object_pairs_hook=OrderedDict)
             s = status.dict2string(d, spaces=8) + '\n'
-            for key in connection.db.get_item_list():
-                s += "{} = {}\n".format(key, connection.db.get_value(key))
+            # for key in connection.db.get_item_list():
+            #     s += "{} = {}\n".format(key, connection.db.get_value(key))
             self.textBox.setText(s)
 
     def showEvent(self, QShowEvent):
