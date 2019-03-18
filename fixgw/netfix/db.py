@@ -139,8 +139,10 @@ class DB_Item(object):
             if self.dtype == bool:
                 if type(x) == bool:
                     self._value = x
+                elif type(x) == str:
+                    self._value = True if x.lower() in ["yes", "true", "1"] else False
                 else:
-                    self._value = (x == True or x.lower() in ["yes", "true", "1", 1])
+                    self._value = True if x else False
             else:
                 try:
                     self._value = self.dtype(x)
@@ -167,6 +169,8 @@ class DB_Item(object):
             #print("ValueWrite {0} {1}".format(self.key, self._value))
             if self.valueWrite != None:
                 self.valueWrite(self._value)
+            if not self.supressWrite:
+                self.client.writeValue(self.key, self._value)
 
     @property
     def dtype(self):
@@ -251,6 +255,7 @@ class DB_Item(object):
             self._annunciate = bool(x)
             if self._annunciate != last and self.annunciateChanged != None:
                     self.annunciateChanged(self._annunciate)
+                    self.client.flag(self.key, 'a', self._annunciate)
 
     @property
     def old(self):
@@ -321,10 +326,10 @@ class DB_Item(object):
 class UpdateThread(threading.Thread):
     def __init__(self, function, interval = 1.0):
         super(UpdateThread, self).__init__()
+        self.daemon = True
         self.interval = interval
         self.getout = False
         self.function = function
-        self.daemon = True
 
     def run(self):
         while not self.getout:
@@ -381,7 +386,6 @@ class Database(object):
         else:
             # Do some maintenance stuff
             pass
-
 
     # This callback gets a data update sentence from the server
     def dataFunction(self, x):

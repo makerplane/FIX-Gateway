@@ -142,6 +142,7 @@ class Connection(object):
             self.queue.put("@w{0}!001\n".format(d[0]).encode())
             return
         try:
+            self.output_inhibit = True
             item.value = a[1]
         except:
             self.queue.put("@w{0}!002\n".format(d[0]).encode())

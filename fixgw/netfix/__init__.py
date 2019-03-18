@@ -60,6 +60,7 @@ class Report:
 class ClientThread(threading.Thread):
     def __init__(self, host, port):
         super(ClientThread, self).__init__()
+        self.daemon = True
         self.host = host
         self.port = port
         self.getout = False

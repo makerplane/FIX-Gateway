@@ -64,35 +64,35 @@ class QtDB_Item(QObject):
         item.destroyed = self.destroyedFunc
 
 
-    def valueChangedFunc(value):
+    def valueChangedFunc(self, value):
         self.valueChanged.emit(value)
 
-    def valueWriteFunc(value):
+    def valueWriteFunc(self, value):
         self.valueWrite.emit(value)
 
-    def annunciateChangedFunc(value):
+    def annunciateChangedFunc(self, value):
         self.annunciateChanged.emit(value)
 
-    def oldChangedFunc(value):
+    def oldChangedFunc(self, value):
         self.oldChanged.emit(value)
 
-    def badChangedFunc(value):
-        self.badChanged(value)
+    def badChangedFunc(self, value):
+        self.badChanged.emit(value)
 
-    def failChangedFunc(value):
-        self.failChanged(value)
+    def failChangedFunc(self, value):
+        self.failChanged.emit(value)
 
-    def secFailChangedFunc(value):
+    def secFailChangedFunc(self, value):
         self.secFailChanged.emit(value)
 
-    def auxChangedFunc(value):
+    def auxChangedFunc(self, value):
         self.auxChanged.emit(value)
 
-    def reportReceivedFunc(value):
-        self.reportReceived(value)
+    def reportReceivedFunc(self, value):
+        self.reportReceived.emit(value)
 
-    def destroyedFunc(value):
-        self.destroyed(value)
+    def destroyedFunc(self, value):
+        self.destroyed.emit(value)
 
     def __str__(self):
         s = "{} = {}".format(self.key, self._value)
@@ -108,94 +108,81 @@ class QtDB_Item(QObject):
         self._item.get_aux_value(name)
 
     # return the age of the item in milliseconds
-    @property
-    def age(self):
+    def getAge(self):
         return self._item.age
+    age = property(getAge)
 
-    @property
-    def description(self):
+    def getDescription(self):
         return self._item.description
+    description = property(getDescription)
 
-    @property
-    def value(self):
+    def getValue(self):
         return self._item.value
 
-    @value.setter
-    def value(self, x):
+    def setValue(self, x):
         self._item.value = x
+    value = property(getValue, setValue)
 
-    @property
-    def dtype(self):
+    def getDtype(self):
         return self._item.dtype
+    dtype = property(getDtype)
 
-    @property
-    def typestring(self):
+    def getTypestring(self):
         return self._item.typestring
+    typestring = property(getTypestring)
 
-    @property
-    def units(self):
+    def getUnits(self):
         return self._item.units
+    units = property(getUnits)
 
-    @units.setter
-    def units(self, value):
-        self._item.units = value
-
-    @property
-    def min(self):
+    def getMin(self):
         return self._item.min
+    min = property(getMin)
 
-    @property
-    def max(self):
+    def getMax(self):
         return self._item.max
+    max = property(getMax)
 
-    @property
-    def tol(self):
+    def getTol(self):
         return self._item.tol
+    tol = property(getTol)
 
-    @property
-    def annunciate(self):
+    def getAnnunciate(self):
         return self._item.annunciate
 
-    @annunciate.setter
-    def annunciate(self, x):
+    def setAnnunciate(self, x):
         self._item.annunciate = x
+    annunciate = property(getAnnunciate, setAnnunciate)
 
-    @property
-    def old(self):
+    def getOld(self):
         return self._item.old
 
-    @old.setter
-    def old(self, x):
+    def setOld(self, x):
         self._item.old = x
+    old = property(getOld, setOld)
 
-    @property
-    def bad(self):
+    def getBad(self):
         return self._item.bad
 
-    @bad.setter
-    def bad(self, x):
+    def setBad(self, x):
         self._item.bad = x
+    bad = property(getBad, setBad)
 
-    @property
-    def fail(self):
+    def getFail(self):
         return self._item.fail
 
-    @fail.setter
-    def fail(self, x):
+    def setFail(self, x):
         self._item.fail = x
+    fail = property(getFail, setFail)
 
-    @property
-    def secFail(self):
+    def getSecFail(self):
         return self._item.sec
 
-    @secFail.setter
-    def secFail(self, x):
+    def setSecFail(self, x):
         self._item.sec = x
+    secFail = property(getSecFail, setSecFail)
 
 
-# This Class represents the database itself.  Once instantiated it
-# creates and starts the thread that handles all the communication to
-# the server.
 class Database(object):
     def __init__(self, client):
         self.__db = fixgw.netfix.db.Database(client)  # main netfix client database
@@ -206,9 +193,6 @@ class Database(object):
         if self.__db.connected:
             self.initialize()
 
-    # These are the callbacks that we use to get events from teh client
-    # This function is called when the connection state of the client
-    # changes.  It recievs a True when connected and False when disconnected
     def connectFunction(self, x):
         if x:
             self.__items = {}
@@ -228,10 +212,6 @@ class Database(object):
         except Exception as e:
             log.error(e)
 
-
-    # If the create flag is set to True this function will create an
-    # item with the given key if it does not exist.  Otherwise just
-    # return the item if found.
     def get_item(self, key):
         return self.__items[key]
 

@@ -87,16 +87,24 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
             r.setDecimals(dp)
             r.setMinimum(self.item.min)
             r.setMaximum(self.item.max)
+            r.valueChanged.connect(self.item.setValue)
+            self.item.valueChanged.connect(r.setValue)
         elif self.item.dtype is int:
             r = QSpinBox(self.scrollAreaWidgetContents)
             r.setMinimum(self.item.min)
             r.setMaximum(self.item.max)
+            r.valueChanged.connect(self.item.setValue)
+            self.item.valueChanged.connect(r.setValue)
         elif self.item.dtype is bool:
             r = QCheckBox(self.scrollAreaWidgetContents)
             r.setChecked(self.item.value)
+            r.stateChanged.connect(self.item.setValue)
+            self.item.valueChanged.connect(r.setChecked)
         elif self.item.dtype is str:
             r = QLineEdit(self.scrollAreaWidgetContents)
             r.setText(self.item.value)
+            r.textChanged.connect(self.item.setValue)
+            self.item.valueChanged.connect(r.setText)
         self.formLayout.addRow(l, r)
 
         l = QLabel(self.scrollAreaWidgetContents)
