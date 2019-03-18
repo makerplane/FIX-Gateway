@@ -16,39 +16,81 @@
 
 from collections import OrderedDict
 import fixgw.database as database
+import logging
+
+try:
+    import psutil
+except:
+    psutil = None
+
+__status = None
+
+class Status():
+    def __init__(self, plugins, config_status):
+        self.plugins = plugins
+        self.version = "0.2"
+        self.db_item_count = len(database.listkeys())
+        self.config_status = config_status
+
+    def get_dict(self):
+        result = OrderedDict({"Version":self.version})
+        result.update(self.config_status)
+        result.update(get_system_status())
+        # Database information
+        db = {"Item Count": self.db_item_count}
+        result["Database Statistics"] = db
+        # Add plugin status
+        for name in self.plugins:
+            d = OrderedDict({"Running":self.plugins[name].is_running()})
+            x = self.plugins[name].get_status()
+            if x: d.update(x)
+            result["Connection: " + name] = d
+        return result
 
 
-def initialize(p):
-    global plugins
-    plugins = p
+if psutil != None:
+    def get_system_status():
+        p = psutil.Process()
+        d = OrderedDict()
+        d["CPU Percent"] = "%.2f" % p.cpu_percent()
+        d["Memory Percent"] = "%.2f" % p.memory_percent()
+        return {"Performance": d}
+else:
+    def get_system_status():
+        return {}
+
+
+def get_object():
+    return __status
+
+
+def initialize(p, ss):
+    global __status
+    global log
+    __status = Status(p, ss)
+    log = logging.getLogger(__name__)
+    if psutil == None:
+        log.info("psutil package not found.  No system stats will be available.")
+
+
 
 def get_dict():
-    result = OrderedDict({"Version":"0.2"})
-    # Database information
-    db = {"Item Count":len(database.listkeys())}
+    return __status.get_dict()
 
-    result["Database Statistics"] = db
-    # Add plugin status
-    for name in plugins:
-        d = OrderedDict({"Running":plugins[name].is_running()})
 
-        x = plugins[name].get_status()
-        if x: d.update(x)
-        result["Connection: " + name] = d
-    return result
-
-def dict2string(d, indent = 0):
-    s = "    " * indent
+def dict2string(d, indent = 0, spaces = 3):
+    s = " " * indent * spaces
     result = ""
     for each in d:
         if type(d[each]) in [dict, OrderedDict]:
             result += s + each + "\n"
-            result += dict2string( d[each], indent+1 )
+            result += dict2string( d[each], indent+1 , spaces)
         else:
             result += "{0}{1}: {2}\n".format(s, each, d[each])
     return result
 
+
 def get_string():
-    d = get_dict()
+    d = __status.get_dict()
     s = dict2string(d)
     return s

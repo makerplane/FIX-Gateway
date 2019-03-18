@@ -4,15 +4,16 @@
 # directory where this file is found.
 
 # File that defines the database.
-database file: "{CONFIG}/default.db"
+database file: "{CONFIG}/database.yaml"
 
 # Set initial values after the database is initialized.
 # If there are duplicate assignments in these files, the last
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-  - "{CONFIG}/c170b.ini"
-  - "{CONFIG}/fg_172.ini"
+  - "{CONFIG}/default.ini"
+  # - "{CONFIG}/c170b.ini"
+  # - "{CONFIG}/fg_172.ini"
 
 # Connections:
 # if 'load' is 'yes' the connection plugin will be loaded at program start
@@ -43,14 +44,14 @@ connections:
 
   # FlightGear Flight Simulator Module
   # To start FlightGear with these paramaters, use the following command...
-  #   >fgfs --generic=socket,bi,10,localhost,5500,udp,fix_fgfs
+  #   >fgfs --generic=socket,out,10,localhost,5500,udp,fix_fgfs --generic=socket,in,1,,5501,udp,fix_sgfs
   # The fix_fgfs.xml file should be in the FG_ROOT/Protocols directory which should be
   # in one of the following locations...
   # LINUX: /usr/share/games/flightgear/
   # OSX: /Applications/FlightGear.app/Contents/Resources/data/
   # WINDOWS: c:\Program Files\FlightGear\data\
   fgfs:
-    load: no
+    load: yes
     module: fixgw.plugins.fgfs
     # This should be the same as $FG_ROOT on your system.  It is used to help
     # fixgw find the xml configuration files
@@ -63,11 +64,14 @@ connections:
     # the same file.
     xml_file: fix_fgfs.xml
     # UDP Address and Ports used for communication to FlightGear.
-    host: localhost
+    # Host address to listen on
+    recv_host: localhost
     # port used for the -out argument to FlightGear
-    out_port: 5500
+    recv_port: 5500
+    # host address where FlightGear is running
+    send_host: localhost
     # port used for the -in argument to FlightGear
-    in_port: 5501
+    send_port: 5501
     # Update rate for sending data to FlightGear
     rate: 10  # updates / second
 
@@ -92,7 +96,7 @@ connections:
 
   # CAN-FIX
   canfix:
-    load: yes
+    load: no
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
@@ -101,7 +105,7 @@ connections:
     #channel: /dev/ttyUSB0
 
     # This file controls the
-    mapfile: config/canfix/default.map
+    mapfile: "{CONFIG}/canfix/map.yaml"
     # The following is our Node Identification Information
     # See the CAN-FIX Protocol Specification for more information
     node: 145     # CAN-FIX Node ID
@@ -113,9 +117,39 @@ connections:
     load: yes
     module: fixgw.plugins.gui
 
-  test:
+  system:
+    load: yes
+    module: fixgw.plugins.system
+    time:
+      enable: yes
+      keys: # Database keys to write the time
+        gmt_seconds: TIMEZS
+        gmt_minutes: TIMEZM
+        gmt_hours: TIMEZH
+        gmt_string: TIMEZ
+        local_seconds:
+        local_minutes:
+        local_hours:
+        local_string: TIMEL
+      gmt_format: "%H:%M:%SZ" # Zulu time format string
+      local_format: "%H:%M:%S %Z" # Local time format string
+
+
+  test1:
     load: no
     module: fixgw.plugins.test
+    key: IAS
+    low: 0.0
+    high: 200.0
+    delay: 1.0
+
+  test2:
+    load: no
+    module: fixgw.plugins.test
+    key: ALT
+    low: 0.0
+    high: 20000.0
+    delay: 1.0
 
   bno055:
     load: no
@@ -178,6 +212,38 @@ connections:
     rais_directory: /home/me/openEFIS
     rais_server_module: RAIS
     rais_config_path: /home/me/openEFIS/sensors_pubsub.yml
+
+  # Data Coputation
+  compute:
+    load: yes
+    module: fixgw.plugins.compute
+    functions:
+      - function: average
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTAVG1
+      - function: span
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTSPAN1
+      - function: max
+        inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
+        output: CHTMAX1
+      - function: sum
+        inputs: ["FUELQ1", "FUELQ2"]
+        output: FUELQT
+
+      # - function: min
+      #   inputs: []
+      #   output: x
+      # - function: span
+      #   inputs: []
+      #   output: x
+      # - function: TAS
+      # - function: DALT
+  dimmer:
+    load: yes
+    module: fixgw.plugins.dimmer
+    DimmerDevice: /sys/class/backlight/intel_backlight/brightness
+    Multiplier: 1.0
 
 # Logging configuration - See Python logging.config module documenation
 logging:

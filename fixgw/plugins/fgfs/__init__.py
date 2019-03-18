@@ -19,32 +19,39 @@
 import threading
 import os
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
 import socket
+import time
 import fixgw.plugin as plugin
 
-items = []
+# out and in are actually backwards here.  These are with respect to the
+# flight simulator.  The recv_items are associated with chunks in the
+# <output> section of the XML file and the generic protocol 'out' argument
+# they are inputs to FIXGateway.  The opposite is true of send_items
+recv_items = []
+send_items = []
 var_sep = ','
 
 class UDPClient(threading.Thread):
     def __init__(self, host, port):
         super(UDPClient, self).__init__()
 
-        UDP_IP = host
-        UDP_PORT = int(port)
+        self.host = host
+        self.port = int(port)
 
         self.sock = socket.socket(socket.AF_INET,  # Internet
                              socket.SOCK_DGRAM)  # UDP
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.settimeout(2.0)
-        self.sock.bind((UDP_IP, UDP_PORT))
+        self.sock.bind((self.host, self.port))
         self.getout = False
+        self.msg_recv = 0
 
     def save_data(self, data):
         l = data.split(var_sep)
         for i, each in enumerate(l):
-            if items[i].item != None:
-                items[i].item.value = each
+            recv_items[i].value = each
 
     def run(self):
         buff = ""
@@ -58,6 +65,7 @@ class UDPClient(threading.Thread):
                             buff += d
                         else:
                             self.save_data(buff)
+                            self.msg_recv += 1
                             buff = ""
             except socket.timeout:
                 pass
@@ -71,8 +79,22 @@ class Item(object):
     def __init__(self, key):
         self.key = key
         self.item = None
-        self.type = ""
+        self.format = ""
         self.conversion = None
+        #self.__value = 0.0
+
+    def setValue(self, value):
+        #self.__value = value
+        if self.item != None:
+            self.item.value = value
+
+    def getValue(self):
+        if self.item != None:
+            return self.item.value[0]
+        else:
+            return 0.0
+
+    value = property(getValue, setValue)
 
     def __str__(self):
         return self.key
@@ -87,14 +109,27 @@ def parseProtocolFile(fg_root, xml_file):
         raise ValueError("Root Tag is not PropertyList")
 
     # TODO Read var_separator tag and adjust accordingly
-    # TODO Get conversion if any and set conversion function
+    # TODO Add <input> tags if any
     generic = root.find("generic")
-    output = generic.find("output")
-    for chunk in output:
+    outputs = generic.find("output")
+    for chunk in outputs:
         name = chunk.find("name")
         if name != None:
             info = name.text.split(":")
-            items.append(Item(info[0].strip()))
+            recv_items.append(Item(info[0].strip()))
+    inputs = generic.find("input")
+    for chunk in inputs:
+        name = chunk.find("name")
+        if name != None:
+            info = name.text.split(":")
+            i = Item(info[0].strip())
+            send_items.append(i)
+            format = chunk.find("format")
+            if format != None:
+                i.format = format.text
+            else:
+                i.format = "%.2f"
+
 
 
 class MainThread(threading.Thread):
@@ -104,12 +139,27 @@ class MainThread(threading.Thread):
         self.parent = parent
         self.log = parent.log
         self.config = parent.config
+        self.msg_sent = 0
+        self.host = self.config['send_host']
+        self.port = int(self.config['send_port'])
+        self.delay_time = 1.0 / float(self.config['rate'])
 
     def run(self):
-        self.clientThread = UDPClient(self.config['host'], self.config['out_port'])
+        self.clientThread = UDPClient(self.config['recv_host'], self.config['recv_port'])
         self.clientThread.start()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        while not self.getout:
+            time.sleep(self.delay_time)
+            ss = []
+            for x in send_items:
+                ss.append("%.2f" % x.value)
+            msg = var_sep.join(ss)
+            msg += "\n"
+            sock.sendto(bytearray(msg, 'UTF-8'), (self.host, self.port))
+            self.msg_sent += 1
 
     def stop(self):
+        self.getout = True
         self.clientThread.stop()
 
 
@@ -130,7 +180,11 @@ class Plugin(plugin.PluginBase):
         # This loop checks to see if we have each item in the database
         # if not then we'll just let it get set to None and ignore it when
         # we parse the string from FlightGear
-        for each in items:
+        for each in recv_items:
+            each.item = self.db_get_item(each.key)
+            if each.item == None:
+                self.log.warning("{0} found in protocol file but not in the database".format(each.key))
+        for each in send_items:
             each.item = self.db_get_item(each.key)
             if each.item == None:
                 self.log.warning("{0} found in protocol file but not in the database".format(each.key))
@@ -146,3 +200,18 @@ class Plugin(plugin.PluginBase):
             self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
+
+    def get_status(self):
+        d = OrderedDict()
+        # For stuff that might fail we just ignore the errors and get what we get
+        try:
+            d["Listening on"] = "{}:{}".format(self.thread.clientThread.host, self.thread.clientThread.port)
+            d["Sending to"] = "{}:{}".format(self.thread.host, self.thread.port)
+            d["Properties"] = OrderedDict([("Receiving",len(recv_items)),
+                                           ("Sending",len(send_items))])
+            d["Messages"] = OrderedDict([("Received", self.thread.clientThread.msg_recv),
+                                         ("Sent", self.thread.msg_sent)])
+        except:
+            pass
+
+        return d

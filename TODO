@@ -1,21 +1,9 @@
 Add some tags to indicate some status information so that EFIS displays and
 other equipment can have access to that.
 
-DATABASE LOCKING!!!  Multithreaded app / single database??? Duh??!!
-
-Finsh FlightGear Plugin.  Need to add conversion functions.  Finish the
-XML file to try and get most of the data.  Also need to set the input
-protocol up so that we can write to FlightGear
-
-Add composite data points.  Things like Min, Max, Sum, Average, Span etc.
-Could be used for things like summing the total fuel on board or determining
-the Average EGT.
-
 Airdata plugin.  This plugin would calculate things like TAS, wind direction
 Density altitude etc.  It would also be a good example of a plugin that used
 only the callback mechanism instead of needing a thread.
-
-Should add a leading zero to item variables if greater than 9. (maybe not)
 
 Allow daemonization of the program.
 
@@ -39,6 +27,18 @@ perhaps we have an item ownership system?  It'll probably work okay in the real
 systems because it'll make sense, but it might be hard to troubleshoot issues
 later if there are conflicts.
 
+System status information like memory usage, average CPU utilization, etc.
+This would depend on the psutils package and it might make sense for it to
+be optional and only work if that package is there.
+
+Add a sys path parameter to the configuration so the user can add a module
+search path to the system for third party plugins.
+
+The --config-file command line argument should allow for a single file name to
+be given and the normal search for the filename to be carried out and the
+config_path stored accordingly.  Also if a full or relative path is given then
+that path should be stored in the config_path variable.
+
 GUI Plugin
 
   Add Tree view for status
@@ -50,17 +50,4 @@ CAN-FIX Plugin
 
   Add mandatory Node Specific Message responses
 
-  Finish input mapping
-
-  Add output mapping
-
   Add node status information.
-
-
-FlightGear Plugin
-
-  Finish outputs
-
-  Add conversion functions
-
-  Finish XML file

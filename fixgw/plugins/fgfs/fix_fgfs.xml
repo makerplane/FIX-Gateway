@@ -62,6 +62,7 @@
     <type>double</type>
     <format>%.11f</format>
     <node>/accelerations/pilot/y-accel-fps_sec</node>
+    <factor>0.031070336391437</factor>
    </chunk>
 
    <chunk>
@@ -97,14 +98,15 @@
     <type>float</type>
     <format>%.2f</format>
     <node>/engines/engine/mp-inhg</node>
-    <converter>ToC</converter>
    </chunk>
 
    <chunk>
-    <name>OILT1: Oil Temp F</name>
-    <type>float</type>
-    <format>%.1f</format>
-    <node>/engines/engine[0]/oil-temperature-degf</node>
+     <name>OILT1: Oil Temp F</name>
+     <type>float</type>
+     <format>%.1f</format>
+     <node>/engines/engine[0]/oil-temperature-degf</node>
+     <offset>-32</offset>
+     <factor>0.55555555555555555</factor>
    </chunk>
 
    <chunk>
@@ -115,10 +117,21 @@
    </chunk>
 
    <chunk>
-    <name>EGT11: Exhaust Gas Temperature</name>
-    <type>double</type>
-    <format>%.1f</format>
-    <node>/engines/engine/egt-degc-fix</node>
+     <name>EGT11: Exhaust Gas Temperature</name>
+     <type>double</type>
+     <format>%.1f</format>
+     <node>/engines/engine/egt-degf</node>
+     <offset>-32</offset>
+     <factor>0.55555555555555555</factor>
+   </chunk>
+
+   <chunk>
+     <name>CHT11: Cylinder Head Temperature</name>
+     <type>double</type>
+     <format>%.1f</format>
+     <node>/engines/engine/cht-degf</node>
+     <offset>-32</offset>
+     <factor>0.55555555555555555</factor>
    </chunk>
 
    <chunk>
@@ -164,22 +177,38 @@
    </chunk>
 
    <chunk>
-    <name>OAT: Outside Air Temperature</name>
-    <type>double</type>
-    <format>%.1f</format>
-    <node>/environment/temperature-degc</node>
+        <name>OAT: Outside Air Temperature</name>
+        <type>double</type>
+        <format>%.1f</format>
+        <node>/environment/temperature-degc</node>
    </chunk>
 
-   <chunk>
-       <name>BARO: Altimeter Setting</name>
-       <type>double</type>
-       <format>%.2f</format>
-       <node>/instrumentation/altimeter/setting-inhg</node>
-   </chunk>
   </output>
-  <input>
-  </input>
 
- </generic>
+
+<input>
+    <line_separator>newline</line_separator>
+    <var_separator>,</var_separator>
+    <chunk>
+        <name>BARO: Altimeter Setting</name>
+        <type>double</type>
+        <format>%.2f</format>
+        <node>/instrumentation/altimeter/setting-inhg</node>
+    </chunk>
+    <chunk>
+        <name>THR1: Throttle Control Engine 1</name>
+        <type>double</type>
+        <format>%.2f</format>
+        <node>/controls/engines/engine/throttle</node>
+    </chunk>
+    <chunk>
+        <name>MIX1: Mixture Control Engine 1</name>
+        <type>double</type>
+        <format>%.2f</format>
+        <node>/controls/engines/engine/mixture</node>
+    </chunk>
+</input>
+
+</generic>
 
 </PropertyList>

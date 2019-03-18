@@ -2,9 +2,9 @@
 Database Definition
 ====================
 
-The database for FIX Gateway is defined by a colon ':' delimited text file.  The
-database is initialized based on the contents of this file before any of the
-plugins are loaded.  The database is immutable.  It cannot be changed by plugins
+The database for FIX Gateway is defined by a YAML text file.  The database is
+initialized based on the contents of this file before any of the plugins are
+loaded.  The database structure is immutable.  It cannot be changed by plugins
 once the program is loaded.  Users can modify the database definition for their
 own use.
 
@@ -15,82 +15,180 @@ The following is an excerpt from the default database definition file.
 
 ::
 
-    e=2:Engines
-    c=4:Cylinders per engine
-    t=2:Fuel Tanks
-    b=16:Generic Buttons
-    r=4:Generic Encoders
-    a=16:Generic Analog
-    ---
-    #Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
-    ANLGa:Generic Analog %a:float:0:1:%/100:0.0:2000:
-    BTNb:Generic Button %b:bool:0:1::False:0:
-    ENCr:Generic Encoder %r:int:-32768:32767:Pulses:0:0:
-    IAS:Indicated Airspeed:float:0:1000:knots:0.0:2000:Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
-    ALT:Indicated Altitude:float:-1000:60000:ft:0.0:2000:
-    BARO:Altimeter Setting:float:0:35:inHg:29.92:2000:
-    VS:Vertical Speed:float:-10000:10000:ft/min:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-    HEAD:Current Aircraft Magnetic Heading:float:0:360:deg:0.0:2000:
-    AOA:Angle of attack:float:-180:180:deg:0.0:200:Min,Max,0g,Warn,Stall
-    CTLPTCH:Pitch Control:float:-1:1:%/100:0.0:200:
-    CTLROLL:Roll Control:float:-1:1:%/100:0.0:200:
-    THRe:Throttle Control Engine %e:float:0:1:%/100:0.0:1000:
-    OILPe:Oil Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-    MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:
-    EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
-    CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
-    FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
-    TACHe:Engine RPM:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-    LAT:Latitude:float:-90:90:deg:0.0:2000:
-    LONG:Longitude:float:-180:180:deg:0:2000:
+  variables:
+    e: 2  # Engines
+    c: 6  # Cylinders
+    a: 8  # Generic Analogs
+    b: 16 # Generic Buttons
 
-The first few lines describe variables.  Variables are a way to eliminate
-duplication in the database definition file.  The line that begins with '---'
-tells FIXGateway that the variable definitions are finished and to treat the
-rest of the file as item definitions.  Any line that begins with a # is treated
-as a comment.
+  entries:
+  - key: ANLGa
+    description: Generic Analog %a
+    type: float
+    min: 0.0
+    max: 1.0
+    units: '%/100'
+    initial: 0.0
+    tol: 2000
+
+  - key: BTNb
+    description: Generic Button %b
+    type: bool
+    tol: 0
+
+  - key: IAS
+    description: Indicated Airspeed
+    type: float
+    min: 0.0
+    max: 1000.0
+    units: knots
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy]
+
+  - key: ALT
+    description: Indicated Altitude
+    type: float
+    min: -1000.0
+    max: 60000.0
+    units: ft
+    initial: 0.0
+    tol: 2000
+
+  - key: VS
+    description: Vertical Speed
+    type: float
+    min: -30000.0
+    max: 30000.0
+    units: ft/min
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max]
+
+  - key: OAT
+    description: Outside Air Temperature
+    type: float
+    min: -100.0
+    max: 100.0
+    units: degC
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max,lowWarn]
+
+  - key: ROLL
+    description: Roll Angle
+    type: float
+    min: -180.0
+    max: 180.0
+    units: deg
+    initial: 0.0
+    tol: 200
+
+  - key: PITCH
+    description: Pitch Angle
+    type: float
+    min: -90.0
+    max: 90.0
+    units: deg
+    initial: 0.0
+    tol: 200
+
+  - key: OILPe
+    description: Oil Pressure Engine %e
+    type: float
+    min: 0.0
+    max: 200.0
+    units: psi
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+  - key: OILTe
+    description: Oil Temperature Engine %e
+    type: float
+    min: 0.0
+    max: 150.0
+    units: degC
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+  - key: EGTec
+    description: Exhaust Gas Temp Engine %e, Cylinder %c
+    type: float
+    min: 0.0
+    max: 1000.0
+    units: degC
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max]
+
+  - key: CHTec
+    description: Cylinder Head Temp Engine %e, Cylinder %c
+    type: float
+    min: 0.0
+    max: 1000.0
+    units: degC
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+
+The YAML file defines two arrays or lists.  The first is `variables.`
+Variables are a way to eliminate duplication in the database definition file.
+Comments can be included in the file as well.  Following the `variables` list is
+the `entries` list. The `entries` list defines the individual entries that will
+make up the database.
 
 Variables
 `````````
 
 Each variable when found in the definition will cause the initialization routine
 to duplicate and index that particular datapoint based on the number given.  For
-example the variable e=2 represents the number of engines that our aircraft will
+example the variable e: 2 represents the number of engines that our aircraft will
 have.  Instead of having to write each of the following three points twice (once
 for each engine) we just use the lower case letter 'e' in the Key definition and
 %e in the description.
 
 ::
 
-    THRe:Throttle Control Engine %e:float:0:1:%/100:0.0:1000:
-    OILPe:Oil Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-    MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:
+  - key: OILPe
+    description: Oil Pressure Engine %e
+    type: float
+    min: 0.0
+    max: 200.0
+    units: psi
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
 
-This would cause THR1 and THR2 to be created in the database.  This doesn't seem
-like much with just this example but consider the following...
+
+This would cause OILP1 and OILP2 to be created in the database.  This doesn't
+seem like much with just this example but consider the following...
 
 ::
 
-    EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
+  - key: EGTec
+    description: Exhaust Gas Temp Engine %e, Cylinder %c
+    type: float
+    min: 0.0
+    max: 1000.0
+    units: degC
+    initial: 0.0
+    tol: 2000
+    aux: [Min,Max]
 
-...if e=2 and c=6 that's a single line that would produce 12 items in the
-database.  It also makes it quite easy for a user to change the counts of these
+...if e=2 and c=6 that single entry would produce 12 items in the
+database.  It also makes it quite easy for a user to change the quantities of these
 things without having to search the entire database file to manage the data
 points.  There are a number of items that use the 'e' for number of engine.
-Each of these would have to be managed individually if we had a line for each
-point.  As it is the user simply changes the line `e=1` to `e=2` if the aircraft
+Each of these would have to be managed individually if we had an entry for each
+point.  As it is the user simply changes the line `e: 1` to `e: 2` if the aircraft
 only has two engines, and he'll get two Oil Pressures, Two Manifold Pressures,
 two Fuel Flows etc.
 
 Database Item Definitions
 -------------------------
-
-The lines that follow the '---' are definitions of the individual database
-items.  The format is...
-
-::
-
-    Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
 
 Key
 ```

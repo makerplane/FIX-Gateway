@@ -29,25 +29,24 @@ from . import mapping
 class MainThread(threading.Thread):
     def __init__(self, parent, config):
         super(MainThread, self).__init__()
-        self.interface = config['interface']
-        self.channel = config['channel']
-        self.device = int(config['device'])
+        # self.interface = config['interface']
+        # self.channel = config['channel']
+        # self.device = int(config['device'])
 
         self.getout = False
         self.parent = parent
         self.log = parent.log
-        self.bus = can.interface.Bus(self.channel, bustype = self.interface)
-        self.framecount = 0
-        self.errorcount = 0
-        mapping.initialize(config['mapfile'])
+        self.mapping = parent.mapping
 
 
     def run(self):
+        self.bus = self.parent.bus
+
         while(True):
             try:
                 msg = self.bus.recv(1.0)
                 if msg:
-                    self.framecount += 1
+                    self.parent.recvcount += 1
                     try:
                         cfobj = canfix.parseMessage(msg)
                     except ValueError as e:
@@ -55,7 +54,7 @@ class MainThread(threading.Thread):
                     else:
                         #self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
                         if isinstance(cfobj, canfix.Parameter):
-                            mapping.inputMap(cfobj)
+                            self.mapping.inputMap(cfobj)
                         else:
                             # TODO What to do with the other types
                             pass
@@ -72,9 +71,21 @@ class MainThread(threading.Thread):
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
+        self.interface = config['interface']
+        self.channel = config['channel']
+        self.device = int(config['device'])
+        self.node = int(config['node'])
+        mapfilename = config['mapfile'].format(CONFIG=config['CONFIGPATH'])
+        self.mapping = mapping.Mapping(mapfilename, self.log)
         self.thread = MainThread(self, config)
+        self.recvcount = 0
+        self.errorcount = 0
+
 
     def run(self):
+        self.bus = can.ThreadSafeBus(self.channel, bustype = self.interface)
+        for each in self.mapping.output_mapping:
+            self.db_callback_add(each, self.mapping.getOutputFunction(self.bus, each, self.node))
         self.thread.start()
 
     def stop(self):
@@ -85,8 +96,13 @@ class Plugin(plugin.PluginBase):
             raise plugin.PluginFail
 
     def get_status(self):
-        return OrderedDict({"Frame Count":self.thread.framecount,
-                            "Error Count":self.thread.errorcount})
+        x = OrderedDict()
+        x["CAN Interface"]=self.interface
+        x["CAN Channel"]=self.channel
+        x["Received Frames"]=self.recvcount
+        x["Sent Frames"]=self.mapping.sendcount
+        x["Error Count"]=self.errorcount
+        return x
 
 # TODO: Add error reporting in debug mode
 # TODO: Add output parameter mapping

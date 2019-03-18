@@ -4,7 +4,7 @@
 # directory where this file is found.
 
 # File that defines the database.
-database file: "config/default.db"
+database file: "fixgw/config/database.yaml"
 
 # Set initial values after the database is initialized.
 # If there are duplicate assignments in these files, the last
@@ -40,7 +40,7 @@ connections:
     channel: tcan0
 
     # This file controls the
-    mapfile: config/canfix/default.map
+    mapfile: 'fixgw/config/canfix/map.yaml'
     # The following is our Node Identification Information
     # See the CAN-FIX Protocol Specification for more information
     node: 145     # CAN-FIX Node ID

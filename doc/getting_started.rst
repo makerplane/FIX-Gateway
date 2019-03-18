@@ -30,29 +30,35 @@ These will run the client and the server respectively.
 
 The configuration files are in the ``fixgw/config`` directory.
 
-If you'd like to install the program permanently to your system or into a virtualenv you
-can issue the command...
+If you'd like to install the program permanently to your system or into a
+virtualenv you can issue the command...
 
 ::
 
   sudo pip3 install .
 
-from the root directory of the source repository.  **Caution** This feature is still
-in development and may not work consistently.
+from the root directory of the source repository.
+
+After installing with pip3 two helper scripts will be installed in the user's
+search path.  These are ``fixgw`` and ``fixgwc`` for the server and client
+repectively.  Once installed properly these commands can be used from anywhere.
 
 Requirements
 ------------
 
-The only dependencies for FIX Gateway are Python itself and ``pyyaml``.  If you used
-pip3 to install FIX Gateway the dependencies should have been installed
+The only dependencies for FIX Gateway are Python itself and ``pyyaml``.  If you
+used pip3 to install FIX Gateway, the dependencies should have been installed
 automatically. FIX Gateway requires Python 3.6 and should run on versions of
 Python higher than 3.6.  It may run on versions of Python 2.x but Python 2.x
 support is deprecated and it's expected that FIX Gateway will eventually stop
 working with these older versions of Python.
 
+If the ``psutil`` package is installed the server will be able to report
+system and performance status.
+
 Many of the plugins will require other dependencies.  See the individual plugin
-documentation for information about those.  We'll discuss some of the more common
-ones.
+documentation for information about those.  We'll discuss some of the more
+common ones.
 
 If you intend to use the gui plugin you will also need PyQt installed.  It
 should work with either PyQt4 or PyQt5.  You'll have to consult the PyQt
@@ -68,14 +74,27 @@ Basic Configuration
 -------------------
 
 FIX Gateway is configured through a configuration file named ``default.yaml``
-that is located in the config/ subdirectory of distribution, or installed into
-the proper place on the filesystem (eg. ``/usr/local/etc/fixgw``).  The
-configuration uses `YAML` as it's  configuration language.
+that is located in the fixgw/config/ subdirectory of the distribution, or
+installed into the proper place on the filesystem.  The configuration uses
+`YAML` as it's  configuration language. Upon startup the server searches a
+predefined set of directories, looking for the  configuration file.  If the
+configuration is not found the program will attempt to install default
+configuration files into the ``.makerplane`` directory in the users home folder.
+If that fails the server will report an error and fail to start.
 
-The **database file** option tells FGW where to find the database definition file. This
-file tells FGW how to build the internal database that is how all the
-connections communicate with one another.  For details on the format of the
-database definition file see the :doc:`database` section.
+When the server finds the configuration file it remembers where and writes that
+path to an internal variable that can be retrieved with ``{CONFIG}`` in other
+parts of the configuration.
+
+The first place the server will look for configuration is in the
+``~/.makerplane/fixgw/config`` directory.  This is where individual user
+configurations should be stored.  For machine wide configurations the system
+directories such as ``/etc/fixgw`` or ``/usr/local/etc/fixgw`` can be used as
+well.
+
+The **database file** option tells FGW where to find the database definition
+file. This file tells FGW how to build the internal database.  For details on
+the format of the database definition file see the :doc:`database` section.
 
 ::
 
@@ -105,7 +124,7 @@ current directory from where the server was run.  Absolute paths to these
 files can also be given.
 
 There is a list of connections in the configuration file that determine which
-connection plugins will be loaded.  Each item in this connection list represents
+connection plug-ins will be loaded.  Each item in this connection list represents
 a specific connection plugin.  Here is a short snippet of the connections list...
 
 ::
@@ -125,15 +144,15 @@ a specific connection plugin.  Here is a short snippet of the connections list..
 The above configuration tells FGW to load a connection plugin named *netfix* and
 use the python module found at ``fixgw.plugins.netfix``. The `load` and `module`
 configuration options are the only two mandatory items.  Any other options
-inside a connection object would be passed as to the plugin.  The included
+inside a connection object would be passed 'as is' to the plugin.  The included
 configuration file contains examples of all the plugins that ship with the FIX
 Gateway distribution. Configuration of the individual plugins are documented
 elsewhere.
 
 The rest of the configuration file contains directives for message logging.  FGW
 uses the built in Python logging module. This is for message logging of the
-program itself.  Not to be confused with logging flight data which is handled in
-a connection plugin.  Python's logging system is very sophisticated and can log
+program itself.  Not to be confused with logging flight data which is handled
+elsewhere.  Python's logging system is very sophisticated and can log
 information in many different ways.  It can log to the terminal, a file, the
 system logger, network sockets even email.  A description of all that this
 system is capable of is beyond the scope of this documentation.  See Python's
@@ -157,8 +176,8 @@ information to discover where the problem is.  This option will produce a lot of
 data and probably shouldn't be used in the actual airplane.
 
 Also if ``--debug`` is set there are some exceptions that will be raised in
-certain  parts of the program that will stop the whole program.  Without this
-flag they may  simply cause a particular part of the program to stop
+certain parts of the program that will stop the whole program.  Without this
+flag they may simply cause a particular part of the program to stop
 functioning.  With this flag it will raise the exception all the way to the top
 so that we can get the traceback information for troubleshooting.  Again don't
 set this flag unless you are troubleshooting.

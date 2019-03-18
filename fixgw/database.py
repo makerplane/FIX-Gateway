@@ -18,9 +18,10 @@ import logging
 from datetime import datetime
 import threading
 import time
+import yaml
+import copy
 
 __database = {}
-__db_lock = threading.Lock()
 
 class UpdateThread(threading.Thread):
     def __init__(self, func, delay):
@@ -51,18 +52,19 @@ class db_item(object):
         self._old = False
         self._bad = False
         self._fail = False
+        self._secfail = False
         self._max = None
         self._min = None
         self._tol = 100     # Time to live in milliseconds.  Any older and quality is bad
         self.timestamp = datetime.utcnow()
         self.aux = {}
         self.callbacks = []
+        self.lock = threading.Lock()
 
     # initialize the auxiliary data dictionary.  aux should be a comma delimited
     # string of the items to include.
     def init_aux(self, aux):
-        l = aux.split(',')
-        for each in l:
+        for each in aux:
             self.aux[each.strip()] = None
 
     def get_aux_list(self):
@@ -102,43 +104,46 @@ class db_item(object):
 
     @property
     def value(self):
-        if self.age > self.tol and self.tol != 0:
-            self._old = True
-        else:
-            self._old = False
-        return (self._value, self._annunciate, self._old, self._bad, self._fail)
+        with self.lock:
+            if self.tol != 0:
+                if self.age > self.tol:
+                    self._old = True
+                else:
+                    self._old = False
+            return (self._value, self._annunciate, self._old, self._bad, self._fail, self._secfail)
 
     # We can set the value in the item with either a value of a tuple that
     # contains the property flags as well.  (value, annunc, bad, fail)
     @value.setter
     def value(self, x):
-        if type(x) == tuple:
-            if len(x) < 4:
-                raise ValueError("Tuple too small for {}".format(self.key))
-            self._annunciate = x[1]
-            self._bad = x[2]
-            self._fail = x[3]
-            x = x[0]
-        if self.dtype == bool:
-            self._value = (x == True or (isinstance(x,str) and x.lower() in ["yes", "true", "1"])
-                                or (isinstance(x,int) and x != 0))
-        else:
-            try:
-                self._value = self.dtype(x)
-            except ValueError:
-                log.error("Bad value '" + str(x) + "' given for " + self.description)
-            if self.dtype != str:
-                # bounds check and cap
+        with self.lock:
+            if type(x) == tuple:
+                if len(x) < 4:
+                    raise ValueError("Tuple too small for {}".format(self.key))
+                self._annunciate = x[1]
+                self._bad = x[2]
+                self._fail = x[3]
+                x = x[0]
+            if self.dtype == bool:
+                self._value = (x == True or (isinstance(x,str) and x.lower() in ["yes", "true", "1"])
+                                    or (isinstance(x,int) and x != 0))
+            else:
                 try:
-                    if self._value < self._min: self._value = self._min
-                except:  # Probably only fails if min has not been set
-                    pass  # ignore at this point
-                try:
-                    if self._value > self._max: self._value = self._max
-                except:  # Probably only fails if max has not been set
-                    pass  # ignore at this point
-                # set the timestamp to right now
-        self.timestamp = datetime.utcnow()
+                    self._value = self.dtype(x)
+                except ValueError:
+                    log.error("Bad value '" + str(x) + "' given for " + self.description)
+                if self.dtype != str:
+                    # bounds check and cap
+                    try:
+                        if self._value < self._min: self._value = self._min
+                    except:  # Probably only fails if min has not been set
+                        pass  # ignore at this point
+                    try:
+                        if self._value > self._max: self._value = self._max
+                    except:  # Probably only fails if max has not been set
+                        pass  # ignore at this point
+                    # set the timestamp to right now
+            self.timestamp = datetime.utcnow()
         self.send_callbacks()
 
 
@@ -170,6 +175,7 @@ class db_item(object):
 
     @tol.setter
     def tol(self, x):
+        if x == '': x = 0
         try:
             self._tol = int(x)
         except ValueError:
@@ -177,52 +183,73 @@ class db_item(object):
 
     @property
     def annunciate(self):
-        return self._annunciate
+        with self.lock:
+            return self._annunciate
 
     @annunciate.setter
     def annunciate(self, x):
-        last = self._annunciate
-        self._annunciate = bool(x)
+        with self.lock:
+            last = self._annunciate
+            self._annunciate = bool(x)
         if self._annunciate != last:
             self.send_callbacks()
 
     @property
     def old(self):
-        return self._old
+        with self.lock:
+            return self._old
 
     @old.setter
     def old(self, x):
-        last = self._old
-        self._old = bool(x)
+        with self.lock:
+            last = self._old
+            self._old = bool(x)
         if self._old != last:
             self.send_callbacks()
 
     @property
     def bad(self):
-        return self._bad
+        with self.lock:
+            return self._bad
 
     @bad.setter
     def bad(self, x):
-        last = self._bad
-        self._bad = bool(x)
+        with self.lock:
+            last = self._bad
+            self._bad = bool(x)
         if self._bad != last:
             self.send_callbacks()
 
     @property
     def fail(self):
-        return self._fail
+        with self.lock:
+            return self._fail
 
     @fail.setter
     def fail(self, x):
-        last = self._fail
-        self._fail = bool(x)
+        with self.lock:
+            last = self._fail
+            self._fail = bool(x)
         if self._fail != last:
+            self.send_callbacks()
+
+    @property
+    def secfail(self):
+        with self.lock:
+            return self._fail
+
+    @secfail.setter
+    def secfail(self, x):
+        with self.lock:
+            last = self._secfail
+            self._secfail = bool(x)
+        if self._secfail != last:
             self.send_callbacks()
 
 
 # These are support functions for loading the initial database
 def check_for_variables(entry):
-    for ch in entry[0]:
+    for ch in entry['key']:
         if ch.islower(): return ch
     return None
 
@@ -231,33 +258,36 @@ def check_for_variables(entry):
 def expand_entry(entry, var, count):
     l = []
     for i in range(count):
-        newentry = list(entry) #.copy()
-        newentry[0] = newentry[0].replace(var, str(i+1))
-        newentry[1] = newentry[1].replace('%' + var, str(i+1))
+        newentry = copy.deepcopy(entry)
+        newentry['key'] = newentry['key'].replace(var, str(i+1))
+        newentry['description'] = newentry['description'].replace('%' + var, str(i+1))
         ch = check_for_variables(newentry)
         if ch:
-            l.extend(expand_entry(newentry,ch,variables[ch]))
+            l.extend(expand_entry(newentry, ch, variables[ch]))
         else:
             l.append(newentry)
     return l
 
 
 def add_item(entry):
-    log.debug("Adding - " + entry[1])
+
+    log.debug("Adding - {}".format(entry.get('description', '')))
     try:
-        newitem = db_item(entry[0], entry[2])
+        newitem = db_item(entry['key'], entry['type'])
     except:
-        log.error("Failure to add entry - " + entry[0])
+        log.error("Failure to add entry - " + entry['key'])
         return None
 
-    newitem.description = entry[1]
-    newitem.min = entry[3]
-    newitem.max = entry[4]
-    newitem.units = entry[5]
-    newitem.tol = entry[7]
-    newitem.value = entry[6]
-    newitem.init_aux(entry[8])
-    __database[entry[0]] = newitem
+    x = entry.get('description', '')
+    newitem.description = x if x != None else ''
+    newitem.min = entry.get('min', None)
+    newitem.max = entry.get('max', None)
+    x = entry.get('units', '')
+    newitem.units = x if x != None else ''
+    newitem.tol = entry.get('tol', 0)
+    newitem.value = entry.get('initial', None)
+    newitem.init_aux(entry.get('aux', []))
+    __database[entry['key']] = newitem
     return newitem
 
 
@@ -273,28 +303,21 @@ def init(f):
 
     state = "var"
 
-    for line in f:
-        sline = line.strip()
-        if sline and sline[0] != '#':  # Skip blank lines and comments
-            entry = sline.split(":")
-            if entry[0][:3] == "---":
-                state = "db"
-                log.debug("Database Variables: " + str(variables))
-                continue
-            if state == "var":
-                v = entry[0].split('=')
-                variables[v[0].strip().lower()] = int(v[1].strip())
-            if state == "db":
-                ch = check_for_variables(entry)
-                if ch:
-                    try:
-                        entries = expand_entry(entry, ch, variables[ch])
-                        for each in entries:
-                            add_item(each)
-                    except KeyError:
-                        log.error("Variable {0} not set for {1}".format(ch, entry[1]))
-                else:
-                    add_item(entry)
+    db = yaml.safe_load(f)
+    for key, value in db['variables'].items():
+        variables[key] = int(value)
+    for entry in db['entries']:
+        ch = check_for_variables(entry)
+        if ch:
+            try:
+                entries = expand_entry(entry, ch, variables[ch])
+                for each in entries:
+                    add_item(each)
+            except KeyError:
+                log.error("Variable {0} not set for {1}".format(ch, entry['key']))
+        else:
+            add_item(entry)
+
     f.close()
     t = UpdateThread(update, 1.0)
     t.daemon = True
@@ -303,68 +326,61 @@ def init(f):
 
 # These are the public functions for interacting with the database
 def write(key, value):
-    with __db_lock:
-        if '.' in key:
-            x = key.split('.')
-            entry = __database[x[0]]
-            entry.set_aux_value(x[1], value)
-        else:
-            entry = __database[key]
-            entry.value = value
+    if '.' in key:
+        x = key.split('.')
+        entry = __database[x[0]]
+        entry.set_aux_value(x[1], value)
+    else:
+        entry = __database[key]
+        entry.value = value
 
 
 def read(key):
-    with __db_lock:
-        if '.' in key:
-            x = key.split('.')
-            entry = __database[x[0]]
-            return entry.get_aux_value(x[1])
-        else:
-            return __database[key].value
+    if '.' in key:
+        x = key.split('.')
+        entry = __database[x[0]]
+        return entry.get_aux_value(x[1])
+    else:
+        return __database[key].value
 
 
 def get_raw_item(key):
-    with __db_lock:
-        try:
-            return __database[key]
-        except KeyError:
-            return None
+    try:
+        return __database[key]
+    except KeyError:
+        return None
 
 
 def listkeys():
-    with __db_lock:
-        return list(__database.keys())
+    return list(__database.keys())
 
 
 # Adds or redefines the callback function that will be called when
 # the items value is set.
 def callback_add(name, key, function, udata):
-    with __db_lock:
-        item = __database[key]
-        item.callbacks.append( (name, function, udata) )
+    item = __database[key]
+    item.callbacks.append( (name, function, udata) )
     log.debug("Adding callback function for %s on key %s" % (name, key))
 
 
 def callback_del(name, key, function, udata):
-    with __db_lock:
-        if key == "*":
-            for each in __database:
-                try:
-                    __database[each].callbacks.remove( (name, function, udata) )
-                    log.debug("Deleting callback function for %s on key %s" % (name, each))
-                except ValueError:
-                    pass
-        else:
-            log.debug("Deleting callback function for %s on key %s" % (name, key))
+    if key == "*":
+        for each in __database:
             try:
-                __database[key].callbacks.remove( (name, function, udata) )
+                __database[each].callbacks.remove( (name, function, udata) )
+                log.debug("Deleting callback function for %s on key %s" % (name, each))
             except ValueError:
-                log.debug("Callback not deleted because it was not found in the list")
+                pass
+    else:
+        log.debug("Deleting callback function for %s on key %s" % (name, key))
+        try:
+            __database[key].callbacks.remove( (name, function, udata) )
+        except ValueError:
+            log.debug("Callback not deleted because it was not found in the list")
 
 # Maintenance Functions
 def update():
-    with __db_lock:
-        for key in __database:
-            item = __database[key]
-            if item.age > item.tol and item.tol != 0:
-                item.old = True
+    for key in __database:
+        item = __database[key]
+        if item.age > item.tol and item.tol != 0:
+            item.old = True

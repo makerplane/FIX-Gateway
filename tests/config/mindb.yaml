@@ -1,0 +1,99 @@
+variables:
+  e: 1  # Engines
+  c: 6  # Cylinders
+  a: 8  # Generic Analogs
+  b: 1 # Generic Buttons
+  r: 1  # Encoders
+  t: 2  # Fuel Tanks
+
+entries:
+- key: IAS
+  description: Indicated Airspeed
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy]
+
+- key: TAS
+  description: True Airspeed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: CAS
+  description: True Airspeed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: GS
+  description: Ground Speed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: ALT
+  description: Indicated Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: TALT
+  description: True Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: DALT
+  description: Density Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: BARO
+  description: Altimeter Setting
+  type: float
+  min: 0.0
+  max: 35.0
+  units: inHg
+  initial: 29.92
+  tol: 2000
+
+- key: ROLL
+  description: Roll Angle
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 200
+
+- key: PITCH
+  description: Pitch Angle
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 200
