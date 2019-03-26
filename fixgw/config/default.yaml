@@ -55,7 +55,7 @@ connections:
     module: fixgw.plugins.fgfs
     # This should be the same as $FG_ROOT on your system.  It is used to help
     # fixgw find the xml configuration files
-    fg_root: /usr/share/games/flightgear/
+    fg_root: /usr/share/flightgear/data/
     # fg_root: /Applications/FlightGear.app/Contents/Resources/data/
     # fg_root: c:\Program Files\FlightGear\data\
 
