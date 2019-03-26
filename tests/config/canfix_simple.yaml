@@ -4,7 +4,7 @@
 # directory where this file is found.
 
 # File that defines the database.
-database file: "fixgw/config/default.db"
+database file: "fixgw/config/database.yaml"
 
 # Set initial values after the database is initialized.
 # If there are duplicate assignments in these files, the last

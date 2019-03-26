@@ -23,28 +23,51 @@ import fixgw.database as database
 # This is a poorly formatted example of a database configuration file.
 # it should test leading/trailing spaces blank lines etc.
 minimal_config = """
-  # indented comment ^extra space last line too
-a = 8:Generic Analog
+variables:
+  a: 8 #Generic Analogs
 
-   ---
-
-#Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
-ANLGa:Generic Analog %a:float:0:1:%/100:0.0:2000:
+entries:
+- key: ANLGa
+  description: Generic Analog %a
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 2000
 """
+
 minimal_list = []
 for x in range(8):
     minimal_list.append("ANLG{}".format(x+1))
 
 variable_config = """
-  # indented comment ^extra space last line too
-e=4:Engines
-c=6:Cylinders per engine
-t=20:Fuel Tanks
- ---
-#Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
-EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
-FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
+variables:
+  e: 4  # Engines
+  c: 6  # Cylinders
+  t: 20 # Fuel Tanks
+entries:
+- key: EGTec
+  description: Exhaust Gas Temp Engine %e, Cylinder %c
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max]
+
+- key: FUELQt
+  description: Fuel Quantity Tank %t
+  type: float
+  min: 0.0
+  max: 200.0
+  units: gal
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,lowAlarm]
 """
+
 variable_list = []
 for e in range(4):
     for c in range(6):
@@ -54,49 +77,679 @@ for t in range(20):
 variable_list.sort()
 
 general_config = """
-e=1:Engines
-c=6:Cylinders per engine
-t=2:Fuel Tanks
-b=1:Generic Buttons
-r=1:Generic Encoders
-a=8:Generic Analog
----
-#Key:Description:Type:Min:Max:Units:Initial:TOL:Auxiliary Data
-ANLGa:Generic Analog %a:float:0:1:%/100:0.0:2000:
-BTNb:Generic Button %b:bool:0:1::False:0:
-ENCr:Generic Encoder %r:int:-32768:32767:Pulses:0:0:
-IAS:Indicated Airspeed:float:0:1000:knots:0.0:2000:Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy
-TAS:True Airspeed:float:0:2000:knots:0.0:2000:
-ALT:Indicated Altitude:float:-1000:60000:ft:0.0:2000:
-BARO:Altimeter Setting:float:0:35:inHg:29.92:2000:
-HEAD:Current Aircraft Magnetic Heading:float:0:360:deg:0.0:2000:
-OAT:Outside Air Temperature:float:-100:100:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-ROLL:Roll Angle:float:-180:180:deg:0.0:200:
-PITCH:Pitch Angle:float:-180:180:deg:0.0:200:
-PITCHSET:Pitch angle setting:float:-180:180:deg:0.0:200:
-YAW:Yaw Angle:float:-180:180:deg:0.0:200:
-AOA:Angle of attack:float:-180:180:deg:0.0:200:Min,Max,0g,Warn,Stall
-CTLPTCH:Pitch Control:float:-1:1:%/100:0.0:200:
-CTLFLAP:Flap Control:float:-1:1:%/100:0.0:200:
-ANORM:Normal Acceleration:float:-30:30:g:0.0:200:
-ALAT:Lateral Acceleration:float:-30:30:g:0.0:200:
-OILPe:Oil Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-OILTe:Oil Temperature Engine %e:float:0:300:degC:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-FUELPe:Fuel Pressure Engine %e:float:0:200:psi:0.0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-FUELFe:Fuel Flow Engine %e:float:0:100:gal/hr:0.0:2000:
-MAPe:Manifold Pressure Engine %e:float:0:60:inHg:0.0:2000:
-EGTec:Exhaust Gas Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
-CHTec:Cylinder Head Temp Engine %e, Cylinder %c:float:0:1000:degC:0.0:2000:
-FUELQt:Fuel Quantity Tank %t:float:0:200:gal:0.0:2000:Min,Max,lowWarn,lowAlarm
-TACHe:Engine RPM:int:0:10000:RPM:0:2000:Min,Max,lowWarn,highWarn,lowAlarm,highAlarm
-LAT:Latitude:float:-90:90:deg:0.0:2000:
-LONG:Longitude:float:-180:180:deg:0:2000:
-TIMEZ:Zulu Time String:str:::::2000:
-TIMEZH:Zulu Time Hour:int:0:23::0:2000:
-TIMEZM:Zulu Time Minute:int:0:59::0:2000:
-TIMEZS:Zulu Time Second:int:0:59::0:2000:
-TIMEL:Local Time String:str:::::0:
-DUMMY::str:::::0:
+variables:
+  e: 1  # Engines
+  c: 6  # Cylinders
+  a: 8  # Generic Analogs
+  b: 16 # Generic Buttons
+  r: 1  # Encoders
+  t: 2  # Fuel Tanks
+
+entries:
+- key: ANLGa
+  description: Generic Analog %a
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 2000
+
+- key: BTNb
+  description: Generic Button %b
+  type: bool
+  tol: 0
+
+- key: ENCr
+  description: Generic Encoder %r
+  type: int
+  min: -32768
+  max: 32767
+  units: Pulses
+  initial: 0
+  tol: 0
+
+- key: IAS
+  description: Indicated Airspeed
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy]
+
+- key: IASW
+  description: Indicated Airspeed Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: TAS
+  description: True Airspeed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: CAS
+  description: True Airspeed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: GS
+  description: Ground Speed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: ALT
+  description: Indicated Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: TALT
+  description: True Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: DALT
+  description: Density Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: BARO
+  description: Altimeter Setting
+  type: float
+  min: 0.0
+  max: 35.0
+  units: inHg
+  initial: 29.92
+  tol: 2000
+
+- key: AIRPRESS
+  description: Air Pressure
+  type: float
+  min: 0.0
+  max: 200000.0
+  units: Pa
+  initial: 101325.0
+  tol: 2000
+
+- key: VS
+  description: Vertical Speed
+  type: float
+  min: -30000.0
+  max: 30000.0
+  units: ft/min
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max]
+
+- key: HEAD
+  description: Current Aircraft Magnetic Heading
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: TRACK
+  description: Current Aircraft Bearing
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: TRACKM
+  description: Current Aircraft Magnetic Bearing
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: COURSE
+  description: Selected Course
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: CDI
+  description: Course Deviation Indicator
+  type: float
+  min: -1.0
+  max: 1.0
+  initial: 0.0
+  tol: 2000
+
+- key: GSI
+  description: Glideslope Indicator
+  type: float
+  min: -1.0
+  max: 1.0
+  initial: 0.0
+  tol: 2000
+
+- key: XTRACK
+  description: Cross Track Error
+  type: float
+  min: 0.0
+  max: 100.0
+  units: nM
+  initial: 0.0
+  tol: 2000
+
+- key: OAT
+  description: Outside Air Temperature
+  type: float
+  min: -100.0
+  max: 100.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn]
+
+- key: CAT
+  description: Cabin Air Temperature
+  type: float
+  min: -100.0
+  max: 100.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: OATW
+  description: Outside Air Temperature Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: ROLL
+  description: Roll Angle
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 200
+
+- key: PITCH
+  description: Pitch Angle
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 200
+
+- key: ORISYSW
+  description: Orientation System Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: GYROW
+  description: Gyroscope sensor Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: ACCELW
+  description: Acceleration sensor Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: MAGW
+  description: Magnetic sensor Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: PITCHSET
+  description: Pitch angle setting
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 200
+
+- key: YAW
+  description: Yaw Angle
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 200
+
+- key: AOA
+  description: Angle of attack
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 200
+  aux:
+  - Min
+  - Max
+  - 0g
+  - Warn
+  - Stall
+
+- key: CTLPTCH
+  description: Pitch Control
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLROLL
+  description: Roll Control
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLYAW
+  description: Yaw Control (Rudder)
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLCOLL
+  description: Collective Control
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLATP
+  description: AntiTorque Pedal Ctrl
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLFLAP
+  description: Flap Control
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLLBRK
+  description: Left Brake Control
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLRBRK
+  description: Right Brake Control
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 1000
+
+- key: ANORM
+  description: Normal Acceleration
+  type: float
+  min: -30.0
+  max: 30.0
+  units: g
+  initial: 0.0
+  tol: 200
+
+- key: ALAT
+  description: Lateral Acceleration
+  type: float
+  min: -30.0
+  max: 30.0
+  units: g
+  initial: 0.0
+  tol: 200
+
+- key: ALONG
+  description: Longitudinal Acceleration
+  type: float
+  min: -30.0
+  max: 30.0
+  units: g
+  initial: 0.0
+  tol: 200
+
+- key: THRe
+  description: Throttle Control Engine %e
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 1000
+
+- key: MIXe
+  description: Mixture Control Engine %e
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 1000
+
+- key: OILPe
+  description: Oil Pressure Engine %e
+  type: float
+  min: 0.0
+  max: 200.0
+  units: psi
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: OILTe
+  description: Oil Temperature Engine %e
+  type: float
+  min: 0.0
+  max: 150.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: H2OTe
+  description: Coolant Temperature Engine %e
+  type: float
+  min: 0.0
+  max: 200.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: FUELPe
+  description: Fuel Pressure Engine %e
+  type: float
+  min: 0.0
+  max: 200.0
+  units: psi
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: FUELFe
+  description: Fuel Flow Engine %e
+  type: float
+  min: 0.0
+  max: 100.0
+  units: gal/hr
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max]
+
+- key: MAPe
+  description: Manifold Pressure Engine %e
+  type: float
+  min: 0.0
+  max: 60.0
+  units: inHg
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max]
+
+- key: VOLT
+  description: System Voltage
+  type: float
+  min: 0.0
+  max: 18.0
+  units: volt
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: CURRNT
+  description: Bus Current
+  type: float
+  min: 0.0
+  max: 60.0
+  units: amps
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: EGTec
+  description: Exhaust Gas Temp Engine %e, Cylinder %c
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max]
+
+- key: EGTAVGe
+  description: Average Exhaust Gas Temp Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 0
+  aux: [Min,Max]
+
+- key: EGTSPANe
+  description: Exhaust Gas Temp Span Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 0
+  aux: [Min,Max]
+
+- key: CHTec
+  description: Cylinder Head Temp Engine %e, Cylinder %c
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: CHTMAXe
+  description: Maximum Cylinder Head Temp Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: FUELQt
+  description: Fuel Quantity Tank %t
+  type: float
+  min: 0.0
+  max: 200.0
+  units: gal
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,lowAlarm]
+
+- key: FUELQT
+  description: Total Fuel Quantity
+  type: float
+  min: 0.0
+  max: 200.0
+  units: gal
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,lowAlarm]
+
+- key: TACHe
+  description: Engine RPM Engine %e
+  type: int
+  min: 0
+  max: 10000
+  units: RPM
+  initial: 0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: PROPe
+  description: Propeller RPM Engine %e
+  type: int
+  min: 0
+  max: 10000
+  units: RPM
+  initial: 0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: LAT
+  description: Latitude
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: LONG
+  description: Longitude
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: TIMEZ
+  description: Zulu Time String
+  type: str
+  tol: 2000
+
+- key: TIMEZH
+  description: Zulu Time Hour
+  type: int
+  min: 0
+  max: 23
+  initial: 0
+  tol: 2000
+
+- key: TIMEZM
+  description: Zulu Time Minute
+  type: int
+  min: 0
+  max: 59
+  initial: 0
+  tol: 2000
+
+- key: TIMEZS
+  description: Zulu Time Second
+  type: int
+  min: 0
+  max: 59
+  initial: 0
+  tol: 2000
+
+- key: TIMEL
+  description: Local Time String
+  type: str
+  tol: 0
+
+- key: TZONE
+  description: Time Zone
+  type: float
+  min: -12.0
+  max: 12.0
+  initial: 0.0
+
+- key: FTIME
+  description: Flight Time
+  type: float
+  min: 0.0
+  max: 1000.0
+  initial: 0.0
+
+- key: DIM
+  description: Panel Dimmer Level
+  type: int
+  min: 0
+  max: 100
+  initial: 100
+
+# Using this to test strings
+- key: DUMMY
+  description:
+  type: str
 """
 
 class TestDatabase(unittest.TestCase):
@@ -291,9 +944,9 @@ class TestDatabase(unittest.TestCase):
         database.write("DUMMY", 1234)
         x = database.read("DUMMY")
         self.assertEqual(x[0], "1234")
-        database.write("PITCH", "123.4")
+        database.write("PITCH", "23.4")
         x = database.read("PITCH")
-        self.assertEqual(x[0], 123.4)
+        self.assertEqual(x[0], 23.4)
 
 
     def test_bool_write(self):
@@ -334,6 +987,16 @@ class TestDatabase(unittest.TestCase):
         x = database.read("BTN1")
         self.assertEqual(x[0], False)
 
+    def test_similar_aux_items(self):
+        """it would be easy for a single aux array to be pointed to
+           by different database items."""
+        sf = io.StringIO(variable_config)
+        database.init(sf)
+        database.write("EGT11.Max", 700)
+        database.write("EGT12.Max", 800)
+        x = database.read("EGT11.Max")
+        y = database.read("EGT12.Max")
+        self.assertNotEqual(y, x)
 
 if __name__ == '__main__':
     unittest.main()
