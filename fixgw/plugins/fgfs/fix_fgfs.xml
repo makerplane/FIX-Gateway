@@ -57,12 +57,18 @@
     <node>/instrumentation/vertical-speed-indicator/indicated-speed-fpm</node>
    </chunk>
 
+    <chunk>
+     <name>ROT: Rate of Turn</name>
+     <type>float</type>
+     <format>%.5f</format>
+     <node>/orientation/yaw-rate-degps</node>
+   </chunk>
+
    <chunk>
     <name>ALAT: AccelerationLateral</name>
     <type>double</type>
     <format>%.11f</format>
     <node>/accelerations/pilot/y-accel-fps_sec</node>
-    <factor>0.031070336391437</factor>
    </chunk>
 
    <chunk>
@@ -177,10 +183,10 @@
    </chunk>
 
    <chunk>
-        <name>OAT: Outside Air Temperature</name>
-        <type>double</type>
-        <format>%.1f</format>
-        <node>/environment/temperature-degc</node>
+    <name>OAT: Outside Air Temperature</name>
+    <type>double</type>
+    <format>%.1f</format>
+    <node>/environment/temperature-degc</node>
    </chunk>
 
   </output>
@@ -195,7 +201,7 @@
         <format>%.2f</format>
         <node>/instrumentation/altimeter/setting-inhg</node>
     </chunk>
-    <chunk>
+    <!-- <chunk>
         <name>THR1: Throttle Control Engine 1</name>
         <type>double</type>
         <format>%.2f</format>
@@ -206,7 +212,7 @@
         <type>double</type>
         <format>%.2f</format>
         <node>/controls/engines/engine/mixture</node>
-    </chunk>
+    </chunk> -->
 </input>
 
 </generic>
