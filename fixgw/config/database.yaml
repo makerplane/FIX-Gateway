@@ -192,6 +192,15 @@ entries:
   initial: 0.0
   tol: 2000
 
+- key: ROT
+  description: Rate of Turn
+  type: float
+  min: -10
+  max: 10
+  units: Deg per sec
+  initial: 0.0
+  tol: 200
+
 - key: OAT
   description: Outside Air Temperature
   type: float
