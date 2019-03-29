@@ -41,7 +41,7 @@ class DB_Item(object):
         self._old = False
         self._bad = True
         self._fail = True
-        self._sec = False
+        self._secFail = False
         self._max = 100.0
         self._min = 0.0
         self._tol = 100     # Timeout lifetime in milliseconds.  Any older and quality is bad
@@ -59,7 +59,7 @@ class DB_Item(object):
         self.oldChanged = None
         self.badChanged = None
         self.failChanged = None
-        self.secFailCahnged = None
+        self.secFailChanged = None
         self.auxChanged = None
         self.reportReceived = None
         self.destroyed = None
@@ -253,9 +253,14 @@ class DB_Item(object):
         with self.lock:
             last = self._annunciate
             self._annunciate = bool(x)
-            if self._annunciate != last and self.annunciateChanged != None:
+            if self._annunciate != last:
+                if self.annunciateChanged != None:
                     self.annunciateChanged(self._annunciate)
-                    self.client.flag(self.key, 'a', self._annunciate)
+                try:
+                    if not self.supressWrite:
+                        self.client.flag(self.key, 'a', self._annunciate)
+                except Exception as e:
+                    log.error(e)
 
     @property
     def old(self):
@@ -267,8 +272,14 @@ class DB_Item(object):
         with self.lock:
             last = self._old
             self._old = bool(x)
-            if self._old != last and self.oldChanged != None:
+            if self._old != last:
+                if self.oldChanged != None:
                     self.oldChanged(self._old)
+                try:
+                    if not self.supressWrite:
+                        self.client.flag(self.key, 'o', self._old)
+                except Exception as e:
+                    log.error(e)
 
     @property
     def bad(self):
@@ -280,8 +291,14 @@ class DB_Item(object):
         with self.lock:
             last = self._bad
             self._bad = bool(x)
-            if self._bad != last and self.badChanged != None:
+            if self._bad != last:
+                if self.badChanged != None:
                     self.badChanged(self._bad)
+                try:
+                    if not self.supressWrite:
+                        self.client.flag(self.key, 'b', self._bad)
+                except Exception as e:
+                    log.error(e)
 
     @property
     def fail(self):
@@ -293,21 +310,33 @@ class DB_Item(object):
         with self.lock:
             last = self._fail
             self._fail = bool(x)
-            if self._fail != last and self.failChanged != None:
-                self.failChanged(self._fail)
+            if self._fail != last:
+                if self.failChanged != None:
+                    self.failChanged(self._fail)
+                try:
+                    if not self.supressWrite:
+                        self.client.flag(self.key, 'f', self._fail)
+                except Exception as e:
+                    log.error(e)
 
     @property
     def secFail(self):
         with self.lock:
-            return self._sec
+            return self._secFail
 
     @secFail.setter
     def secFail(self, x):
         with self.lock:
-            last = self._sec
-            self._sec = bool(x)
-            if self._sec != last and self.secFailChanged != None:
-                self.secFailChanged(self._sec)
+            last = self._secFail
+            self._secFail = bool(x)
+            if self._secFail != last:
+                if self.secFailChanged != None:
+                    self.failChanged(self._secFail)
+                try:
+                    if not self.supressWrite:
+                        self.client.flag(self.key, 's', self._secFail)
+                except Exception as e:
+                    log.error(e)
 
     def updateNoWrite(self, report):
         with self.lock:
@@ -402,7 +431,15 @@ class Database(object):
             for key in keys:
                 res = self.client.getReport(key)
                 rep = fixgw.netfix.Report(res)
-                self.define_item(key, rep)
+                item = self.define_item(key, rep)
+                res = self.client.read(key)
+                item.value = res[1]
+                item.annunciate = 'a' in res[2]
+                item.old = 'o' in res[2]
+                item.bad = 'b' in res[2]
+                item.fail = 'f' in res[2]
+                item.secFail = 's' in res[2]
+
             self.init_event.set()
         except Exception as e:
             log.error(e)
@@ -436,6 +473,7 @@ class Database(object):
         # Subscribe to the point
         self.client.subscribe(key)
         self.__items[key] = item
+        return item
 
 
     # If the create flag is set to True this function will create an

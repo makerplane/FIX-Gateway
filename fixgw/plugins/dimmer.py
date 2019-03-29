@@ -22,7 +22,7 @@
 import fixgw.plugin as plugin
 
 def dimFunction(key, value, parent):
-    print ("Dim to", str(int(round(value[0]*parent.config['Multiplier']))))
+    #print ("Dim to", str(int(round(value[0]*parent.config['Multiplier']))))
     with open(parent.config["DimmerDevice"], 'w') as dim:
         dim.write (str(int(round(value[0]*parent.config['Multiplier']))) + '\n')
         dim.close()

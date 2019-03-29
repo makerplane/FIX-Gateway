@@ -174,9 +174,8 @@ class ClientThread(threading.Thread):
         if not self.isConnected():
             raise ResponseError("Not Connected to Server")
         try:
-            x = self.cmdqueue.get(timeout = 2.0)
+            x = self.cmdqueue.get(timeout = 1.0)
             while x[0] != c:
-                self.cmdqueue.put(x)
                 x = self.cmdqueue.get(timeout = 1.0)
             return x
         except queue.Empty:
@@ -270,6 +269,7 @@ class Client:
             sendStr = "{0};{1};{2}{3}{4}{5}\n".format(id, value, a, b, f, s)
             #s = "{};{};00000\n".format(id, value)
             self.cthread.send(sendStr.encode())
+
 
     def subscribe(self, id):
         with self.lock:

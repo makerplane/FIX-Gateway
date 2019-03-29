@@ -209,28 +209,28 @@ class Connection(object):
                     else:
                         s = '0'
                     if a and a == '1':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.annunciate = True
                     elif a and a == '0':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.annunciate = False
                     if b and b == '1':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.bad = True
                     elif b and b == '0':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.bad = False
                     if f and f == '1':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.fail = True
                     elif f and f == '0':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.fail = False
                     if s and s == '1':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.secfail = True
                     elif s and s == '0':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.secfail = False
                 self.output_inhibit = True
                 self.parent.db_write(x[0], x[1])

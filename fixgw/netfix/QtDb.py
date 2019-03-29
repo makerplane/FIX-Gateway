@@ -39,10 +39,10 @@ class QtDB_Item(QObject):
     oldChanged =  pyqtSignal(bool)
     badChanged =  pyqtSignal(bool)
     failChanged =  pyqtSignal(bool)
-    secFailCahnged =  pyqtSignal(bool)
+    secFailChanged =  pyqtSignal(bool)
     auxChanged =  pyqtSignal(bool)
     reportReceived =  pyqtSignal(bool)
-    destroyed =  pyqtSignal(bool)
+    destroyed =  pyqtSignal()
 
     def __init__(self, key, item):
         super(QtDB_Item, self).__init__()
@@ -91,8 +91,8 @@ class QtDB_Item(QObject):
     def reportReceivedFunc(self, value):
         self.reportReceived.emit(value)
 
-    def destroyedFunc(self, value):
-        self.destroyed.emit(value)
+    def destroyedFunc(self):
+        self.destroyed.emit()
 
     def __str__(self):
         s = "{} = {}".format(self.key, self._value)
@@ -176,10 +176,10 @@ class QtDB_Item(QObject):
     fail = property(getFail, setFail)
 
     def getSecFail(self):
-        return self._item.sec
+        return self._item.secFail
 
     def setSecFail(self, x):
-        self._item.sec = x
+        self._item.secFail = x
     secFail = property(getSecFail, setSecFail)
 
 

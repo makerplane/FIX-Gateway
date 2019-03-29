@@ -118,7 +118,7 @@ connections:
     module: fixgw.plugins.gui
 
   system:
-    load: yes
+    load: no
     module: fixgw.plugins.system
     time:
       enable: yes

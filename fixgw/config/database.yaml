@@ -674,3 +674,8 @@ entries:
   max: 100000.0
   units: Hours
   initial: 0.0
+
+- key: ACID
+  description: Aircraft Identification
+  type: str
+  tol: 0
