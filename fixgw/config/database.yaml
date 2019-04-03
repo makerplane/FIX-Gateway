@@ -197,7 +197,7 @@ entries:
   type: float
   min: -10
   max: 10
-  units: Deg per sec
+  units: Deg/sec
   initial: 0.0
   tol: 200
 

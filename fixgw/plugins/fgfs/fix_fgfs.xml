@@ -69,6 +69,7 @@
     <type>double</type>
     <format>%.11f</format>
     <node>/accelerations/pilot/y-accel-fps_sec</node>
+    <factor>0.031070336391437</factor>
    </chunk>
 
    <chunk>
