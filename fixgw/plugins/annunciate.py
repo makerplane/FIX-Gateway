@@ -39,11 +39,22 @@ class AnnunciateItem(object):
         if self.item is None:
             raise ValueError("Key {} not found".format(self.key))
         low_point = defaults["low_aux_point"] if "low_aux_point" in defaults else None
-        self.low_aux_point = itemdef["low_aux_point"] if "low_aux_point" in itemdef else low_point
+        low_point = itemdef["low_aux_point"] if "low_aux_point" in itemdef else low_point
+        if low_point is not None and low_point in self.item.aux:
+            self.low_set_point = "{}.{}".format(self.key, low_point)
+        else:
+            self.low_set_point = None
+
         high_point = defaults["high_aux_point"] if "high_aux_point" in defaults else None
-        self.high_aux_point = itemdef["high_aux_point"] if "high_aux_point" in itemdef else high_point
-        low_bypass = defaults["low_bypass"] if "low_bypass" in defaults else None
-        self.low_bypass = itemdef["low_bypass"] if "low_bypass" in itemdef else low_bypass
+        high_point = itemdef["high_aux_point"] if "high_aux_point" in itemdef else high_point
+        if high_point is not None and high_point in self.item.aux:
+            self.high_set_point = "{}.{}".format(self.key, high_point)
+        else:
+            self.high_set_point = None
+
+
+        start_bypass = defaults["start_bypass"] if "start_bypass" in defaults else None
+        self.start_bypass = itemdef["start_bypass"] if "start_bypass" in itemdef else start_bypass
 
         deadband = defaults["deadband"] if "deadband" in defaults else None
         deadband = itemdef["deadband"] if "deadband" in itemdef else deadband
@@ -69,20 +80,58 @@ class AnnunciateItem(object):
             except KeyError:
                 raise ValueError("Unknown operator {} for conditional bypass: {}".format(tokens[1], self.key))
             self.cond_value = self.cond_item.dtype(tokens[2])
+        if self.start_bypass is not None:
+            self.start_bypass_latch = True
+        self.low_latch = False
+        self.high_latch = False
 
         plugin.db_callback_add(self.key, self.evaluate)
 
     def evaluate(self,k, x, udata):
-        print("{} = {}".format(self.key, x[0]))
+        # The start bypass clears once the value is greater than the low
+        # set point
+        if self.start_bypass_latch and self.low_set_point is not None:
+            lp = self.plugin.db_read(self.low_set_point)
+            if lp is None: lp = self.item.min
+            if x[0] > lp:
+                self.start_bypass_latch = False
+        else:
+            self.start_bypass_latch = False
+        if self.cond_bypass is not None:
+            b = self.cond_oper(self.cond_item.value[0], self.cond_value)
+        else:
+            b = False
+        # We are bypassed
+        if b or self.start_bypass_latch:
+            self.item.annunicate = False
+        else:
+            if self.low_set_point:
+                lp = self.plugin.db_read(self.low_set_point)
+                if lp is None: lp = self.item.min
+                if x[0] < lp or (x[0] < (lp + self.deadband) and self.low_latch):
+                    self.low_latch = True
+                else:
+                    self.low_latch = False
+            if self.high_set_point:
+                hp = self.plugin.db_read(self.high_set_point)
+                if hp is None: hp = self.item.max
+                if x[0] > hp or (x[0] > (hp - self.deadband) and self.high_latch):
+                    self.high_latch = True
+                else:
+                    self.high_latch = False
+            if self.high_latch or self.low_latch:
+                self.item.annunciate = True
+            else:
+                self.item.annunciate = False
 
 
     def __str__(self):
         s = []
         s.append(self.key)
-        s.append("  Low Aux Point Name: {}".format(self.low_aux_point))
-        s.append("  High Aux Point Name: {}".format(self.high_aux_point))
+        s.append("  Low Set Point: {}".format(self.low_set_point))
+        s.append("  High Set Point: {}".format(self.high_set_point))
         s.append("  Deadband: {}".format(self.deadband))
-        s.append("  Low Bypass Enabled: {}".format("Yes" if self.low_bypass else "No"))
+        s.append("  Start Bypass Enabled: {}".format("Yes" if self.start_bypass else "No"))
         s.append("  Conditional Bypass: {}".format(self.cond_bypass))
         return "\n".join(s)
 

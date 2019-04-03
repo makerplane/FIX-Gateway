@@ -149,7 +149,7 @@ connections:
       #high_aux_point: highWarn
 
       # No annunciation until the value first climbs above the set point
-      low_bypass: no
+      start_bypass: no
       # Bypasses the value on a condition
       cond_bypass: None
       #cond_bypass: TACH1 < 1000
@@ -160,13 +160,13 @@ connections:
       deadband: 1%
     items:
       - key: OILT1
-        low_bypass: yes
-        cond_bypass: TACH1 < 1000
+        start_bypass: yes
+        cond_bypass: TACH1 < 500
         deadband: 4
 
       - key: OILP1
-        low_bypass: yes
-        cond_bypass: TACH1 < 1000
+        start_bypass: yes
+        cond_bypass: TACH1 < 500
         deadband: 2
 
       - key: CHT11
@@ -176,7 +176,7 @@ connections:
 
       - key: CURRNT
       - key: VOLT
-        cond_bypass: TACH1 < 1000
+        cond_bypass: TACH1 < 500
 
       - key: FUELP1
       - key: FUELQ1
