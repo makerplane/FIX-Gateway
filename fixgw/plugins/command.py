@@ -22,6 +22,10 @@ import fixgw.plugin as plugin
 import fixgw.status as status
 
 class Command(cmd.Cmd):
+    def __init__(self):
+        super(Command, self).__init__()
+        self.subs = set()
+
     def setplugin(self, p):
         self.plugin = p
 
@@ -78,16 +82,21 @@ class Command(cmd.Cmd):
     def do_sub(self, line):
         """Subscribe\nSubscribe to updates"""
         args = line.split(" ")
-        try:
-            self.plugin.db_callback_add(args[0], self.callback_function)
-        except KeyError:
-            print(("Unknown Key " + args[0]))
+        if args[0] not in self.subs:
+            try:
+                self.plugin.db_callback_add(args[0], self.callback_function)
+                self.subs.add(args[0])
+            except KeyError:
+                print(("Unknown Key " + args[0]))
+        else:
+            print("Already subscribed to {}".format(args[0]))
 
     def do_unsub(self, line):
         """Unsubscribe\nRemove subscription to updates"""
         args = line.split(" ")
         try:
-            self.plugin.db_callback_del(args[0])
+            self.plugin.db_callback_del(args[0], self.callback_function)
+            self.subs.remove(args[0])
         except KeyError:
             print(("Unknown Key " + args[0]))
 
