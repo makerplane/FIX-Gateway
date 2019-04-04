@@ -139,14 +139,20 @@ class Connection(object):
         try:
             item = self.parent.db_get_item(a[0])
         except KeyError:
-            self.queue.put("@w{0}!001\n".format(d[0]).encode())
+            self.queue.put("@w{0}!001\n".format(a[0]).encode())
             return
         try:
             self.output_inhibit = True
             item.value = a[1]
         except:
-            self.queue.put("@w{0}!002\n".format(d[0]).encode())
-        self.queue.put("@w{}\n".format(d).encode())
+            self.queue.put("@w{0}!002\n".format(a[0]).encode())
+        flags = ""
+        flags += '1' if item.annunciate else '0'
+        flags += '1' if item.old else '0'
+        flags += '1' if item.bad else '0'
+        flags += '1' if item.fail else '0'
+        flags += '1' if item.secfail else '0'
+        self.queue.put("@w{};{};{}\n".format(item.key, item.value[0], flags).encode())
 
 
     def handle_request(self, d):

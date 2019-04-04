@@ -67,7 +67,7 @@ class ClientThread(threading.Thread):
         self.timeout = 1.0
         self.s = None
         # This Queue will hold normal data parameter responses
-        self.dataqueue = queue.Queue()
+        #self.dataqueue = queue.Queue()
         # This Queue will hold command responses
         self.cmdqueue = queue.Queue()
         self.connectedEvent = threading.Event()
@@ -100,7 +100,7 @@ class ClientThread(threading.Thread):
                 if x[2][3] == "1": s += "f";
                 if x[2][4] == "1": s += "s";
                 x[2] = s
-            self.dataqueue.put(x)
+            #self.dataqueue.put(x)
             if self.dataCallback:
                 self.dataCallback(x)
 
@@ -129,11 +129,11 @@ class ClientThread(threading.Thread):
                             self.s.close()
                             break;
                     except Exception as e:
-                        log.debug("Receive Failure {0}".format(e))
+                        log.error("Receive Failure {0}".format(e))
                         break
                     else:
                         if not data:
-                            log.debug("No Data, Bailing Out")
+                            log.error("No Data, Bailing Out")
                             self.connectedState(False)
                             break
                         else:
@@ -267,7 +267,6 @@ class Client:
             f = "1" if 'f' in flags else "0"
             s = "1" if 's' in flags else "0"
             sendStr = "{0};{1};{2}{3}{4}{5}\n".format(id, value, a, b, f, s)
-            #s = "{};{};00000\n".format(id, value)
             self.cthread.send(sendStr.encode())
 
 
@@ -300,6 +299,7 @@ class Client:
         with self.lock:
             self.cthread.send("@w{};{}\n".format(id, value).encode())
             res = self.cthread.getResponse('w')
+            return res[1]
 
     def getStatus(self):
         with self.lock:
@@ -311,12 +311,3 @@ class Client:
         with self.lock:
             self.cthread.send("@xkill\n".encode())
             res = self.cthread.getResponse('x')
-
-
-if __name__ == "__main__":
-    logging.basicConfig()
-    log.level = logging.DEBUG
-    c = Client("localhost", 3490)
-    c.connect()
-    print(c.write("IAS", 127.3))
-    c.disconnect()

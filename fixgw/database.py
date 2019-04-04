@@ -246,6 +246,9 @@ class db_item(object):
         if self._secfail != last:
             self.send_callbacks()
 
+    def __str__(self):
+        return "{} = {}".format(self.key, self.value)
+
 
 # These are support functions for loading the initial database
 def check_for_variables(entry):

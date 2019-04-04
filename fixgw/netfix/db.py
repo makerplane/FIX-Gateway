@@ -131,46 +131,69 @@ class DB_Item(object):
         with self.lock:
             return self._value #, self.annunciate, self.old, self.bad, self.fail)
 
+    def valueConvert(self, x):
+        if self.dtype == bool:
+            if type(x) == bool:
+                y = x
+            elif type(x) == str:
+                y = True if x.lower() in ["yes", "true", "1"] else False
+            else:
+                y = True if x else False
+        else:
+            try:
+                y = self.dtype(x)
+            except ValueError:
+                log.error("Bad value '" + str(x) + "' given for " + self.description)
+            if self.dtype != str:
+                # bounds check and cap
+                try:
+                    if y < self._min: y = self._min
+                except:  # Probably only fails if min has not been set
+                    #raise
+                    pass  # ignore at this point
+                try:
+                    if y > self._max: y = self._max
+                except:  # Probably only fails if max has not been set
+                    #raise
+                    pass  # ignore at this point
+        return y
+
     @value.setter
     def value(self, x):
         with self.lock:
-            #print("Value called {0} {1} Min {2} Max {3}".format(self.key, x, self.min, self.max))
             last = self._value
-            if self.dtype == bool:
-                if type(x) == bool:
-                    self._value = x
-                elif type(x) == str:
-                    self._value = True if x.lower() in ["yes", "true", "1"] else False
-                else:
-                    self._value = True if x else False
-            else:
-                try:
-                    self._value = self.dtype(x)
-                except ValueError:
-                    log.error("Bad value '" + str(x) + "' given for " + self.description)
-                if self.dtype != str:
-                    # bounds check and cap
-                    try:
-                        if self._value < self._min: self._value = self._min
-                    except:  # Probably only fails if min has not been set
-                        #raise
-                        pass  # ignore at this point
-                    try:
-                        if self._value > self._max: self._value = self._max
-                    except:  # Probably only fails if max has not been set
-                        #raise
-                        pass  # ignore at this point
+            self._value = self.valueConvert(x)
             # set the timestamp to right now
             self.timestamp = datetime.utcnow()
             if last != self._value:
-                #print("ValueChanged {0} {1}".format(self.key, self._value))
                 if self.valueChanged != None:
+                    # Send the callback if we have a changed value
                     self.valueChanged(self._value)
-            #print("ValueWrite {0} {1}".format(self.key, self._value))
             if self.valueWrite != None:
+                # Send Callback everytime we write to it
                 self.valueWrite(self._value)
             if not self.supressWrite:
-                self.client.writeValue(self.key, self._value)
+                res = self.client.writeValue(self.key, self._value)
+                if '!' in res:
+                    # TODO: Should probably report the error???
+                    return
+                vals = res.split(';')
+                last = self._value
+                y = self.valueConvert(vals[1])
+                if y != last:
+                    # Resend the valueChanged callback
+                    if self.valueChanged != None:
+                        self.valueChanged(self._value)
+                    # Set the actual stored value to the different one returned
+                    # from the server
+                    self._value = y
+                # Deal with the returned state of the flags
+                self.annunciate = vals[2][0]
+                self.old = vals[2][1]
+                self.bad = vals[2][2]
+                self.fail = vals[2][3]
+                self.secFail = vals[2][4]
+
 
     @property
     def dtype(self):
@@ -243,6 +266,16 @@ class DB_Item(object):
             except ValueError:
                 log.error("Time to live should be an integer for " + self.description)
 
+    def convertBool(self, x):
+        if type(x) == str:
+            x=x.lower()
+            if x in ['0', 'false', 'no', 'f']:
+                return False
+            else:
+                return True
+        else:
+            return bool(x)
+
     @property
     def annunciate(self):
         with self.lock:
@@ -252,7 +285,7 @@ class DB_Item(object):
     def annunciate(self, x):
         with self.lock:
             last = self._annunciate
-            self._annunciate = bool(x)
+            self._annunciate = self.convertBool(x)
             if self._annunciate != last:
                 if self.annunciateChanged != None:
                     self.annunciateChanged(self._annunciate)
@@ -271,7 +304,7 @@ class DB_Item(object):
     def old(self, x):
         with self.lock:
             last = self._old
-            self._old = bool(x)
+            self._old = self.convertBool(x)
             if self._old != last:
                 if self.oldChanged != None:
                     self.oldChanged(self._old)
@@ -290,7 +323,7 @@ class DB_Item(object):
     def bad(self, x):
         with self.lock:
             last = self._bad
-            self._bad = bool(x)
+            self._bad = self.convertBool(x)
             if self._bad != last:
                 if self.badChanged != None:
                     self.badChanged(self._bad)
@@ -309,7 +342,7 @@ class DB_Item(object):
     def fail(self, x):
         with self.lock:
             last = self._fail
-            self._fail = bool(x)
+            self._fail = self.convertBool(x)
             if self._fail != last:
                 if self.failChanged != None:
                     self.failChanged(self._fail)
@@ -328,7 +361,7 @@ class DB_Item(object):
     def secFail(self, x):
         with self.lock:
             last = self._secFail
-            self._secFail = bool(x)
+            self._secFail = self.convertBool(x)
             if self._secFail != last:
                 if self.secFailChanged != None:
                     self.failChanged(self._secFail)
