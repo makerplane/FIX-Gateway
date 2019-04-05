@@ -165,34 +165,37 @@ class DB_Item(object):
             self._value = self.valueConvert(x)
             # set the timestamp to right now
             self.timestamp = datetime.utcnow()
-            if last != self._value:
+            
+        if last != self._value:
+            if self.valueChanged != None:
+                # Send the callback if we have a changed value
+                self.valueChanged(self._value)
+        if self.valueWrite != None:
+            # Send Callback everytime we write to it
+            self.valueWrite(self._value)
+        if not self.supressWrite:
+            res = self.client.writeValue(self.key, self._value)
+            if '!' in res:
+                # TODO: Should probably report the error???
+                return
+            vals = res.split(';')
+            last = self._value
+            y = self.valueConvert(vals[1])
+            if y != last:
+                # Resend the valueChanged callback
                 if self.valueChanged != None:
-                    # Send the callback if we have a changed value
                     self.valueChanged(self._value)
-            if self.valueWrite != None:
-                # Send Callback everytime we write to it
-                self.valueWrite(self._value)
-            if not self.supressWrite:
-                res = self.client.writeValue(self.key, self._value)
-                if '!' in res:
-                    # TODO: Should probably report the error???
-                    return
-                vals = res.split(';')
-                last = self._value
-                y = self.valueConvert(vals[1])
-                if y != last:
-                    # Resend the valueChanged callback
-                    if self.valueChanged != None:
-                        self.valueChanged(self._value)
-                    # Set the actual stored value to the different one returned
-                    # from the server
-                    self._value = y
-                # Deal with the returned state of the flags
-                self.annunciate = vals[2][0]
-                self.old = vals[2][1]
-                self.bad = vals[2][2]
-                self.fail = vals[2][3]
-                self.secFail = vals[2][4]
+                # Set the actual stored value to the different one returned
+                # from the server
+                self._value = y
+            # Dealwith the returned state of the flags
+            self.supressWrite = True
+            self.annunciate = vals[2][0]
+            self.old = vals[2][1]
+            self.bad = vals[2][2]
+            self.fail = vals[2][3]
+            self.secFail = vals[2][4]
+            self.supressWrite = False
 
 
     @property
@@ -286,14 +289,15 @@ class DB_Item(object):
         with self.lock:
             last = self._annunciate
             self._annunciate = self.convertBool(x)
-            if self._annunciate != last:
-                if self.annunciateChanged != None:
-                    self.annunciateChanged(self._annunciate)
-                try:
-                    if not self.supressWrite:
-                        self.client.flag(self.key, 'a', self._annunciate)
-                except Exception as e:
-                    log.error(e)
+
+        if self._annunciate != last:
+            if self.annunciateChanged != None:
+                self.annunciateChanged(self._annunciate)
+            try:
+                if not self.supressWrite:
+                    self.client.flag(self.key, 'a', self._annunciate)
+            except Exception as e:
+                log.error(e)
 
     @property
     def old(self):
@@ -305,14 +309,15 @@ class DB_Item(object):
         with self.lock:
             last = self._old
             self._old = self.convertBool(x)
-            if self._old != last:
-                if self.oldChanged != None:
-                    self.oldChanged(self._old)
-                try:
-                    if not self.supressWrite:
-                        self.client.flag(self.key, 'o', self._old)
-                except Exception as e:
-                    log.error(e)
+
+        if self._old != last:
+            if self.oldChanged != None:
+                self.oldChanged(self._old)
+            try:
+                if not self.supressWrite:
+                    self.client.flag(self.key, 'o', self._old)
+            except Exception as e:
+                log.error(e)
 
     @property
     def bad(self):
@@ -324,14 +329,15 @@ class DB_Item(object):
         with self.lock:
             last = self._bad
             self._bad = self.convertBool(x)
-            if self._bad != last:
-                if self.badChanged != None:
-                    self.badChanged(self._bad)
-                try:
-                    if not self.supressWrite:
-                        self.client.flag(self.key, 'b', self._bad)
-                except Exception as e:
-                    log.error(e)
+
+        if self._bad != last:
+            if self.badChanged != None:
+                self.badChanged(self._bad)
+            try:
+                if not self.supressWrite:
+                    self.client.flag(self.key, 'b', self._bad)
+            except Exception as e:
+                log.error(e)
 
     @property
     def fail(self):
@@ -343,14 +349,15 @@ class DB_Item(object):
         with self.lock:
             last = self._fail
             self._fail = self.convertBool(x)
-            if self._fail != last:
-                if self.failChanged != None:
-                    self.failChanged(self._fail)
-                try:
-                    if not self.supressWrite:
-                        self.client.flag(self.key, 'f', self._fail)
-                except Exception as e:
-                    log.error(e)
+
+        if self._fail != last:
+            if self.failChanged != None:
+                self.failChanged(self._fail)
+            try:
+                if not self.supressWrite:
+                    self.client.flag(self.key, 'f', self._fail)
+            except Exception as e:
+                log.error(e)
 
     @property
     def secFail(self):
@@ -362,14 +369,15 @@ class DB_Item(object):
         with self.lock:
             last = self._secFail
             self._secFail = self.convertBool(x)
-            if self._secFail != last:
-                if self.secFailChanged != None:
-                    self.failChanged(self._secFail)
-                try:
-                    if not self.supressWrite:
-                        self.client.flag(self.key, 's', self._secFail)
-                except Exception as e:
-                    log.error(e)
+
+        if self._secFail != last:
+            if self.secFailChanged != None:
+                self.failChanged(self._secFail)
+            try:
+                if not self.supressWrite:
+                    self.client.flag(self.key, 's', self._secFail)
+            except Exception as e:
+                log.error(e)
 
     def updateNoWrite(self, report):
         with self.lock:
