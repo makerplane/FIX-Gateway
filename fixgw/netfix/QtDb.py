@@ -40,7 +40,7 @@ class QtDB_Item(QObject):
     badChanged =  pyqtSignal(bool)
     failChanged =  pyqtSignal(bool)
     secFailChanged =  pyqtSignal(bool)
-    auxChanged =  pyqtSignal(bool)
+    auxChanged =  pyqtSignal(str, object)
     reportReceived =  pyqtSignal(bool)
     destroyed =  pyqtSignal()
 
@@ -85,8 +85,8 @@ class QtDB_Item(QObject):
     def secFailChangedFunc(self, value):
         self.secFailChanged.emit(value)
 
-    def auxChangedFunc(self, value):
-        self.auxChanged.emit(value)
+    def auxChangedFunc(self, name, value):
+        self.auxChanged.emit(name, value)
 
     def reportReceivedFunc(self, value):
         self.reportReceived.emit(value)
@@ -181,6 +181,16 @@ class QtDB_Item(QObject):
     def setSecFail(self, x):
         self._item.secFail = x
     secFail = property(getSecFail, setSecFail)
+
+    def get_aux_list(self):
+        return self._item.get_aux_list()
+
+    def set_aux_value(self, name, value):
+        return self._item.set_aux_value(name, value)
+
+    def get_aux_value(self, name):
+        return self._item.get_aux_value(name)
+
 
 
 class Database(object):

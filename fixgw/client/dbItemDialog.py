@@ -146,32 +146,18 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
         self.item.failChanged.connect(r9.setChecked)
         self.formLayout.addRow(l9, r9)
 
-        l10 = QLabel(self.scrollAreaWidgetContents)
-        l10.setText("Sec Failed")
-        r10 = QCheckBox(self.scrollAreaWidgetContents)
-        r10.setChecked(self.item.secFail)
-        r10.stateChanged.connect(self.item.setSecFail)
-        self.item.secFailChanged.connect(r10.setChecked)
-        self.formLayout.addRow(l10, r10)
+        l = QLabel(self.scrollAreaWidgetContents)
+        l.setText("Sec Failed")
+        r = QCheckBox(self.scrollAreaWidgetContents)
+        r.setChecked(self.item.secFail)
+        r.stateChanged.connect(self.item.setSecFail)
+        self.item.secFailChanged.connect(r.setChecked)
+        self.formLayout.addRow(l, r)
 
-            # self.labelMin.setText(str(self.item.min))
-            # self.doubleSpinValue.setMinimum(self.item.min)
-            # self.labelMax.setText(str(self.item.max))
-            # self.doubleSpinValue.setMaximum(self.item.max)
-            #
-            # span = self.item.max - self.item.min
-            # if span < 2.1:
-            #     self.doubleSpinValue.setSingleStep(0.001)
-            #     self.doubleSpinValue.setDecimals(3)
-            # elif span < 201:
-            #     self.doubleSpinValue.setSingleStep(0.01)
-            #     self.doubleSpinValue.setDecimals(2)
-            # elif span < 2001:
-            #     self.doubleSpinValue.setSingleStep(0.1)
-            #     self.doubleSpinValue.setDecimals(1)
-            # elif span < 20001:
-            #     self.doubleSpinValue.setSingleStep(1)
-            #     self.doubleSpinValue.setDecimals(0)
-            # else:
-            #     self.doubleSpinValue.setSingleStep(10)
-            #     self.doubleSpinValue.setDecimals(0)
+        aux_list = self.item.get_aux_list()
+        for aux in aux_list:
+            l = QLabel(self.scrollAreaWidgetContents)
+            l.setText(aux)
+            r = QLineEdit(self.scrollAreaWidgetContents)
+            r.setText(str(self.item.get_aux_value(aux)))
+            self.formLayout.addRow(l, r)

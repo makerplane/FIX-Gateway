@@ -146,7 +146,8 @@ class ClientThread(threading.Thread):
                                     try:
                                         self.handle_request(buff)
                                     except Exception as e:
-                                        log.debug("Error handling request {0}".format(buff))
+                                        # TODO: Print file and line number here.  Use traceback module
+                                        log.error("Error handling request {} - {}".format(buff, e))
                                     buff = ""
                                 else:
                                     buff += d

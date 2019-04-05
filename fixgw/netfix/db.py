@@ -92,8 +92,8 @@ class DB_Item(object):
                 else:
                     self.aux[name] = self.dtype(value)
                 if self.aux[name] != last:
-                    if self.__auxChanged != None:
-                        self.__auxChanged(self.aux)
+                    if self.auxChanged != None:
+                        self.auxChanged(name, value)
             except ValueError:
                 log.error("Bad Value for aux {0} {1}".format(name, value))
                 raise
@@ -165,7 +165,7 @@ class DB_Item(object):
             self._value = self.valueConvert(x)
             # set the timestamp to right now
             self.timestamp = datetime.utcnow()
-            
+
         if last != self._value:
             if self.valueChanged != None:
                 # Send the callback if we have a changed value
@@ -380,6 +380,7 @@ class DB_Item(object):
                 log.error(e)
 
     def updateNoWrite(self, report):
+        print("Update " + str(report))
         with self.lock:
             try:
                 self.supressWrite = True
@@ -389,6 +390,8 @@ class DB_Item(object):
                 self.bad = True if 'b' in report[2] else False
                 self.fail = True if 'f' in report[2] else False
                 self.secFail = True if 's' in report[2] else False
+            except:
+                raise
             finally:
                 self.supressWrite = False
 
@@ -459,8 +462,15 @@ class Database(object):
 
     # This callback gets a data update sentence from the server
     def dataFunction(self, x):
-        i = self.__items[x[0]]
-        i.updateNoWrite(x)
+        if '.' in x[0]:
+            tokens = x[0].split('.')
+            i = self.__items[tokens[0]]
+            i.supressWrite = True
+            i.set_aux_value(tokens[1], x[1])
+            i.supressWrite = False
+        else:
+            i = self.__items[x[0]]
+            i.updateNoWrite(x)
 
     def initialize(self):
         log.debug("Initializing Database")
