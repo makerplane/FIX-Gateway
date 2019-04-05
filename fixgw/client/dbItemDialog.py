@@ -43,6 +43,11 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
         r1 = QLabel(self.scrollAreaWidgetContents)
         r1.setText(types[self.item.dtype])
         self.formLayout.addRow(l1, r1)
+        l1a = QLabel(self.scrollAreaWidgetContents)
+        l1a.setText("Lifetime:")
+        r1a = QLabel(self.scrollAreaWidgetContents)
+        r1a.setText(str(self.item.tol)+ " ms")
+        self.formLayout.addRow(l1a, r1a)
 
         if self.item.dtype in [int, float]:
             l2 = QLabel(self.scrollAreaWidgetContents)
@@ -87,12 +92,14 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
             r5.setDecimals(dp)
             r5.setMinimum(self.item.min)
             r5.setMaximum(self.item.max)
+            r5.setValue(self.item.value)
             r5.valueChanged.connect(self.item.setValue)
             self.item.valueChanged.connect(r5.setValue)
         elif self.item.dtype is int:
             r5 = QSpinBox(self.scrollAreaWidgetContents)
             r5.setMinimum(self.item.min)
             r5.setMaximum(self.item.max)
+            r5.setValue(self.item.value)
             r5.valueChanged.connect(self.item.setValue)
             self.item.valueChanged.connect(r5.setValue)
         elif self.item.dtype is bool:
