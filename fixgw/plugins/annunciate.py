@@ -90,6 +90,9 @@ class AnnunciateItem(object):
     def evaluate(self,k, x, udata):
         # The start bypass clears once the value is greater than the low
         # set point
+        if '.' in k:  # This is an aux value update
+            tokens = k.split('.')
+            x = self.plugin.db_read(tokens[0])
         if self.start_bypass_latch and self.low_set_point is not None:
             lp = self.plugin.db_read(self.low_set_point)
             if lp is None: lp = self.item.min
