@@ -24,6 +24,8 @@ import time
 
 import fixgw.netfix
 
+log = logging.getLogger(__name__)
+
 # This class represents a single data point in the database.
 class DB_Item(object):
     def __init__(self, client, key, dtype='float'):
@@ -380,7 +382,6 @@ class DB_Item(object):
                 log.error(e)
 
     def updateNoWrite(self, report):
-        print("Update " + str(report))
         with self.lock:
             try:
                 self.supressWrite = True
@@ -420,8 +421,6 @@ class Database(object):
     def __init__(self, client):
         self.__items = {}
         self.client = client
-        global log
-        log = logging.getLogger(__name__)
         self.init_event = threading.Event()
         self.connected = False
         if self.client.isConnected():
@@ -490,11 +489,15 @@ class Database(object):
                 item.bad = 'b' in res[2]
                 item.fail = 'f' in res[2]
                 item.secFail = 's' in res[2]
+                auxlist = item.get_aux_list()
+                for aux in auxlist:
+                    val = self.client.read("{}.{}".format(key, aux))
+                    item.set_aux_value(aux, val[1])
 
             self.init_event.set()
         except Exception as e:
             log.error(e)
-
+            raise
 
     # Either add an item or redefine the item if it already exists.
     #  This is mostly useful when the FIXGW client reconnects.  The
