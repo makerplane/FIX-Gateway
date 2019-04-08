@@ -83,7 +83,9 @@ class DB_Item(object):
 
     def get_aux_list(self):
         with self.lock:
-            return list(self.aux.keys())
+            l = list(self.aux.keys())
+            l.sort()
+            return l
 
     def set_aux_value(self, name, value):
         with self.lock:
@@ -96,6 +98,11 @@ class DB_Item(object):
                 if self.aux[name] != last:
                     if self.auxChanged != None:
                         self.auxChanged(name, value)
+                    if not self.supressWrite:
+                        res = self.client.writeValue("{}.{}".format(self.key, name), self.aux[name])
+                        if '!' in res:
+                            # TODO: Should probably report the error???
+                            return
             except ValueError:
                 log.error("Bad Value for aux {0} {1}".format(name, value))
                 raise
@@ -438,6 +445,7 @@ class Database(object):
     # This function is called when the connection state of the client
     # changes.  It recievs a True when connected and False when disconnected
     def connectFunction(self, x):
+        log.debug("Database Connection State - {}".format(x))
         self.connected = x
         if self.connectCallback != None:
             self.connectCallback(x)
