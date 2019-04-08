@@ -134,6 +134,57 @@ connections:
       gmt_format: "%H:%M:%SZ" # Zulu time format string
       local_format: "%H:%M:%S %Z" # Local time format string
 
+  # Set the annunciation flag bit on configured database items.
+  annunciate:
+    load: yes
+    module: fixgw.plugins.annunciate
+    # These are the defaults for all the items.  These settings can be
+    # overridden in each item definition
+    defaults:
+      # These are the auxilliary data values that will be used as the
+      # set points for the annunciation
+      low_aux_point: lowAlarm
+      high_aux_point: highAlarm
+      #low_aux_point: lowWarn
+      #high_aux_point: highWarn
+
+      # No annunciation until the value first climbs above the set point
+      start_bypass: no
+      # Bypasses the value on a condition
+      cond_bypass: None
+      #cond_bypass: TACH1 < 1000
+      # Once triggered the annunication will not clear until the value clears
+      # the setpoint plus the deadband.  This cuts down "flashing" annunications
+      # that are caused by values that are very near the set point.  The value
+      # can be in absolute units or in percentage of full range.
+      deadband: 1%
+    items:
+      - key: OILT1
+        start_bypass: yes
+        cond_bypass: TACH1 < 500
+        deadband: 4
+
+      - key: OILP1
+        start_bypass: yes
+        cond_bypass: TACH1 < 500
+        deadband: 2
+
+      - key: CHT11
+      - key: CHT12
+      - key: CHT13
+      - key: CHT14
+
+      - key: CURRNT
+      - key: VOLT
+        cond_bypass: TACH1 < 500
+
+      - key: FUELP1
+      - key: FUELQ1
+      - key: FUELQ2
+      - key: FUELQT
+
+      - key: OAT
+
 
   test1:
     load: no
