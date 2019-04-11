@@ -24,59 +24,9 @@ from PyQt5.QtWidgets import *
 
 from . import connection
 from .ui import itemDialog_ui
+from . import common
 
 types = {int:"Integer", float:"Float", bool:"Bool", str:"String"}
-
-# This function creates and returns a proper control to use to adjust
-# the value..
-def getValueControl(item, parent, signals = True):
-    if item.dtype is float:
-        control = QDoubleSpinBox(parent)
-        span = item.max - item.min
-        if span < 2.1:
-            ss = 0.001
-            dp = 3
-        elif span < 201:
-            ss = 0.01
-            dp = 2
-        elif span < 2001:
-            ss = 0.1
-            dp = 1
-        elif span < 20001:
-            ss = 1
-            dp = 0
-        else:
-            ss = 10
-            dp = 0
-        control.setSingleStep(ss)
-        control.setDecimals(dp)
-        control.setMinimum(item.min)
-        control.setMaximum(item.max)
-        if signals:
-            control.setValue(item.value)
-            control.valueChanged.connect(item.setValue)
-            item.valueChanged.connect(control.setValue)
-    elif item.dtype is int:
-        control = QSpinBox(parent)
-        control.setMinimum(self.item.min)
-        control.setMaximum(self.item.max)
-        if signals:
-            control.setValue(self.item.value)
-            control.valueChanged.connect(self.item.setValue)
-            self.item.valueChanged.connect(control.setValue)
-    elif item.dtype is bool:
-        control = QCheckBox(parent)
-        if signals:
-            control.setChecked(item.value)
-            control.stateChanged.connect(item.setValue)
-            item.valueChanged.connect(control.setChecked)
-    elif item.dtype is str:
-        control = QLineEdit(parent)
-        if signals:
-            control.setText(item.value)
-            control.textChanged.connect(item.setValue)
-            item.valueChanged.connect(control.setText)
-    return control
 
 
 # Returns a function that can be used as a slot for aux value changes
@@ -158,7 +108,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
 
         l5 = QLabel(self.scrollAreaWidgetContents)
         l5.setText("Value:")
-        r5 = getValueControl(self.item, self.scrollAreaWidgetContents)
+        r5 = common.getValueControl(self.item, self.scrollAreaWidgetContents)
         self.formLayout.addRow(l5, r5)
 
         l6 = QLabel(self.scrollAreaWidgetContents)
@@ -208,7 +158,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
             l = QLabel(self.scrollAreaWidgetContents)
             l.setText(aux)
 
-            vc = getValueControl(self.item, self.scrollAreaWidgetContents, False)
+            vc = common.getValueControl(self.item, self.scrollAreaWidgetContents, False)
             vc.valueChanged.connect(auxValueSlotClosure(self.item, aux))
             vc.hide()
             d["control"] = vc
