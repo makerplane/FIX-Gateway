@@ -76,8 +76,11 @@ class db_item(object):
             if self.aux[name] < self._min: self.aux[name] = self._min
             if self.aux[name] > self._max: self.aux[name] = self._max
         except ValueError:
-            log.error("Bad Value for aux {0} {1}".format(name, value))
-            raise
+            if value == "None":
+                self.aux[name] = None
+            else:
+                log.error("Bad Value for aux {0} {1}".format(name, value))
+                raise
         except KeyError:
             log.error("No aux {0} for {1}".format(name, self.description))
             raise
