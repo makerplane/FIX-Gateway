@@ -114,7 +114,7 @@ connections:
     model: 0      # Model Number
 
   gui:
-    load: yes
+    load: no
     module: fixgw.plugins.gui
 
   system:

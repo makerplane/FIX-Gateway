@@ -41,11 +41,12 @@ to be stored in the normal place and run with fixgw --config-file test.yaml
 
 Client
 
+  Reconnect and disconnect don't work properly
   Initialize Aux data on startup of the database.
   Show aux data on table in GUI.
-  Reconnect and disconnect don't work properly
   Add Tree view for status on GUI
   Add trending capability on GUI
+  Setting an Aux Value to None from the client doesn't work.
 
 
 
