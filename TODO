@@ -2,6 +2,7 @@
 Bugs
 =================================
 Typing write ANLG1. 0.5 causes a bad data update to be sent
+Strings come to the gui client as None and should probably be blank
 
 =================================
 Features
@@ -42,11 +43,8 @@ to be stored in the normal place and run with fixgw --config-file test.yaml
 Client
 
   Reconnect and disconnect don't work properly
-  Initialize Aux data on startup of the database.
-  Show aux data on table in GUI.
   Add Tree view for status on GUI
   Add trending capability on GUI
-  Setting an Aux Value to None from the client doesn't work.
 
 
 
@@ -66,16 +64,23 @@ Testing
 =================================
 
 Further testing of the CAN-FIX plugin
-
 Test plugin interface.
-
 Test database failures.
-
-Figure out a way to test the netfix protocol
-
-Test all the error codes in netfix protocol for each command
-
 Figure out a way to test the client and client module
+
+Netfix:
+  all the error codes in netfix protocol for each command
+  multiple clients
+  try to start a feedback loop
+  strings that are None should have ""
+  test each data type
+  test out of bounds
+
+Netfix Client Library:
+  multiple clients hammering the server check database integrity
+
+Netfix Qt Client Library:
+  multiple clients hammering the server check database integrity
 
 
 =================================

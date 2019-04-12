@@ -21,6 +21,16 @@ from PyQt5.QtWidgets import *
 
 from . import connection
 from . import dbItemDialog
+from . import common
+
+class CheckButton(QPushButton):
+    def setChecked(self, value):
+        super(CheckButton, self).setChecked(value)
+        if value:
+            self.setText("I")
+        else:
+            self.setText("0")
+
 
 class DataTable(QTableWidget):
     def __init__(self, parent=None):
@@ -32,31 +42,52 @@ class DataTable(QTableWidget):
         self.dblist.sort()
         self.setRowCount(len(self.dblist))
         self.setVerticalHeaderLabels(self.dblist)
-        #self.verticalHeader().hide()
         for i, key in enumerate(self.dblist):
             item = connection.db.get_item(key)
-            #cell = QTableWidgetItem(key)
-            #cell.setFlags(Qt.ItemIsEnabled)
-            #self.setItem(i, 0, cell)
+
             cell = QTableWidgetItem(item.description)
             cell.setFlags(Qt.ItemIsEnabled)
             self.setItem(i, 0, cell)
-            cell = QTableWidgetItem(str(item.value))
-            cell.setFlags(Qt.ItemIsEnabled)
-            self.setItem(i, 1, cell)
 
-            cell = QTableWidgetItem()
-            cell.setFlags(Qt.ItemIsEnabled)
-            self.setItem(i, 2, cell)
-            cb = QCheckBox(self)
+            cell = common.getValueControl(item, self)
+            self.setCellWidget(i, 1, cell)
+
+            cb = CheckButton(self)
+            cb.setCheckable(True)
+            cb.setChecked(item.annunciate)
+            cb.clicked.connect(item.setAnnunciate)
+            item.annunciateChanged.connect(cb.setChecked)
             self.setCellWidget(i, 2, cb)
 
-        #self.cellClicked.connect(self.clickifcated)
-        #self.itemSelectionChanged.connect(self.whatsup)
+            cb = CheckButton(self)
+            cb.setCheckable(True)
+            cb.setChecked(item.old)
+            cb.clicked.connect(item.setOld)
+            item.oldChanged.connect(cb.setChecked)
+            self.setCellWidget(i, 3, cb)
+
+            cb = CheckButton(self)
+            cb.setCheckable(True)
+            cb.setChecked(item.bad)
+            cb.clicked.connect(item.setBad)
+            item.badChanged.connect(cb.setChecked)
+            self.setCellWidget(i, 4, cb)
+
+            cb = CheckButton(self)
+            cb.setCheckable(True)
+            cb.setChecked(item.fail)
+            cb.clicked.connect(item.setFail)
+            item.failChanged.connect(cb.setChecked)
+            self.setCellWidget(i, 5, cb)
+
+            cb = CheckButton(self)
+            cb.setCheckable(True)
+            cb.setChecked(item.secFail)
+            cb.clicked.connect(item.setSecFail)
+            item.secFailChanged.connect(cb.setChecked)
+            self.setCellWidget(i, 6, cb)
+
         self.resizeColumnsToContents()
-        self.timer = QTimer()
-        self.timer.setInterval(1000)
-        self.timer.timeout.connect(self.update)
         self.verticalHeader().sectionDoubleClicked.connect(self.keySelected)
 
 
@@ -65,15 +96,3 @@ class DataTable(QTableWidget):
         d = dbItemDialog.ItemDialog(self)
         d.setKey(key)
         d.show()
-
-    def update(self):
-        for i, key in enumerate(self.dblist):
-            x = connection.db.get_value(key)
-            y = self.item(i,1)
-            y.setText(str(x))
-
-    def showEvent(self, QShowEvent):
-        self.timer.start()
-
-    def hideEvent(self, QHideEvent):
-        self.timer.stop()
