@@ -58,7 +58,7 @@ class QtDB_Item(QObject):
         item.oldChanged = self.oldChangedFunc
         item.badChanged = self.badChangedFunc
         item.failChanged = self.failChangedFunc
-        item.secFailCahnged = self.secFailChangedFunc
+        item.secFailChanged = self.secFailChangedFunc
         item.auxChanged = self.auxChangedFunc
         item.reportReceived = self.reportReceivedFunc
         item.destroyed = self.destroyedFunc

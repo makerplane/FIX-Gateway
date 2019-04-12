@@ -381,7 +381,7 @@ class DB_Item(object):
 
         if self._secFail != last:
             if self.secFailChanged != None:
-                self.failChanged(self._secFail)
+                self.secFailChanged(self._secFail)
             try:
                 if not self.supressWrite:
                     self.client.flag(self.key, 's', self._secFail)

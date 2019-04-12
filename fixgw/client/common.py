@@ -54,12 +54,12 @@ def getValueControl(item, parent, signals = True):
             item.valueChanged.connect(control.setValue)
     elif item.dtype is int:
         control = QSpinBox(parent)
-        control.setMinimum(self.item.min)
-        control.setMaximum(self.item.max)
+        control.setMinimum(item.min)
+        control.setMaximum(item.max)
         if signals:
-            control.setValue(self.item.value)
-            control.valueChanged.connect(self.item.setValue)
-            self.item.valueChanged.connect(control.setValue)
+            control.setValue(item.value)
+            control.valueChanged.connect(item.setValue)
+            item.valueChanged.connect(control.setValue)
     elif item.dtype is bool:
         control = QCheckBox(parent)
         if signals:
