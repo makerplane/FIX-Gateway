@@ -1,4 +1,4 @@
-#  Copyright (c) 2019 Garrett Herschleb
+#  Copyright (c) 2016 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -15,21 +15,6 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 #  USA.import plugin
 
-#  This is a compute plugin.  It calculates derivative points like averages,
-#  minimums or maximums and the like.  Specific calculations for things like
-#  True Airspeed could be done also.
-
-import fixgw.plugin as plugin
-
-def dimFunction(key, value, parent):
-    #print ("Dim to", str(int(round(value[0]*parent.config['Multiplier']))))
-    with open(parent.config["DimmerDevice"], 'w') as dim:
-        dim.write (str(int(round(value[0]*parent.config['Multiplier']))) + '\n')
-        dim.close()
-
-class Plugin(plugin.PluginBase):
-    def run(self):
-        self.db_callback_add("DIM", dimFunction, self)
-
-    def stop(self):
-        pass
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *

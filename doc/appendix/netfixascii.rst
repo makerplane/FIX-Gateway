@@ -104,29 +104,25 @@ a data update sentence
 ``@rIAS.Vs`` would cause the server to report the Vs auxilliary data
 if it exists.
 
-
-``q`` = Query Item Information
-
-This command causes the server to report all of the information associated
-with the point.
-
-The response from the read command is the ID, folowed by the value, followed
-by the quality flags.  The flags are exactly like the quality flags sent in
-a data update sentence
-
-``@rIAS;105.2;00000``
-
-``@rIAS.Vs`` would cause the server to report the Vs auxilliary data
-if it exists.
-
 Error Codes:
 
 * 001 - ID Not Found
 
+
 Write Command
 ~~~~~~~~~~~~~
 
-**TODO**
+``w`` = Write the value.  This command is similar to sending a normal
+data sentence except that it does not affect the quality flags and it gives
+the client a return value with errors if something fails.
+
+``@wIAS;105.2``
+
+Error Codes:
+
+* 001 - ID Not Found
+* 002 - Bad Argument
+
 
 Subscribe Command
 ~~~~~~~~~~~~~~~~~
