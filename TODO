@@ -47,7 +47,6 @@ Client
   Add trending capability on GUI
 
 
-
 GUI Plugin
 
   Move to client
@@ -56,17 +55,20 @@ GUI Plugin
 CAN-FIX Plugin
 
   Add mandatory Node Specific Message responses
-  Add node status information.
+  Add node status information
 
 
 =================================
 Testing
 =================================
 
-Further testing of the CAN-FIX plugin
 Test plugin interface.
 Test database failures.
 Figure out a way to test the client and client module
+
+CanFix:
+  refactor to get rid of the test pluin
+  test mandatory CAN-FIX messages
 
 Netfix:
   all the error codes in netfix protocol for each command
@@ -78,6 +80,7 @@ Netfix:
 
 Netfix Client Library:
   multiple clients hammering the server check database integrity
+  make sure client can handle multiple value updates in a single recv message
 
 Netfix Qt Client Library:
   multiple clients hammering the server check database integrity
