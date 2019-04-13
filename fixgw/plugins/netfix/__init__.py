@@ -41,7 +41,7 @@ class Connection(object):
         self.log = parent.log
         self.queue = queue.Queue()
         self.buffer_size = int(parent.config['buffer_size']) if ('buffer_size' in parent.config) and parent.config['buffer_size'] else 1024
-        self.subcount = 0
+        self.subscriptions = set()
         self.output_inhibit = False
 
 
@@ -192,17 +192,21 @@ class Connection(object):
                 except KeyError:
                     self.queue.put("@r{0}!001\n".format(id).encode())
             elif d[1] == 's':
-                try:
-                    self.parent.db_callback_add(id, self.subscription_handler)
-                    self.queue.put("@s{0}\n".format(id).encode())
-                    self.subcount += 1
-                except KeyError:
-                    self.queue.put("@s{0}!001\n".format(id).encode())
+                if id not in self.subscriptions:
+                    try:
+                        self.parent.db_callback_add(id, self.subscription_handler)
+                        self.queue.put("@s{0}\n".format(id).encode())
+                        self.subscriptions.add(id)
+                    except KeyError:
+                        self.queue.put("@s{0}!001\n".format(id).encode())
+                else: # Duplicate subscription
+                    self.queue.put("@s{0}!002\n".format(id).encode())
+
             elif d[1] == 'u':
                 try:
                     self.parent.db_callback_del(id, self.subscription_handler)
                     self.queue.put("@u{0}\n".format(id).encode())
-                    self.subcount -= 1
+                    self.subscriptions.remove(id)
                 except KeyError:
                     self.queue.put("@u{0}!001\n".format(id).encode())
             elif d[1] == 'q':
@@ -421,10 +425,12 @@ class ServerThread(threading.Thread):
     def get_status(self):
         d = OrderedDict({"Current Connections":len(self.threads)})
         for i, t in enumerate(self.threads):
-            c = {"Client":t[0].addr,
-                 "Messages Received":t[0].msg_recv,
-                 "Messages Sent":t[1].msg_sent,
-                 "Subscriptions":t[0].co.subcount}
+            c = OrderedDict()
+            c["Client"] = t[0].addr
+            c["Messages Received"] = t[0].msg_recv
+            c["Messages Sent"] = t[1].msg_sent
+                 #"Subscriptions":','.join(t[0].co.subscriptions)}
+            c["Subscriptions"] = len(t[0].co.subscriptions)
             d["Connection {0}".format(i)] = c
         return d
 

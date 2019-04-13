@@ -149,6 +149,7 @@ with the identical message, or the ! followed by an error code.
 Error Codes:
 
 * 001 - ID Not Found
+* 002 - Duplicate Subscription
 
 List Command
 ~~~~~~~~~~~~
