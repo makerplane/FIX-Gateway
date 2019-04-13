@@ -199,6 +199,7 @@ def main():
         try:
             plugins[each].start()
         except Exception as e:
+            log.error("Problem Starting Plugin: {} - {}".format(each,e))
             if args.debug:
                 raise e  # If we have debuggin set we'll raise this exception
 

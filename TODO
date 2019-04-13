@@ -1,13 +1,18 @@
-Add some tags to indicate some status information so that EFIS displays and
-other equipment can have access to that.
+=================================
+Bugs
+=================================
+Typing write ANLG1. 0.5 causes a bad data update to be sent
+Strings come to the gui client as None and should probably be blank
+
+=================================
+Features
+=================================
 
 Airdata plugin.  This plugin would calculate things like TAS, wind direction
 Density altitude etc.  It would also be a good example of a plugin that used
 only the callback mechanism instead of needing a thread.
 
 Allow daemonization of the program.
-
-Make item keys in command module case insensitive.
 
 Add commands to start/stop/restart plugins.  Might also add configuration to
 load and/or start the plugin.  It could be loaded but not started.  Testing,
@@ -27,27 +32,63 @@ perhaps we have an item ownership system?  It'll probably work okay in the real
 systems because it'll make sense, but it might be hard to troubleshoot issues
 later if there are conflicts.
 
-System status information like memory usage, average CPU utilization, etc.
-This would depend on the psutils package and it might make sense for it to
-be optional and only work if that package is there.
-
 Add a sys path parameter to the configuration so the user can add a module
 search path to the system for third party plugins.
 
 The --config-file command line argument should allow for a single file name to
 be given and the normal search for the filename to be carried out and the
-config_path stored accordingly.  Also if a full or relative path is given then
-that path should be stored in the config_path variable.
+config_path stored accordingly.  This would allow for different configurations
+to be stored in the normal place and run with fixgw --config-file test.yaml
+
+Client
+
+  Reconnect and disconnect don't work properly
+  Add Tree view for status on GUI
+  Add trending capability on GUI
+
+
 
 GUI Plugin
 
-  Add Tree view for status
-
-  Add trending capability
+  Move to client
 
 
 CAN-FIX Plugin
 
   Add mandatory Node Specific Message responses
-
   Add node status information.
+
+
+=================================
+Testing
+=================================
+
+Further testing of the CAN-FIX plugin
+Test plugin interface.
+Test database failures.
+Figure out a way to test the client and client module
+
+Netfix:
+  all the error codes in netfix protocol for each command
+  multiple clients
+  try to start a feedback loop
+  strings that are None should have ""
+  test each data type
+  test out of bounds
+
+Netfix Client Library:
+  multiple clients hammering the server check database integrity
+
+Netfix Qt Client Library:
+  multiple clients hammering the server check database integrity
+
+
+=================================
+Documentation
+=================================
+
+Document and netfix error codes and specify them generally
+
+Document using the netfix client package fixgw.netfix
+
+Document annunciate plugin
