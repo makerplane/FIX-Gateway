@@ -299,12 +299,20 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.sock.sendall("@rJUNKID\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@rJUNKID!001\n")
+        # Try it with a good key but bad aux
+        self.sock.sendall("@rOILP1.lowWarned\n".encode())
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "@rOILP1.lowWarned!001\n")
 
 
     def test_write_errors(self):
         self.sock.sendall("@wJUNKID;12.8\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@wJUNKID!001\n")
+        # Try it with a good key but bad aux
+        self.sock.sendall("@wOILP1.lowWarned;12.0\n".encode())
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "@wOILP1.lowWarned!001\n")
 
 
     def test_value_write_with_subscription(self):
@@ -321,7 +329,9 @@ class TestNetfixServerSimple(unittest.TestCase):
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "IAS;135.4;00000\nALT;4300.0;00000\n")
         # writing over the socket should not create a callback
-        self.sock.sendall("@wALT;3200".encode())
+        self.sock.sendall("@wALT;3200\n".encode())
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "@wALT;3200.0;00000\n")
         database.write("IAS", 132.4)
         res = self.sock.recv(1024).decode()
         # we should only get the IAS one
@@ -333,14 +343,19 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.assertEqual(res, "IAS;136.4;00000\n")
 
 
-
-
+    def test_aux_write(self):
+        self.sock.sendall("@wOILP1.lowWarn;12.5\n".encode())
+        res = self.sock.recv(1024).decode()
+        x = database.read("OILP1.lowWarn")
+        self.assertEqual(x, 12.5)
 
 
     # def test_aux_subscription(self):
-    #     pass
-    #
-    #
+    #     self.sock.sendall("@wOILP1\n".encode())
+    #     res = self.sock.recv(1024).decode()
+    #     self.assertEqual(res, "@OILP1\n")
+
+
     # def test_list(self):
     #     pass
     #
@@ -354,10 +369,6 @@ class TestNetfixServerSimple(unittest.TestCase):
     #
     #
     # def test_tol(self):
-    #     pass
-    #
-    #
-    # def test_aux_write(self):
     #     pass
     #
     #
