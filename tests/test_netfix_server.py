@@ -349,6 +349,12 @@ class TestNetfixServerSimple(unittest.TestCase):
     def test_subscribe_flags(self):
         pass
 
+    def test_unknown_command(self):
+        pass
+
+    def test_status_command(self):
+        pass
+
 
 
 if __name__ == '__main__':
