@@ -135,6 +135,7 @@ class db_item(object):
                     self._value = self.dtype(x)
                 except ValueError:
                     log.error("Bad value '" + str(x) + "' given for " + self.description)
+                    raise
                 if self.dtype != str:
                     # bounds check and cap
                     try:
