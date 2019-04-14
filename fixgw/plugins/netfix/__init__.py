@@ -136,37 +136,27 @@ class Connection(object):
     # value.
     def __writeValue(self, d):
         a = d.split(';')
-        if '.' in a[0]: # This is an aux write
-            toks = a[0].split('.')
-            item_name = toks[0]
-            aux = True
-        else:
-            item_name = a[0]
-            aux = False
-
         try:
-            item = self.parent.db_get_item(item_name)
+            self.output_inhibit = True
+            self.parent.db_write(a[0], a[1])
         except KeyError:
             self.queue.put("@w{0}!001\n".format(a[0]).encode())
             return
-        try:
-            self.output_inhibit = True
-            if aux:
-                item.set_aux_value(toks[1], a[1])
-            else:
-                item.value = a[1]
-        except:
+        except ValueError:
             self.queue.put("@w{0}!002\n".format(a[0]).encode())
-        if aux:
-            self.queue.put("@w{};{}\n".format(a[0], item.get_aux_value(toks[1])).encode())
+            return
+
+        val = self.parent.db_read(a[0])
+        if '.' in a[0]: # This is an aux write
+            self.queue.put("@w{};{}\n".format(a[0], val).encode())
         else:
             flags = ""
-            flags += '1' if item.annunciate else '0'
-            flags += '1' if item.old else '0'
-            flags += '1' if item.bad else '0'
-            flags += '1' if item.fail else '0'
-            flags += '1' if item.secfail else '0'
-            self.queue.put("@w{};{};{}\n".format(item.key, item.value[0], flags).encode())
+            flags += '1' if val[1] else '0'
+            flags += '1' if val[2] else '0'
+            flags += '1' if val[3] else '0'
+            flags += '1' if val[4] else '0'
+            flags += '1' if val[5] else '0'
+            self.queue.put("@w{};{};{}\n".format(a[0], val[0], flags).encode())
 
 
     def handle_request(self, d):
