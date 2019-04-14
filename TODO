@@ -67,7 +67,6 @@ Test database failures.
 Figure out a way to test the client and client module
 
 CanFix:
-  refactor to get rid of the test pluin
   test mandatory CAN-FIX messages
 
 Netfix:

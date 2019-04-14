@@ -104,6 +104,7 @@ ptests = [("PITCH", 0x180, "FF0000D8DC", -90.0, 0.0),
 #          ("OILT1", 0x220, "FF0000", 0.0, 0.001),
 ]
 
+
 def string2data(s):
     b = bytearray()
     for x in range(0, len(s), 2):
@@ -124,6 +125,10 @@ class TestCanfix(unittest.TestCase):
         self.pl.start()
         self.interface = cc['interface']
         self.channel = cc['channel']
+        self.node = cc['node']
+        self.device = cc['device']
+        self.revision = cc['revision']
+        self.model = cc['model']
         self.bus = can.Bus(self.channel, bustype = self.interface)
         time.sleep(0.1) # Give plugin a chance to get started
 
@@ -146,8 +151,30 @@ class TestCanfix(unittest.TestCase):
             self.assertTrue(abs(val-param[3]) <= param[4])
 
 
-    def test_outputs(self):
-        pass
+    def test_unowned_outputs(self):
+        database.write("BARO", 30.04)
+        msg = self.bus.recv(1.0)
+        self.assertEqual(msg.arbitration_id, self.node + 1760)
+        self.assertEqual(msg.data, bytearray([12, 0x90, 0x01, 0x58, 0x75]))
+
+    # We don't really have any of these yet
+    # def test_owned_outputs(self):
+    #     pass
+
+    # These aren't implemented yet
+    # def test_node_identification(self):
+    #     pass
+    #
+    # def test_node_report(self):
+    #     pass
+    #
+    # def test_parameter_disable_enable(self):
+    #     pass
+    #
+    # def test_node_id_set(self):
+    #     pass
+
+
 
 if __name__ == '__main__':
     unittest.main()
