@@ -71,6 +71,9 @@ class db_item(object):
         return list(self.aux.keys())
 
     def set_aux_value(self, name, value):
+        if name not in self.aux:
+            log.error("No aux {0} for {1}".format(name, self.description))
+            raise KeyError("Aux name {} not found".format(name))
         try:
             self.aux[name] = self.dtype(value)
             if self.aux[name] < self._min: self.aux[name] = self._min
@@ -81,9 +84,6 @@ class db_item(object):
             else:
                 log.error("Bad Value for aux {0} {1}".format(name, value))
                 raise
-        except KeyError:
-            log.error("No aux {0} for {1}".format(name, self.description))
-            raise
         for func in self.callbacks:
             func[1]("{0}.{1}".format(self.key, name), self.aux[name], func[2])
 
