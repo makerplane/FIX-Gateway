@@ -170,7 +170,7 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.pl.shutdown()
 
 
-    def test_does_this_work_at_all(self):
+    def test_value_write(self):
         self.sock.sendall("@wALT;2500\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@wALT;2500.0;00000\n")
@@ -296,64 +296,90 @@ class TestNetfixServerSimple(unittest.TestCase):
 
 
     def test_read_errors(self):
-        pass
+        self.sock.sendall("@rJUNKID\n".encode())
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "@rJUNKID!001\n")
 
-
-    def test_value_write(self):
-        pass
 
     def test_write_errors(self):
-        pass
+        self.sock.sendall("@wJUNKID;12.8\n".encode())
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "@wJUNKID!001\n")
 
 
     def test_value_write_with_subscription(self):
         """Make sure we don't get a response to a value write on our subscriptions"""
-        pass
+        self.sock.sendall("@sALT\n".encode())
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "@sALT\n")
+        self.sock.sendall("@sIAS\n".encode())
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "@sIAS\n")
+        # writing both from database should give subscription returns
+        database.write("IAS", 135.4)
+        database.write("ALT", 4300)
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "IAS;135.4;00000\nALT;4300.0;00000\n")
+        # writing over the socket should not create a callback
+        self.sock.sendall("@wALT;3200".encode())
+        database.write("IAS", 132.4)
+        res = self.sock.recv(1024).decode()
+        # we should only get the IAS one
+        self.assertEqual(res, "IAS;132.4;00000\n")
+        # using a normal write should do the same
+        self.sock.sendall("ALT;3400;000\n".encode())
+        database.write("IAS", 136.4)
+        res = self.sock.recv(1024).decode()
+        self.assertEqual(res, "IAS;136.4;00000\n")
 
 
-    def test_aux_subscription(self):
-        pass
 
 
-    def test_list(self):
-        pass
 
 
-    def test_get_report(self):
-        pass
-
-
-    def test_min_max(self):
-        pass
-
-
-    def test_tol(self):
-        pass
-
-
-    def test_aux_write(self):
-        pass
-
-
-    def test_flags(self):
-        pass
-
-
-    def test_string_type(self):
-        pass
-
-
-    def test_none_string(self):
-        pass
-
-    def test_subscribe_flags(self):
-        pass
-
-    def test_unknown_command(self):
-        pass
-
-    def test_status_command(self):
-        pass
+    # def test_aux_subscription(self):
+    #     pass
+    #
+    #
+    # def test_list(self):
+    #     pass
+    #
+    #
+    # def test_get_report(self):
+    #     pass
+    #
+    #
+    # def test_min_max(self):
+    #     pass
+    #
+    #
+    # def test_tol(self):
+    #     pass
+    #
+    #
+    # def test_aux_write(self):
+    #     pass
+    #
+    #
+    # def test_flags(self):
+    #     pass
+    #
+    #
+    # def test_string_type(self):
+    #     pass
+    #
+    #
+    # def test_none_string(self):
+    #     pass
+    #
+    # def test_subscribe_flags(self):
+    #     pass
+    #
+    # def test_unknown_command(self):
+    #     pass
+    #
+    # def test_status_command(self):
+    #     pass
 
 
 
