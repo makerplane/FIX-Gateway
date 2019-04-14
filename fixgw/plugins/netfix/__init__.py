@@ -136,6 +136,9 @@ class Connection(object):
     # value.
     def __writeValue(self, d):
         a = d.split(';')
+        if len(a) < 2:
+            self.queue.put("@w{0}!002\n".format(a[0]).encode())
+            return
         try:
             self.output_inhibit = True
             self.parent.db_write(a[0], a[1])
