@@ -43,7 +43,8 @@ class Mapping(object):
             self.log.error("Unable to Open Mapfile - {}".format(mapfile))
             raise
         maps = yaml.load(f)
-
+        f.close()
+        
         # dictionaries used for converting meta data strings from db to canfix and back
         self.meta_replacements_in = maps['meta replacements']
         self.meta_replacements_out = {v:k for k,v in self.meta_replacements_in.items()}
