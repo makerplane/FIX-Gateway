@@ -132,7 +132,10 @@ class db_item(object):
                                     or (isinstance(x,int) and x != 0))
             else:
                 try:
-                    self._value = self.dtype(x)
+                    if self.dtype == str and x is None:
+                        self._value = ''
+                    else:
+                        self._value = self.dtype(x)
                 except ValueError:
                     log.error("Bad value '" + str(x) + "' given for " + self.description)
                     raise
