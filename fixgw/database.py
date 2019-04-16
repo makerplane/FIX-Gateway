@@ -15,7 +15,6 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import logging
-from datetime import datetime
 import threading
 import time
 import yaml
@@ -56,7 +55,7 @@ class db_item(object):
         self._max = None
         self._min = None
         self._tol = 100     # Time to live in milliseconds.  Any older and quality is bad
-        self.timestamp = datetime.utcnow()
+        self.timestamp = time.time()
         self.aux = {}
         self.callbacks = []
         self.lock = threading.Lock()
@@ -102,8 +101,7 @@ class db_item(object):
     # return the age of the item in milliseconds
     @property
     def age(self):
-        d = datetime.utcnow() - self.timestamp
-        return d.total_seconds() * 1000 + d.microseconds / 1000
+        return (time.time() - self.timestamp) * 1000
 
     @property
     def value(self):
@@ -150,7 +148,7 @@ class db_item(object):
                     except:  # Probably only fails if max has not been set
                         pass  # ignore at this point
                     # set the timestamp to right now
-            self.timestamp = datetime.utcnow()
+            self.timestamp = time.time()
         self.send_callbacks()
 
 
