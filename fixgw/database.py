@@ -124,6 +124,8 @@ class db_item(object):
                 self._annunciate = x[1]
                 self._bad = x[2]
                 self._fail = x[3]
+                if len(x) >= 5:
+                    self._secfail = x[4]
                 x = x[0]
             if self.dtype == bool:
                 self._value = (x == True or (isinstance(x,str) and x.lower() in ["yes", "true", "1"])
