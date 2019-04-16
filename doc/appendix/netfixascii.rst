@@ -89,6 +89,13 @@ The following is an exmple of an error returned by the read command.
 
 ``@rIAS!001`` where 001 is the error code.
 
+Some common error codes are given below...
+
+* 001 - ID Not Found
+* 002 - Bad Argument
+* 003 - Bad Value
+* 004 - Unknown Command
+
 Read Command
 ~~~~~~~~~~~~
 
@@ -121,7 +128,7 @@ the client a return value with errors if something fails.
 Error Codes:
 
 * 001 - ID Not Found
-* 002 - Bad Argument
+* 003- Bad Argument
 
 
 Subscribe Command

@@ -137,7 +137,7 @@ class Connection(object):
     def __writeValue(self, d):
         a = d.split(';')
         if len(a) < 2:
-            self.queue.put("@w{0}!002\n".format(a[0]).encode())
+            self.queue.put("@w{0}!003\n".format(a[0]).encode())
             return
         try:
             self.output_inhibit = True
@@ -146,7 +146,7 @@ class Connection(object):
             self.queue.put("@w{0}!001\n".format(a[0]).encode())
             return
         except ValueError:
-            self.queue.put("@w{0}!002\n".format(a[0]).encode())
+            self.queue.put("@w{0}!003\n".format(a[0]).encode())
             return
 
         val = self.parent.db_read(a[0])
@@ -210,6 +210,8 @@ class Connection(object):
                 self.__flag(d[2:])
             elif d[1] == 'w':
                 self.__writeValue(d[2:])
+            else: # Unknown command given
+                self.queue.put("{}!004\n".format(d).encode())
 
         else:  # If no '@' then it must be a value update
             try:
