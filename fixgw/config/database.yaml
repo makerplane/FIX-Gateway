@@ -492,7 +492,7 @@ entries:
   units: inHg
   initial: 0.0
   tol: 2000
-  aux: [Min,Max]
+  aux: [Min,Max,highWarn,highAlarm]
 
 - key: VOLT
   description: System Voltage

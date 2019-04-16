@@ -72,6 +72,7 @@ class PluginBase(object):
     def db_list(self):
         return database.listkeys()
 
+    # TODO: Get rid of this.  Bad form to access the item directly
     def db_get_item(self, key):
         return database.get_raw_item(key)
 

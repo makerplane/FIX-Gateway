@@ -2,7 +2,6 @@
 Bugs
 =================================
 Typing write ANLG1. 0.5 causes a bad data update to be sent
-Strings come to the gui client as None and should probably be blank
 
 =================================
 Features
@@ -10,7 +9,8 @@ Features
 
 Airdata plugin.  This plugin would calculate things like TAS, wind direction
 Density altitude etc.  It would also be a good example of a plugin that used
-only the callback mechanism instead of needing a thread.
+only the callback mechanism instead of needing a thread.  Probably should just
+add this to the compute plugin
 
 Allow daemonization of the program.
 
@@ -18,7 +18,7 @@ Add commands to start/stop/restart plugins.  Might also add configuration to
 load and/or start the plugin.  It could be loaded but not started.  Testing,
 simulation and GUI plugins might not always start.
 
-Add annunciation backend.
+Add annunciation message backend.
 
 Maybe a feature to allow plugins to override a value.  It might be helpful for
 some kinds of testing to allow the gui or command interface to override a
@@ -39,6 +39,8 @@ The --config-file command line argument should allow for a single file name to
 be given and the normal search for the filename to be carried out and the
 config_path stored accordingly.  This would allow for different configurations
 to be stored in the normal place and run with fixgw --config-file test.yaml
+
+Finish the partial key list feature of the netfix plugin.
 
 Client
 
@@ -70,12 +72,9 @@ CanFix:
   test mandatory CAN-FIX messages
 
 Netfix:
-  all the error codes in netfix protocol for each command
   multiple clients
   try to start a feedback loop
-  strings that are None should have ""
   test each data type
-  test out of bounds
 
 Netfix Client Library:
   multiple clients hammering the server check database integrity
@@ -88,8 +87,6 @@ Netfix Qt Client Library:
 =================================
 Documentation
 =================================
-
-Document and netfix error codes and specify them generally
 
 Document using the netfix client package fixgw.netfix
 
