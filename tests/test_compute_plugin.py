@@ -81,6 +81,15 @@ entries:
   initial: 0.0
   aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
 
+- key: CHTMINe
+  description: Maximum Cylinder Head Temp Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
 - key: FUELQt
   description: Fuel Quantity Tank %t
   type: float
@@ -113,6 +122,9 @@ functions:
   - function: max
     inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
     output: CHTMAX1
+  - function: min
+    inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
+    output: CHTMIN1
   - function: sum
     inputs: ["FUELQ1", "FUELQ2"]
     output: FUELQT
@@ -138,7 +150,7 @@ class TestComputePlugin(unittest.TestCase):
         self.pl.shutdown()
 
 
-    def test_average(self):
+    def test_compute_average(self):
         database.write("EGT11", 300)
         database.write("EGT12", 320)
         database.write("EGT13", 340)
@@ -154,3 +166,104 @@ class TestComputePlugin(unittest.TestCase):
         database.write("EGT13", (340, False, False, False, True))
         x = database.read("EGTAVG1")
         self.assertEqual(x, (330, False, False, False, False, True))
+
+
+    def test_compute_span(self):
+        database.write("EGT11", 300)
+        database.write("EGT12", 320)
+        database.write("EGT13", 340)
+        database.write("EGT14", 360)
+        x = database.read("EGTSPAN1")
+        self.assertEqual(x, (60, False, False, False, False, False))
+        database.write("EGT13", (340, False, True, False, False))
+        x = database.read("EGTSPAN1")
+        self.assertEqual(x, (60, False, False, True, False, False))
+        database.write("EGT13", (340, False, False, True, False))
+        x = database.read("EGTSPAN1")
+        self.assertEqual(x, (0, False, False, False, True, False))
+        database.write("EGT13", (340, False, False, False, True))
+        x = database.read("EGTSPAN1")
+        self.assertEqual(x, (60, False, False, False, False, True))
+
+
+    def test_compute_max(self):
+        database.write("CHT11", 300)
+        database.write("CHT12", 320)
+        database.write("CHT13", 340)
+        database.write("CHT14", 360)
+        x = database.read("CHTMAX1")
+        self.assertEqual(x, (360, False, False, False, False, False))
+        database.write("CHT11", 370)
+        x = database.read("CHTMAX1")
+        self.assertEqual(x, (370, False, False, False, False, False))
+        database.write("CHT12", 380)
+        x = database.read("CHTMAX1")
+        self.assertEqual(x, (380, False, False, False, False, False))
+        database.write("CHT13", 390)
+        x = database.read("CHTMAX1")
+        self.assertEqual(x, (390, False, False, False, False, False))
+
+        database.write("CHT13", (340, False, True, False, False))
+        x = database.read("CHTMAX1")
+        self.assertEqual(x, (380, False, False, True, False, False))
+        database.write("CHT13", (340, False, False, True, False))
+        x = database.read("CHTMAX1")
+        self.assertEqual(x, (0, False, False, False, True, False))
+        database.write("CHT13", (340, False, False, False, True))
+        x = database.read("CHTMAX1")
+        self.assertEqual(x, (380, False, False, False, False, True))
+
+
+    def test_compute_min(self):
+        database.write("CHT11", 300)
+        database.write("CHT12", 320)
+        database.write("CHT13", 340)
+        database.write("CHT14", 360)
+        x = database.read("CHTMIN1")
+        self.assertEqual(x, (300, False, False, False, False, False))
+        database.write("CHT11", 295)
+        x = database.read("CHTMIN1")
+        self.assertEqual(x, (295, False, False, False, False, False))
+        database.write("CHT12", 290)
+        x = database.read("CHTMIN1")
+        self.assertEqual(x, (290, False, False, False, False, False))
+        database.write("CHT13", 280)
+        x = database.read("CHTMIN1")
+        self.assertEqual(x, (280, False, False, False, False, False))
+
+        database.write("CHT13", (280, False, True, False, False))
+        x = database.read("CHTMIN1")
+        self.assertEqual(x, (280, False, False, True, False, False))
+        database.write("CHT13", (280, False, False, True, False))
+        x = database.read("CHTMIN1")
+        self.assertEqual(x, (0, False, False, False, True, False))
+        database.write("CHT13", (280, False, False, False, True))
+        x = database.read("CHTMIN1")
+        self.assertEqual(x, (280, False, False, False, False, True))
+
+
+    def test_compute_sum(self):
+        database.write("FUELQ1", 10)
+        database.write("FUELQ2", 10)
+        x = database.read("FUELQT")
+        self.assertEqual(x, (20, False, False, False, False, False))
+
+        database.write("FUELQ1", 10)
+        database.write("FUELQ2", 0)
+        x = database.read("FUELQT")
+        self.assertEqual(x, (10, False, False, False, False, False))
+
+        database.write("FUELQ1", 0)
+        database.write("FUELQ2", 15)
+        x = database.read("FUELQT")
+        self.assertEqual(x, (15, False, False, False, False, False))
+
+        database.write("FUELQ1", (10, False, True, False, False))
+        x = database.read("FUELQT")
+        self.assertEqual(x, (25, False, False, True, False, False))
+        database.write("FUELQ1", (10, False, False, True, False))
+        x = database.read("FUELQT")
+        self.assertEqual(x, (0, False, False, False, True, False))
+        database.write("FUELQ1", (10, False, False, False, True))
+        x = database.read("FUELQT")
+        self.assertEqual(x, (25, False, False, False, False, True))
