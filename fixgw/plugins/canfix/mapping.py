@@ -42,7 +42,7 @@ class Mapping(object):
         except:
             self.log.error("Unable to Open Mapfile - {}".format(mapfile))
             raise
-        maps = yaml.load(f)
+        maps = yaml.full_load(f)
         f.close()
 
         # dictionaries used for converting meta data strings from db to canfix and back
