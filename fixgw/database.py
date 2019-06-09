@@ -15,7 +15,6 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import logging
-from datetime import datetime
 import threading
 import time
 import yaml
@@ -56,7 +55,7 @@ class db_item(object):
         self._max = None
         self._min = None
         self._tol = 100     # Time to live in milliseconds.  Any older and quality is bad
-        self.timestamp = datetime.utcnow()
+        self.timestamp = time.time()
         self.aux = {}
         self.callbacks = []
         self.lock = threading.Lock()
@@ -71,16 +70,19 @@ class db_item(object):
         return list(self.aux.keys())
 
     def set_aux_value(self, name, value):
+        if name not in self.aux:
+            log.error("No aux {0} for {1}".format(name, self.description))
+            raise KeyError("Aux name {} not found".format(name))
         try:
             self.aux[name] = self.dtype(value)
             if self.aux[name] < self._min: self.aux[name] = self._min
             if self.aux[name] > self._max: self.aux[name] = self._max
         except ValueError:
-            log.error("Bad Value for aux {0} {1}".format(name, value))
-            raise
-        except KeyError:
-            log.error("No aux {0} for {1}".format(name, self.description))
-            raise
+            if value == "None":
+                self.aux[name] = None
+            else:
+                log.error("Bad Value for aux {0} {1}".format(name, value))
+                raise
         for func in self.callbacks:
             func[1]("{0}.{1}".format(self.key, name), self.aux[name], func[2])
 
@@ -99,8 +101,7 @@ class db_item(object):
     # return the age of the item in milliseconds
     @property
     def age(self):
-        d = datetime.utcnow() - self.timestamp
-        return d.total_seconds() * 1000 + d.microseconds / 1000
+        return (time.time() - self.timestamp) * 1000
 
     @property
     def value(self):
@@ -123,15 +124,21 @@ class db_item(object):
                 self._annunciate = x[1]
                 self._bad = x[2]
                 self._fail = x[3]
+                if len(x) >= 5:
+                    self._secfail = x[4]
                 x = x[0]
             if self.dtype == bool:
                 self._value = (x == True or (isinstance(x,str) and x.lower() in ["yes", "true", "1"])
                                     or (isinstance(x,int) and x != 0))
             else:
                 try:
-                    self._value = self.dtype(x)
+                    if self.dtype == str and x is None:
+                        self._value = ''
+                    else:
+                        self._value = self.dtype(x)
                 except ValueError:
                     log.error("Bad value '" + str(x) + "' given for " + self.description)
+                    raise
                 if self.dtype != str:
                     # bounds check and cap
                     try:
@@ -143,7 +150,7 @@ class db_item(object):
                     except:  # Probably only fails if max has not been set
                         pass  # ignore at this point
                     # set the timestamp to right now
-            self.timestamp = datetime.utcnow()
+            self.timestamp = time.time()
         self.send_callbacks()
 
 
@@ -246,6 +253,9 @@ class db_item(object):
         if self._secfail != last:
             self.send_callbacks()
 
+    def __str__(self):
+        return "{} = {}".format(self.key, self.value)
+
 
 # These are support functions for loading the initial database
 def check_for_variables(entry):
@@ -345,10 +355,7 @@ def read(key):
 
 
 def get_raw_item(key):
-    try:
-        return __database[key]
-    except KeyError:
-        return None
+    return __database[key]
 
 
 def listkeys():

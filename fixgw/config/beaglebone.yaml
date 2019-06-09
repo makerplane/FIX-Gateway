@@ -4,15 +4,15 @@
 # directory where this file is found.
 
 # File that defines the database.
-database file: "{CONFIG}/default.db"
+database file: "{CONFIG}/database.yaml"
 
 # Set initial values after the database is initialized.
 # If there are duplicate assignments in these files, the last
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-  - "{CONFIG}/c170b.ini"
-  - "{CONFIG}/fg_172.ini"
+#  - "{CONFIG}/c170b.ini"
+#  - "{CONFIG}/fg_172.ini"
 
 # Connections:
 # if 'load' is 'yes' the connection plugin will be loaded at program start
@@ -34,7 +34,7 @@ connections:
 
   # Command Line Module
   command:
-    load: yes
+    load: no
     module: fixgw.plugins.command
     prompt: "FIX:"
     # If set quiting the command interpreter plugin
@@ -101,7 +101,7 @@ connections:
     #channel: /dev/ttyUSB0
 
     # This file controls the
-    mapfile: config/canfix/map.yaml
+    mapfile: "{CONFIG}/canfix/map.yaml"
     # The following is our Node Identification Information
     # See the CAN-FIX Protocol Specification for more information
     node: 145     # CAN-FIX Node ID

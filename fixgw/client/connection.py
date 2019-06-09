@@ -1,4 +1,4 @@
-#  Copyright (c) 2018 Phil Birkelbach
+#  Copyright (c) 2019 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -14,32 +14,16 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import unittest
-#import string
-#import io
-import subprocess
-import os
-#import fixgw
-#import fixgw.server
-import time
+#  This module contains all of the functions that interact with the server
+#  for the GUI client.
 
+import fixgw.netfix.QtDb
 
-class TestProcess(unittest.TestCase):
+client = None
+db = None
 
-    def setUp(self):
-        pass
-
-    def test_MinimalSuccess(self):
-        """Minimal Process start/stop test"""
-        p = subprocess.Popen(["python3", "fixgw.py", "--debug", "--config-file", "tests/config/minimal.yaml"])
-        time.sleep(0.3)
-        p.terminate()
-        x = p.wait()
-        self.assertEqual(x,0)
-
-    def tearDown(self):
-        pass
-
-
-if __name__ == '__main__':
-    unittest.main()
+def initialize(c):
+    global client
+    global db
+    client = c
+    db = fixgw.netfix.QtDb.Database(client)

@@ -42,7 +42,8 @@ class Mapping(object):
         except:
             self.log.error("Unable to Open Mapfile - {}".format(mapfile))
             raise
-        maps = yaml.load(f)
+        maps = yaml.full_load(f)
+        f.close()
 
         # dictionaries used for converting meta data strings from db to canfix and back
         self.meta_replacements_in = maps['meta replacements']
@@ -76,8 +77,10 @@ class Mapping(object):
     # This is a closure that holds the information we need to transfer data
     # from the CAN-FIX port to the FIXGW Database
     def getInputFunction(self, dbKey):
-        dbItem = database.get_raw_item(dbKey)
-        if dbItem == None: return None
+        try:
+            dbItem = database.get_raw_item(dbKey)
+        except KeyError:
+            return None
 
         # The output exclusion keeps us from constantly sending updates on the
         # CAN Bus when the change that we recieved was from the CAN Bus.

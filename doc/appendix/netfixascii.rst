@@ -89,6 +89,13 @@ The following is an exmple of an error returned by the read command.
 
 ``@rIAS!001`` where 001 is the error code.
 
+Some common error codes are given below...
+
+* 001 - ID Not Found
+* 002 - Bad Argument
+* 003 - Bad Value
+* 004 - Unknown Command
+
 Read Command
 ~~~~~~~~~~~~
 
@@ -104,29 +111,25 @@ a data update sentence
 ``@rIAS.Vs`` would cause the server to report the Vs auxilliary data
 if it exists.
 
-
-``q`` = Query Item Information
-
-This command causes the server to report all of the information associated
-with the point.
-
-The response from the read command is the ID, folowed by the value, followed
-by the quality flags.  The flags are exactly like the quality flags sent in
-a data update sentence
-
-``@rIAS;105.2;00000``
-
-``@rIAS.Vs`` would cause the server to report the Vs auxilliary data
-if it exists.
-
 Error Codes:
 
 * 001 - ID Not Found
 
+
 Write Command
 ~~~~~~~~~~~~~
 
-**TODO**
+``w`` = Write the value.  This command is similar to sending a normal
+data sentence except that it does not affect the quality flags and it gives
+the client a return value with errors if something fails.
+
+``@wIAS;105.2``
+
+Error Codes:
+
+* 001 - ID Not Found
+* 003- Bad Argument
+
 
 Subscribe Command
 ~~~~~~~~~~~~~~~~~
@@ -153,6 +156,7 @@ with the identical message, or the ! followed by an error code.
 Error Codes:
 
 * 001 - ID Not Found
+* 002 - Duplicate Subscription
 
 List Command
 ~~~~~~~~~~~~

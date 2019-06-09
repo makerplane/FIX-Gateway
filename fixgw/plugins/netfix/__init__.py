@@ -41,6 +41,7 @@ class Connection(object):
         self.log = parent.log
         self.queue = queue.Queue()
         self.buffer_size = int(parent.config['buffer_size']) if ('buffer_size' in parent.config) and parent.config['buffer_size'] else 1024
+        self.subscriptions = set()
         self.output_inhibit = False
 
 
@@ -130,6 +131,36 @@ class Connection(object):
         elif a[1] == 's': item.secfail = bit
         self.queue.put("@f{0}\n".format(d).encode())
 
+    # This is a command that simply writes the value.  It does not change the
+    # flags like the normal data write sentence would.  It also has a return
+    # value.
+    def __writeValue(self, d):
+        a = d.split(';')
+        if len(a) < 2:
+            self.queue.put("@w{0}!003\n".format(a[0]).encode())
+            return
+        try:
+            self.output_inhibit = True
+            self.parent.db_write(a[0], a[1])
+        except KeyError:
+            self.queue.put("@w{0}!001\n".format(a[0]).encode())
+            return
+        except ValueError:
+            self.queue.put("@w{0}!003\n".format(a[0]).encode())
+            return
+
+        val = self.parent.db_read(a[0])
+        if '.' in a[0]: # This is an aux write
+            self.queue.put("@w{};{}\n".format(a[0], val).encode())
+        else:
+            flags = ""
+            flags += '1' if val[1] else '0'
+            flags += '1' if val[2] else '0'
+            flags += '1' if val[3] else '0'
+            flags += '1' if val[4] else '0'
+            flags += '1' if val[5] else '0'
+            self.queue.put("@w{};{};{}\n".format(a[0], val[0], flags).encode())
+
 
     def handle_request(self, d):
         if d[0] == '@': # It's a command frame
@@ -154,15 +185,21 @@ class Connection(object):
                 except KeyError:
                     self.queue.put("@r{0}!001\n".format(id).encode())
             elif d[1] == 's':
-                try:
-                    self.parent.db_callback_add(id, self.subscription_handler)
-                    self.queue.put("@s{0}\n".format(id).encode())
-                except KeyError:
-                    self.queue.put("@s{0}!001\n".format(id).encode())
+                if id not in self.subscriptions:
+                    try:
+                        self.parent.db_callback_add(id, self.subscription_handler)
+                        self.queue.put("@s{0}\n".format(id).encode())
+                        self.subscriptions.add(id)
+                    except KeyError:
+                        self.queue.put("@s{0}!001\n".format(id).encode())
+                else: # Duplicate subscription
+                    self.queue.put("@s{0}!002\n".format(id).encode())
+
             elif d[1] == 'u':
                 try:
                     self.parent.db_callback_del(id, self.subscription_handler)
                     self.queue.put("@u{0}\n".format(id).encode())
+                    self.subscriptions.remove(id)
                 except KeyError:
                     self.queue.put("@u{0}!001\n".format(id).encode())
             elif d[1] == 'q':
@@ -171,6 +208,11 @@ class Connection(object):
                 self.__server_specific(d[2:])
             elif d[1] == 'f':
                 self.__flag(d[2:])
+            elif d[1] == 'w':
+                self.__writeValue(d[2:])
+            else: # Unknown command given
+                self.queue.put("{}!004\n".format(d).encode())
+
         else:  # If no '@' then it must be a value update
             try:
                 x = d.strip().split(';')
@@ -186,28 +228,28 @@ class Connection(object):
                     else:
                         s = '0'
                     if a and a == '1':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.annunciate = True
                     elif a and a == '0':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.annunciate = False
                     if b and b == '1':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.bad = True
                     elif b and b == '0':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.bad = False
                     if f and f == '1':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.fail = True
                     elif f and f == '0':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.fail = False
                     if s and s == '1':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.secfail = True
                     elif s and s == '0':
-                        self.output_inhibit = True
+                        #self.output_inhibit = True
                         item.secfail = False
                 self.output_inhibit = True
                 self.parent.db_write(x[0], x[1])
@@ -378,9 +420,12 @@ class ServerThread(threading.Thread):
     def get_status(self):
         d = OrderedDict({"Current Connections":len(self.threads)})
         for i, t in enumerate(self.threads):
-            c = {"Client":t[0].addr,
-                 "Messages Received":t[0].msg_recv,
-                 "Messages Sent":t[1].msg_sent}
+            c = OrderedDict()
+            c["Client"] = t[0].addr
+            c["Messages Received"] = t[0].msg_recv
+            c["Messages Sent"] = t[1].msg_sent
+                 #"Subscriptions":','.join(t[0].co.subscriptions)}
+            c["Subscriptions"] = len(t[0].co.subscriptions)
             d["Connection {0}".format(i)] = c
         return d
 

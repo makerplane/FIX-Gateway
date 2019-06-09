@@ -1,19 +1,24 @@
-Add some tags to indicate some status information so that EFIS displays and
-other equipment can have access to that.
+=================================
+Bugs
+=================================
+Typing write ANLG1. 0.5 causes a bad data update to be sent
+
+=================================
+Features
+=================================
 
 Airdata plugin.  This plugin would calculate things like TAS, wind direction
 Density altitude etc.  It would also be a good example of a plugin that used
-only the callback mechanism instead of needing a thread.
+only the callback mechanism instead of needing a thread.  Probably should just
+add this to the compute plugin
 
 Allow daemonization of the program.
-
-Make item keys in command module case insensitive.
 
 Add commands to start/stop/restart plugins.  Might also add configuration to
 load and/or start the plugin.  It could be loaded but not started.  Testing,
 simulation and GUI plugins might not always start.
 
-Add annunciation backend.
+Add annunciation message backend.
 
 Maybe a feature to allow plugins to override a value.  It might be helpful for
 some kinds of testing to allow the gui or command interface to override a
@@ -27,27 +32,62 @@ perhaps we have an item ownership system?  It'll probably work okay in the real
 systems because it'll make sense, but it might be hard to troubleshoot issues
 later if there are conflicts.
 
-System status information like memory usage, average CPU utilization, etc.
-This would depend on the psutils package and it might make sense for it to
-be optional and only work if that package is there.
-
 Add a sys path parameter to the configuration so the user can add a module
 search path to the system for third party plugins.
 
 The --config-file command line argument should allow for a single file name to
 be given and the normal search for the filename to be carried out and the
-config_path stored accordingly.  Also if a full or relative path is given then
-that path should be stored in the config_path variable.
+config_path stored accordingly.  This would allow for different configurations
+to be stored in the normal place and run with fixgw --config-file test.yaml
+
+Finish the partial key list feature of the netfix plugin.
+
+Client
+
+  Reconnect and disconnect don't work properly
+  Add Tree view for status on GUI
+  Add trending capability on GUI
+
 
 GUI Plugin
 
-  Add Tree view for status
-
-  Add trending capability
+  Move to client
 
 
 CAN-FIX Plugin
 
   Add mandatory Node Specific Message responses
+  Add node status information
 
-  Add node status information.
+
+=================================
+Testing
+=================================
+
+Test plugin interface.
+Test database failures.
+Figure out a way to test the client and client module
+
+CanFix:
+  test mandatory CAN-FIX messages
+
+Netfix:
+  multiple clients
+  try to start a feedback loop
+  test each data type
+
+Netfix Client Library:
+  multiple clients hammering the server check database integrity
+  make sure client can handle multiple value updates in a single recv message
+
+Netfix Qt Client Library:
+  multiple clients hammering the server check database integrity
+
+
+=================================
+Documentation
+=================================
+
+Document using the netfix client package fixgw.netfix
+
+Document annunciate plugin

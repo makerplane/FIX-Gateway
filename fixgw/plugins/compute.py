@@ -47,6 +47,7 @@ def averageFunction(inputs, output):
         flag_old = False
         flag_bad = False
         flag_fail = False
+        flag_secfail = False
         for each in vals:
             if vals[each] is None:
                 return  # We don't have one of each yet
@@ -54,11 +55,13 @@ def averageFunction(inputs, output):
             if vals[each][2]: flag_old = True
             if vals[each][3]: flag_bad = True
             if vals[each][4]: flag_fail = True
+            if vals[each][5]: flag_secfail = True
         o.value = arrsum / len(vals)
         o.fail = flag_fail
         if o.fail: o.value = 0.0
         o.bad = flag_bad
         o.old = flag_old
+        o.secfail = flag_secfail
     return func
 
 
@@ -76,6 +79,7 @@ def sumFunction(inputs, output):
         flag_old = False
         flag_bad = False
         flag_fail = False
+        flag_secfail = False
         for each in vals:
             if vals[each] is None:
                 return  # We don't have one of each yet
@@ -84,6 +88,7 @@ def sumFunction(inputs, output):
                 if vals[each][2]: flag_old = True
                 if vals[each][3]: flag_bad = True
                 if vals[each][4]: flag_fail = True
+                if vals[each][5]: flag_secfail = True
             except TypeError:
                 print("WTF {} {}".format(key, value))
                 raise
@@ -93,6 +98,7 @@ def sumFunction(inputs, output):
         if o.fail: o.value = 0.0
         o.bad = flag_bad
         o.old = flag_old
+        o.secfail = flag_secfail
     return func
 
 
@@ -116,6 +122,7 @@ def maxFunction(inputs, output):
         flag_old = False
         flag_bad = False
         flag_fail = False
+        flag_secfail = False
         vmax = None
         for each in vals:
             if vals[each] is None:
@@ -127,11 +134,13 @@ def maxFunction(inputs, output):
             if vals[each][2]: flag_old = True
             if vals[each][3]: flag_bad = True
             if vals[each][4]: flag_fail = True
+            if vals[each][5]: flag_secfail = True
         o.value = vmax
         o.fail= flag_fail
         if o.fail: o.value = 0.0
         o.bad = flag_bad
         o.old = flag_old
+        o.secfail = flag_secfail
     return func
 
 
@@ -155,6 +164,7 @@ def minFunction(inputs, output):
         flag_old = False
         flag_bad = False
         flag_fail = False
+        flag_secfail = False
         vmin = None
         for each in vals:
             if vals[each] is None:
@@ -166,11 +176,13 @@ def minFunction(inputs, output):
             if vals[each][2]: flag_old = True
             if vals[each][3]: flag_bad = True
             if vals[each][4]: flag_fail = True
+            if vals[each][5]: flag_secfail = True
         o.value = vmin
         o.fail= flag_fail
         if o.fail: o.value = 0.0
         o.bad = flag_bad
         o.old = flag_old
+        o.secfail = flag_secfail
     return func
 
 # Determines the span between the highest and lowest of the inputs
@@ -186,6 +198,7 @@ def spanFunction(inputs, output):
         flag_old = False
         flag_bad = False
         flag_fail = False
+        flag_secfail = False
         vmin = None
         for each in vals:
             if vals[each] is None:
@@ -200,12 +213,14 @@ def spanFunction(inputs, output):
             if vals[each][2]: flag_old = True
             if vals[each][3]: flag_bad = True
             if vals[each][4]: flag_fail = True
+            if vals[each][5]: flag_secfail = True
         o = parent.db_get_item(output)
         o.value = vmax - vmin
         o.fail= flag_fail
         if o.fail: o.value = 0.0
         o.bad = flag_bad
         o.old = flag_old
+        o.secfail = flag_secfail
     return func
 
 
