@@ -103,6 +103,15 @@ entries:
   initial: 0.0
   tol: 2000
 
+- key: AGL
+  description: Radar Altitude (Above Ground Level)
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
 - key: BARO
   description: Altimeter Setting
   type: float
@@ -415,6 +424,15 @@ entries:
   units: g
   initial: 0.0
   tol: 200
+
+- key: AOA
+  description: Angle of Attack
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 1000
 
 - key: THRe
   description: Throttle Control Engine %e
