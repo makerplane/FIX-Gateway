@@ -109,6 +109,64 @@ entries:
   initial: 0.0
   tol: 2000
   aux: [Min,Max,lowWarn,lowAlarm]
+
+- key: VS
+  description: Vertical Speed
+  type: float
+  min: -30000.0
+  max: 30000.0
+  units: ft/min
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max]
+
+- key: HEAD
+  description: Current Aircraft Magnetic Heading
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: PITCH
+  description: Pitch Angle
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 200
+
+- key: AOA
+  description: Angle of attack
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 200
+  aux: [Min, Max, 0g, Warn, Stall]
+
+- key: IAS
+  description: Indicated Airspeed
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy]
+
+- key: ANORM
+  description: Normal Acceleration
+  type: float
+  min: -30.0
+  max: 30.0
+  units: g
+  initial: 0.0
+  tol: 200
+
 """
 
 config = """
@@ -128,6 +186,24 @@ functions:
   - function: sum
     inputs: ["FUELQ1", "FUELQ2"]
     output: FUELQT
+  - function: AOA
+    inputs: ["PITCH", "IAS", "ANORM", "HEAD", "VS",
+            2, 100, 100,
+            100, 50,
+            5, 5,
+            3, 3
+            ]
+    output: AOA
+    # AOA input constants:
+    #   AOA_pitch_root: The pitch angle of the wing at the root (in degrees)
+    #   AOA_smooth_min_len: Minimum number of AHRS samples in which the aircraft must be in straight and level flight in order to estimate the lift constant
+    #   AOA_max_mean_vs: The maximum vertical speed (up or down) the aircraft can experience before considered 'not level flight'
+    #   AOA_max_vs_dev: The maximum single sample deviation from the average to be considered 'level flight'
+    #   AOA_max_vs_trend: The maximum difference between the starting samples and ending samples of vertical speed before it's considered 'not level flight'
+    #   AOA_max_heading_dev: The maximum single sample deviation from the average heading to be considered 'straight flight'
+    #   AOA_max_heading_trend: The maximum difference between the starting samples and ending samples of heading before it's considered 'not straight flight'
+    #   AOA_max_pitch_dev: The maximum single sample deviation from the average to be considered 'level flight'
+    #   AOA_max_pitch_trend: The maximum difference between the starting samples and ending samples of pitch before it's considered 'not level flight'
 """
 
 # Basically what we do with this test is set up a skeleton of the application
@@ -267,3 +343,72 @@ class TestComputePlugin(unittest.TestCase):
         database.write("FUELQ1", (10, False, False, False, True))
         x = database.read("FUELQT")
         self.assertEqual(x, (25, False, False, False, False, True))
+
+
+    def test_compute_aoa(self):
+        database.write("IAS.Vs", 72)
+        database.write("AOA.0g", -1.0)
+        database.write("PITCH", 0)
+        database.write("IAS", 10)
+        x = database.read("AOA")
+        self.assertEqual(x, (2.0, False, False, False, False, False))
+
+        # Takeoff roll
+        for i in range(100):
+            database.write("PITCH", 0)
+            database.write("IAS", 10 + i)
+            database.write("VS", 0)
+            database.write("ANORM", 9.8)
+            database.write("HEAD", 0)
+        x = database.read("AOA")
+        self.assertEqual(x, (2.0, False, False, True, False, False))
+
+        # Climbout
+        for i in range(100):
+            database.write("PITCH", 5)
+            database.write("IAS", 110)
+            database.write("VS", 500)
+            database.write("ANORM", 9.8)
+            database.write("HEAD", 0)
+        x = database.read("AOA")
+        self.assertEqual(x, (7.0, False, False, True, False, False))
+
+        # Turn
+        for i in range(100):
+            database.write("PITCH", 2)
+            database.write("IAS", 130)
+            database.write("VS", 50)
+            database.write("ANORM", 10.8)
+            database.write("HEAD", i)
+        x = database.read("AOA")
+        self.assertEqual(x, (4.0, False, False, True, False, False))
+
+        # Straight and level
+        for i in range(110):
+            database.write("PITCH", 1)
+            database.write("IAS", 130)
+            database.write("VS", 0)
+            database.write("ANORM", 9.8)
+            database.write("HEAD", 100)
+        x = database.read("AOA")
+        y,a,o,b,f,s = x
+        x = (round(y,2),a,o,b,f,s)
+        self.assertEqual(x, (3.0, False, False, False, False, False))
+
+        database.write("IAS", 100)
+        database.write("ANORM", 10.8)
+        x = database.read("AOA")
+        y,a,o,b,f,s = x
+        x = (round(y,2),a,o,b,f,s)
+        self.assertEqual(x, (4.72, False, False, False, False, False))
+
+        database.write("IAS", 130)
+        database.write("ANORM", 7.8)
+        x = database.read("AOA")
+        y,a,o,b,f,s = x
+        x = (round(y,2),a,o,b,f,s)
+        self.assertEqual(x, (2.59, False, False, False, False, False))
+
+if __name__ == '__main__':
+    unittest.main()
+

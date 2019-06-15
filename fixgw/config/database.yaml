@@ -319,12 +319,7 @@ entries:
   units: deg
   initial: 0.0
   tol: 200
-  aux:
-  - Min
-  - Max
-  - 0g
-  - Warn
-  - Stall
+  aux: [Min, Max, 0g, Warn, Stall]
 
 - key: CTLPTCH
   description: Pitch Control
