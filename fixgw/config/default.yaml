@@ -114,7 +114,7 @@ connections:
     model: 0      # Model Number
 
   gui:
-    load: no
+    load: yes
     module: fixgw.plugins.gui
 
   system:
@@ -304,6 +304,12 @@ connections:
     module: fixgw.plugins.dimmer
     DimmerDevice: /sys/class/backlight/intel_backlight/brightness
     Multiplier: 1.0
+
+  stratux:
+      load: yes
+      module: fixgw.plugins.stratux
+      host: localhost
+      rate: 10
 
 # Logging configuration - See Python logging.config module documenation
 logging:

@@ -340,7 +340,8 @@ def AOAFunction(inputs, output):
         #
         # Update lift constant, if possible
         #
-        if AOA_hist_count > AOA_smooth_min_len:
+        if AOA_hist_count > AOA_smooth_min_len and len(AOA_vs_history) and \
+                len(AOA_ias_history):
             # Check if we've been straight and level for a sufficient time
             AOA_hist_count = 0
             mean_vs = sum(AOA_vs_history) / len(AOA_vs_history)
