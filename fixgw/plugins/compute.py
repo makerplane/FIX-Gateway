@@ -23,6 +23,7 @@
 
 from collections import OrderedDict
 import fixgw.plugin as plugin
+from fixgw.database import read
 
 # Determines the average of the inputs and writes that to output
 def averageFunction(inputs, output):
@@ -203,7 +204,7 @@ def spanFunction(inputs, output):
         for each in vals:
             if vals[each] is None:
                 return  # We don't have one of each yet
-            if vmin:
+            if vmin is not None:
                 if vals[each][0] < vmin: vmin = vals[each][0]
                 if vals[each][0] > vmax: vmax = vals[each][0]
             else:  # The first time through we just set vmax to the value
@@ -223,6 +224,201 @@ def spanFunction(inputs, output):
         o.secfail = flag_secfail
     return func
 
+AOA_pitch_history=list()
+AOA_ias_history=list()
+AOA_acc_history=list()
+AOA_vs_history=list()
+AOA_heading_history=list()
+AOA_lift_constant = None
+def AOAFunction(inputs, output):
+    vals = {}
+    # pitch_root: the pitch of the wing relative to the aircraft at the root
+    AOA_pitch_root, AOA_smooth_min_len, AOA_max_mean_vs, AOA_max_vs_dev, \
+    AOA_max_vs_trend, AOA_max_heading_dev, AOA_max_heading_trend, \
+    AOA_max_pitch_dev, AOA_max_pitch_trend = inputs[5:]
+    AOA_hist_count = 0
+    for each in inputs[:5]:
+        vals[each] = None
+    def func(key, value, parent):
+        global AOA_pitch_history, AOA_ias_history, AOA_lift_constant, \
+                AOA_acc_history, AOA_vs_history, AOA_heading_history
+        nonlocal vals, AOA_pitch_root, AOA_smooth_min_len, \
+                AOA_hist_count
+        if not isinstance(key,str):
+            return
+        # This is to set the aux data in the output to one of the inputs
+        o = parent.db_get_item(output)
+        vals[key] = value
+        Vs = read("IAS.Vs")
+        if Vs is None:
+            Vs = 9999
+        #
+        # Accumulate history values for estimating a lift constant
+        #
+        if key == 'PITCH':
+            AOA_pitch_history.append(value[0])
+            if len(AOA_pitch_history) > AOA_smooth_min_len:
+                del AOA_pitch_history[0]
+        if key == 'IAS':
+            AOA_ias_history.append(value[0])
+            if len(AOA_ias_history) > AOA_smooth_min_len:
+                del AOA_ias_history[0]
+        if key == 'ANORM':
+            AOA_acc_history.append(value[0])
+            if len(AOA_acc_history) > AOA_smooth_min_len:
+                del AOA_acc_history[0]
+        if key == 'VS':
+            AOA_vs_history.append(value[0])
+            if len(AOA_vs_history) > AOA_smooth_min_len:
+                del AOA_vs_history[0]
+            AOA_hist_count += 1
+        if key == 'HEAD':
+            AOA_heading_history.append(value[0])
+            if len(AOA_heading_history) > AOA_smooth_min_len:
+                del AOA_heading_history[0]
+        #
+        # Restart value history accumulation if any input is
+        # not perfect quality
+        #
+        for each in vals:
+            ve = vals[each]
+            if not isinstance(ve,tuple): continue
+            if ve is None: AOA_hist_count = 0; break
+            if ve[2]: AOA_hist_count = 0; break
+            if ve[3]: AOA_hist_count = 0; break
+            if ve[4]: AOA_hist_count = 0; break
+            if ve[5]: AOA_hist_count = 0; break
+        #
+        # Compute AOA, one way or another
+        #
+        if len(AOA_ias_history): ias = AOA_ias_history[-1]
+        else: ias = 0
+        if AOA_lift_constant is not None and ias > Vs:
+            # We're flying with a known lift constant, so compute alpha directly
+            AOA_pitch_0 = read("AOA.0g")
+            # Alpha (AOA) = lift_constant * acc[NORMAL/Z axis] / ias^2 -
+            #               AOA_pitch_0
+            o.value = AOA_lift_constant * AOA_acc_history[-1] / (ias * ias) - \
+                      AOA_pitch_0
+            flag_old = False
+            flag_bad = False
+            flag_fail = False
+            flag_secfail = False
+            for each in ['IAS', 'ANORM']:
+                if vals[each] is None: flag_fail = True
+                if vals[each][2]: flag_old = True
+                if vals[each][3]: flag_bad = True
+                if vals[each][4]: flag_fail = True
+                if vals[each][5]: flag_secfail = True
+            o.old = flag_old
+            o.bad = flag_bad
+            o.fail = flag_fail
+            o.secfail = flag_secfail
+            if flag_old or flag_bad or flag_fail or flag_secfail:
+                AOA_hist_count = 0
+        elif ias < Vs and vals['PITCH'] is not None:
+            # Give an answer for taxi'ing and/or takeoff roll
+            pitch = vals['PITCH']
+            o.value = AOA_pitch_root + pitch[0]
+            o.old, o.bad, o.fail, o.secfail = pitch[2:]
+            # Since we're taxi'ing, we might have just refueled,
+            # or changed the weight and balance, which drastically changes
+            # the lift constant. Mark it as unknown to re-estimate
+            # when possible.
+            AOA_lift_constant = None
+        elif vals['PITCH'] is not None:
+            # Flying, but the lift constant is not yet established.
+            # Give a guesstimate
+            pitch = vals['PITCH']
+            o.value = AOA_pitch_root + pitch[0]
+            o.old = pitch[2]
+            o.bad = True
+            o.fail = pitch[4]
+        else:
+            # We're not getting any basic data. Fail out.
+            o.fail = True
+        #
+        # Update lift constant, if possible
+        #
+        if AOA_hist_count > AOA_smooth_min_len and len(AOA_vs_history) and \
+                len(AOA_ias_history):
+            # Check if we've been straight and level for a sufficient time
+            AOA_hist_count = 0
+            mean_vs = sum(AOA_vs_history) / len(AOA_vs_history)
+            if mean_vs < AOA_max_mean_vs and \
+                       is_calm(AOA_vs_history,
+                               AOA_max_vs_dev, AOA_max_vs_trend) and \
+                       is_calm(AOA_pitch_history,
+                               AOA_max_pitch_dev, AOA_max_pitch_trend) and \
+                       is_calm(AOA_heading_history,
+                               AOA_max_heading_dev, AOA_max_heading_trend,
+                               wrap=360):
+                # Flying straight and level! We can estimate a lift constant
+                acc_mean = sum(AOA_acc_history) / len(AOA_acc_history)
+                ias_mean = sum(AOA_ias_history) / len(AOA_ias_history)
+                pitch_mean = sum(AOA_pitch_history) / len(AOA_pitch_history)
+                AOA_pitch_0 = read("AOA.0g")
+                # The steady state angle of attack at wing root
+                # Alpha [steady state] + AOA_pitch_0 = lift_constant * acc[NORMAL/Z axis] / ias^2
+                alpha_ss = pitch_mean + AOA_pitch_root
+                # (Alpha [steady state] + AOA_pitch_0) * ias^2 = lift_constant * acc
+                # lift_constant = (Alpha [steady state] + AOA_pitch_0) * ias^2 / acc
+                new_lift_constant = (alpha_ss + AOA_pitch_0) * \
+                        ias_mean * ias_mean / \
+                        acc_mean
+                if AOA_lift_constant is None:
+                    AOA_lift_constant = new_lift_constant
+                else:
+                    filter_coefficient = .9
+                    anti_filter_coefficient = (1 - filter_coefficient)
+                    AOA_lift_constant = \
+                            new_lift_constant*anti_filter_coefficient + \
+                            AOA_lift_constant*     filter_coefficient
+                print ("AOA estimation lift constant %g"%AOA_lift_constant)
+    return func
+
+def is_calm(samples, max_sample_dev, max_trend_dev, end_size=10, wrap=None):
+    if wrap is None:
+        mean = sum(samples)/len(samples)
+        deviation = [abs(x-mean) for x in samples]
+    else:
+        mean = mean_wrap(samples,wrap)
+        deviation = [abs_wrap(x,mean,wrap) for x in samples]
+    deviation = max(deviation)
+    end_count = int(round(float(len(samples)) * float(end_size) / 100.0))
+    if end_count > 0:
+        end_mean = sum(samples[-end_count:])/end_count
+        beg_mean = sum(samples[:end_count])/end_count
+        trend = abs(end_mean-beg_mean)
+    else:
+        trend = 0
+    return deviation < max_sample_dev and trend < max_trend_dev
+
+def mean_wrap(samples, wrap):
+    standard = samples[0]
+    sm = 0
+    for s in samples:
+        diff = s-standard
+        if diff > wrap / 2:
+            sm += (s-wrap)
+        elif diff < -wrap / 2:
+            sm += (s+wrap)
+        else:
+            sm += s
+    ret = sm / len(samples)
+    if ret < 0:
+        ret += wrap
+    elif ret >= wrap:
+        ret -= wrap
+    return ret
+
+def abs_wrap(x,mean,wrap):
+    diff = x-mean
+    if diff > wrap / 2:
+        diff -= wrap
+    elif diff < -wrap / 2:
+        diff += wrap
+    return abs(diff)
 
 class Plugin(plugin.PluginBase):
     # def __init__(self, name, config):
@@ -235,7 +431,8 @@ class Plugin(plugin.PluginBase):
                                "sum":sumFunction,
                                "max":maxFunction,
                                "min":minFunction,
-                               "span":spanFunction
+                               "span":spanFunction,
+                               "aoa":AOAFunction
                                }
 
         for function in self.config["functions"]:
@@ -243,7 +440,8 @@ class Plugin(plugin.PluginBase):
             if fname in aggregate_functions:
                 f = aggregate_functions[fname](function["inputs"], function["output"])
                 for each in function["inputs"]:
-                    self.db_callback_add(each, f, self)
+                    if isinstance(each,str):
+                        self.db_callback_add(each, f, self)
 
             else:
                 self.log.warning("Unknown function - {}".format(function["function"]))

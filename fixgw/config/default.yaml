@@ -51,7 +51,7 @@ connections:
   # OSX: /Applications/FlightGear.app/Contents/Resources/data/
   # WINDOWS: c:\Program Files\FlightGear\data\
   fgfs:
-    load: yes
+    load: no
     module: fixgw.plugins.fgfs
     # This should be the same as $FG_ROOT on your system.  It is used to help
     # fixgw find the xml configuration files
@@ -114,7 +114,7 @@ connections:
     model: 0      # Model Number
 
   gui:
-    load: no
+    load: yes
     module: fixgw.plugins.gui
 
   system:
@@ -281,6 +281,15 @@ connections:
       - function: sum
         inputs: ["FUELQ1", "FUELQ2"]
         output: FUELQT
+      - function: aoa
+        inputs: ["PITCH", "IAS", "ANORM", "HEAD", "VS",
+                2, 100, 100,
+                100, 50,
+                5, 5,
+                3, 3
+                ]
+        output: AOA
+
 
       # - function: min
       #   inputs: []
@@ -291,10 +300,16 @@ connections:
       # - function: TAS
       # - function: DALT
   dimmer:
-    load: yes
+    load: no
     module: fixgw.plugins.dimmer
     DimmerDevice: /sys/class/backlight/intel_backlight/brightness
     Multiplier: 1.0
+
+  stratux:
+      load: yes
+      module: fixgw.plugins.stratux
+      host: localhost
+      rate: 10
 
 # Logging configuration - See Python logging.config module documenation
 logging:

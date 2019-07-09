@@ -103,6 +103,15 @@ entries:
   initial: 0.0
   tol: 2000
 
+- key: AGL
+  description: Radar Altitude (Above Ground Level)
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
 - key: BARO
   description: Altimeter Setting
   type: float
@@ -310,12 +319,7 @@ entries:
   units: deg
   initial: 0.0
   tol: 200
-  aux:
-  - Min
-  - Max
-  - 0g
-  - Warn
-  - Stall
+  aux: [Min, Max, 0g, Warn, Stall]
 
 - key: CTLPTCH
   description: Pitch Control
