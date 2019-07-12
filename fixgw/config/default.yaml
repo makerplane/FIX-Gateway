@@ -35,7 +35,7 @@ connections:
 
   # Command Line Module
   command:
-    load: yes
+    load: no
     module: fixgw.plugins.command
     prompt: "FIX:"
     # If set quiting the command interpreter plugin
@@ -51,7 +51,7 @@ connections:
   # OSX: /Applications/FlightGear.app/Contents/Resources/data/
   # WINDOWS: c:\Program Files\FlightGear\data\
   fgfs:
-    load: yes
+    load: no
     module: fixgw.plugins.fgfs
     # This should be the same as $FG_ROOT on your system.  It is used to help
     # fixgw find the xml configuration files
@@ -96,7 +96,7 @@ connections:
 
   # CAN-FIX
   canfix:
-    load: no
+    load: yes
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
@@ -118,7 +118,7 @@ connections:
     module: fixgw.plugins.gui
 
   system:
-    load: no
+    load: yes
     module: fixgw.plugins.system
     time:
       enable: yes
