@@ -189,6 +189,9 @@ class ClientThread(threading.Thread):
 
 
 def decodeDataString(d):
+    if '!' in d: # This is an error
+        x = d.split('!')
+        return int(x[1])
     x = d.split(';')
     id = x[0]
     v = x[1]

@@ -153,11 +153,12 @@ def main():
         raise
 
     if "initialization files" in config and config["initialization files"]:
-        log.info("Setting Initial Values")
         ifiles = config["initialization files"]
         for fn in ifiles:
+            filename = fn.format(CONFIG=config_path)
+            log.info("Setting Initial Values - {}".format(filename))
             try:
-                f = open(fn.format(CONFIG=config_path), 'r')
+                f = open(filename, 'r')
                 for line in f.readlines():
                     l = line.strip()
                     if l and l[0] != '#':
