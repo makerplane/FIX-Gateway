@@ -96,7 +96,10 @@ class db_item(object):
     def send_callbacks(self):
         for func in self.callbacks:
             log.debug("Calling Callback for {0}".format(self.key))
-            func[1](self.key, self.value, func[2])
+            try:
+                func[1](self.key, self.value, func[2])
+            except Exception as e:
+                log.error(e)
 
     # return the age of the item in milliseconds
     @property

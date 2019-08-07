@@ -140,7 +140,7 @@ class TestCanfix(unittest.TestCase):
 
     def test_parameter_writes(self):
         for param in ptests:
-            msg = can.Message(extended_id = False, arbitration_id = param[1])
+            msg = can.Message(is_extended_id = False, arbitration_id = param[1])
             msg.data = string2data(param[2])
             self.bus.send(msg)
             time.sleep(0.03)
