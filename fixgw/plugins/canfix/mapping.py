@@ -142,9 +142,6 @@ class Mapping(object):
 
         return outputCallback
 
-    # This opens the map file and buids the input mapping lists.
-    # def initialize(self, mapfile):
-
 
     def inputMap(self, par):
         """Retrieve the function that should be called for a given parameter"""

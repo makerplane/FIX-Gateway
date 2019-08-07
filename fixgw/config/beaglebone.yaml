@@ -96,7 +96,7 @@ connections:
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
-    channel: can0
+    channel: vcan0
     #interface: serial
     #channel: /dev/ttyUSB0
 
