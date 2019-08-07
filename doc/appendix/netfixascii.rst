@@ -34,7 +34,7 @@ the FIX-Gateway :doc:`database` as a common place to configure this information.
 The ``xxxx.x`` represents the value. The value can be a float, int,
 bool or string (The string cannot contain a ;).  Floats will contain the decimal
 point, integers will not. Booleans will be 'T' or 'F' and strings will begin
-with an '&'.  the 'obf' represent the quality flags.  They will be either 1 or
+with an '&'.  the 'aobfs' represent the quality flags.  They will be either 1 or
 0. a=annunciate, o=Old, b=bad, f=failed, s=secondary fail.  The old flag is set
 if the data has not been written within the configured time to live for that
 point.  The bad is set if there is reason to doubt the data but it hasn't
