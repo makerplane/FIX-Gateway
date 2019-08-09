@@ -309,7 +309,7 @@ logging:
       #level: ERROR
       #level: CRITICAL
 
-      handlers: [stderr, file]
+      handlers: [stderr, syslog]
       propagate: True
 
   formatters:
@@ -333,4 +333,6 @@ logging:
 
     syslog:
       class: logging.handlers.SysLogHandler
+      address: /dev/log
+      facility: local6
       formatter: standard
