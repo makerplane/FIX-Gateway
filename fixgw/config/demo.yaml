@@ -1,0 +1,198 @@
+# This is the main configuration file for the FIX-Gateway Server
+
+# For use in this configuration, {CONFIG} will be replaced with the
+# directory where this file is found.
+
+# File that defines the database.
+database file: "{CONFIG}/database.yaml"
+
+# Set initial values after the database is initialized.
+# If there are duplicate assignments in these files, the last
+# file listed will overwrite data in previous files
+# Plugins may overwrite this data as well.
+initialization files:
+  - "{CONFIG}/default.ini"
+
+# Connections:
+# if 'load' is 'yes' the connection plugin will be loaded at program start
+# if 'module' should be set to the location of the Python module that
+# represents the connection plugin.
+# All other configuration options will be passed to the connection plugin
+# itself. See the FIX-Gateway documentation for specific connection plugin
+# configuration options.
+connections:
+  # Network FIX Protocol Interface
+  netfix:
+    load: yes
+    module: fixgw.plugins.netfix
+    type: server
+    host: 0.0.0.0
+    port: 3490
+    buffer_size: 1024
+    timeout: 1.0
+
+  # CAN-FIX
+  canfix:
+    load: yes
+    module: fixgw.plugins.canfix
+    # See the python-can documentation for the meaning of these options
+    interface: socketcan
+    channel: vcan0
+    #interface: serial
+    #channel: /dev/ttyUSB0
+
+    # This file controls the
+    mapfile: "{CONFIG}/canfix/map.yaml"
+    # The following is our Node Identification Information
+    # See the CAN-FIX Protocol Specification for more information
+    node: 145     # CAN-FIX Node ID
+    device: 145   # CAN-FIX Device Type
+    revision: 0   # Software Revision Number
+    model: 0      # Model Number
+
+  system:
+    load: yes
+    module: fixgw.plugins.system
+    time:
+      enable: yes
+      keys: # Database keys to write the time
+        gmt_seconds: TIMEZS
+        gmt_minutes: TIMEZM
+        gmt_hours: TIMEZH
+        gmt_string: TIMEZ
+        local_seconds:
+        local_minutes:
+        local_hours:
+        local_string: TIMEL
+      gmt_format: "%H:%M:%SZ" # Zulu time format string
+      local_format: "%H:%M:%S %Z" # Local time format string
+
+  # Set the annunciation flag bit on configured database items.
+  annunciate:
+    load: yes
+    module: fixgw.plugins.annunciate
+    # These are the defaults for all the items.  These settings can be
+    # overridden in each item definition
+    defaults:
+      # These are the auxilliary data values that will be used as the
+      # set points for the annunciation
+      low_aux_point: lowAlarm
+      high_aux_point: highAlarm
+      #low_aux_point: lowWarn
+      #high_aux_point: highWarn
+
+      # No annunciation until the value first climbs above the set point
+      start_bypass: no
+      # Bypasses the value on a condition
+      cond_bypass: None
+      #cond_bypass: TACH1 < 1000
+      # Once triggered the annunication will not clear until the value clears
+      # the setpoint plus the deadband.  This cuts down "flashing" annunications
+      # that are caused by values that are very near the set point.  The value
+      # can be in absolute units or in percentage of full range.
+      deadband: 1%
+    items:
+      - key: OILT1
+        start_bypass: yes
+        cond_bypass: TACH1 < 500
+        deadband: 4
+
+      - key: OILP1
+        start_bypass: yes
+        cond_bypass: TACH1 < 500
+        deadband: 2
+
+      - key: CHT11
+      - key: CHT12
+      - key: CHT13
+      - key: CHT14
+
+      - key: CURRNT
+      - key: VOLT
+        cond_bypass: TACH1 < 500
+
+      - key: FUELP1
+      - key: FUELQ1
+      - key: FUELQ2
+      - key: FUELQT
+
+      - key: OAT
+
+  # Data Coputation
+  compute:
+    load: yes
+    module: fixgw.plugins.compute
+    functions:
+      - function: average
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTAVG1
+      - function: span
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTSPAN1
+      - function: max
+        inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
+        output: CHTMAX1
+      - function: sum
+        inputs: ["FUELQ1", "FUELQ2"]
+        output: FUELQT
+
+      # - function: min
+      #   inputs: []
+      #   output: x
+      # - function: span
+      #   inputs: []
+      #   output: x
+      # - function: TAS
+      # - function: DALT
+  dimmer:
+    load: yes
+    module: fixgw.plugins.dimmer
+    DimmerDevice: /sys/class/backlight/intel_backlight/brightness
+    Multiplier: 1.0
+
+  # Demo Simulation
+  demo:
+    load: yes
+    module: fixgw.plugins.demo
+
+
+# Logging configuration - See Python logging.config module documenation
+logging:
+  version: 1
+  disable_existing_loggers: False
+  loggers:
+    '':
+      # messages with levels below the one given will not be logged
+      #level: DEBUG
+      #level: INFO
+      level: WARNING
+      #level: ERROR
+      #level: CRITICAL
+
+      handlers: [stderr, syslog]
+      propagate: True
+
+  formatters:
+    standard:
+      format: "%(levelname)s:%(asctime)s:%(name)s - %(message)s"
+      datefmt: "%Y%m%d-%H:%M:%S"
+      class: logging.Formatter
+
+  handlers:
+    stderr:
+      class: logging.StreamHandler
+      formatter: standard
+      stream: ext://sys.stderr
+
+    file:
+      class: logging.FileHandler
+      formatter: standard
+      filename: fixgw.log
+      mode: w
+      #mode: a
+
+    syslog:
+      class: logging.handlers.SysLogHandler
+      address: /dev/log
+      facility: local6
+      formatter: standard
