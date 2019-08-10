@@ -58,15 +58,20 @@ class StratuxClient(threading.Thread):
         while not self.parent.getout:
             try:
                 r = request.urlopen('http://%s/getSituation'%self.host
-                    ,timeout=.01)
+                    ,timeout=0.1)
             except Exception as e:
-                self.parent.log.error ("Failed to read Stratux: %s"%str(e))
+                self.parent.log.error ("Failed to Connect Stratux: %s"%str(e))
                 r = None
 
             if r is not None:
                 response_str = ''
-                while not r.isclosed():
-                    response_str += r.read(1024).decode('utf-8')
+                try:
+                    while not r.isclosed():
+                        response_str += r.read(1024).decode('utf-8')
+                except Exception as e:
+                    self.parent.log.error ("Read Failure: %s"%str(e))
+                    break
+
                 data = json.loads(response_str)
                 ahrs_status = data['AHRSStatus']
                 self.received += 1
