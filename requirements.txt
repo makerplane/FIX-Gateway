@@ -2,3 +2,4 @@ python-can
 python-canfix
 lockfile
 daemon
+pyyaml
