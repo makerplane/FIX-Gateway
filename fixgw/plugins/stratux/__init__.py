@@ -26,20 +26,7 @@ from collections import OrderedDict
 import fixgw.plugin as plugin
 
 MIN_GPS_FIX_QUALITY = 3
-MAGIC_NUMBER_INVALID=3276.7
-stratux_map = {
-        'AHRSPitch' : 'PITCH'
-       ,'AHRSRoll' : 'ROLL'
-       ,'AHRSMagHeading' : 'HEAD'
-       ,'AHRSSlipSkid' : 'ALAT'
-       ,'AHRSTurnRate' : 'ROT'
-       ,'AHRSGLoad' : 'ANORM'
-       ,'GPSLatitude' : 'LAT'
-       ,'GPSLongitude' : 'LONG'
-       ,'GPSTrueCourse' : 'TRACK'
-       ,'GPSGroundSpeed' : 'GS'
-       ,'BaroVerticalSpeed' : 'VS'
-}
+MAGIC_NUMBER_INVALID = 3276.7
 
 class StratuxClient(threading.Thread):
     def __init__(self, parent, host, rate):
@@ -48,10 +35,14 @@ class StratuxClient(threading.Thread):
         self.update_period = 1.0 / rate
         self.parent = parent
         self.db_items = dict()
-        for k,v in stratux_map.items():
+        for k,v in self.parent.config['situation_report'].items():
             self.db_items[k] = self.parent.db_get_item(v)
+        self.requests = 0
         self.received = 0
-        self.sent = 0
+        self.conn_failures = 0
+        self.bad_msgs = 0
+        self.ahrs_status = False
+        self.gps_status = False
 
     def run(self):
         next_update = time.time()
@@ -59,8 +50,10 @@ class StratuxClient(threading.Thread):
             try:
                 r = request.urlopen('http://%s/getSituation'%self.host
                     ,timeout=0.1)
+                self.requests += 1;
             except Exception as e:
                 self.parent.log.error ("Failed to Connect Stratux: %s"%str(e))
+                self.conn_failures += 1
                 r = None
 
             if r is not None:
@@ -71,26 +64,32 @@ class StratuxClient(threading.Thread):
                 except Exception as e:
                     self.parent.log.error ("Read Failure: %s"%str(e))
                     break
-
-                data = json.loads(response_str)
-                ahrs_status = data['AHRSStatus']
-                self.received += 1
-                # Status bitmask values:
+                try:
+                    data = json.loads(response_str)
+                    self.received += 1
+                except Exception as e:
+                    self.parent.log.error("Bad Message Received")
+                    self.bad_msgs += 1
+                self.ahrs_status = True if (data['AHRSStatus'] & 0x8) else False
+                # AHRSStatus bitmask values:
                 #  abcd
                 #   a = IMU is providing data. 1=yes,0=no.
                 #   b = Pressure sensor is providing data. 1=yes,0=no.
                 #   c = IMU is calibrating. 1=yes,0=no.
                 #   d = data is being logged to CSV. 1=yes,0=no.
-                update_ahrs = True if (ahrs_status & 0x8) else False
-                update_gps = data['GPSFixQuality'] > MIN_GPS_FIX_QUALITY
+                self.gps_status = data['GPSFixQuality'] > MIN_GPS_FIX_QUALITY
                 for k,v in self.db_items.items():
                     if k.startswith('GPS'):
-                        if update_gps:
+                        if self.gps_status:
                             v.value = data[k]
-                            self.sent += 1
+                            v.fail = False
+                        else:
+                            v.value = 0
+                            v.fail = True
                     else:
-                        if update_ahrs:
+                        if self.ahrs_status:
                             if data[k] == MAGIC_NUMBER_INVALID:
+                                v.value = 0
                                 v.fail = True
                             else:
                                 v.fail = False
@@ -98,7 +97,6 @@ class StratuxClient(threading.Thread):
                                     v.value = data[k] % 360
                                 else:
                                     v.value = data[k]
-                            self.sent += 1
             next_update += self.update_period
             sleep_time = next_update - time.time()
             if sleep_time <= 0:
@@ -140,9 +138,15 @@ class Plugin(plugin.PluginBase):
         d = OrderedDict()
         # For stuff that might fail we just ignore the errors and get what we get
         try:
-            d["Listening on"] = "{}".format(self.clientThread.host)
-            d["Messages"] = OrderedDict([("Receiving",self.clientThread.received),
-                                           ("Sending",self.clientThread.sent)])
+            d["Stratux Host"] = "{}".format(self.clientThread.host)
+            d["Connection Failures"] = self.clientThread.conn_failures
+            d["Messages"] = OrderedDict([
+                                        ("Requests Sent",self.clientThread.requests),
+                                        ("Valid Responses",self.clientThread.received),
+                                        ("Bad Responses", self.clientThread.bad_msgs)
+                                        ])
+            d["GPS Status"] = "Good" if self.clientThread.gps_status else "Failed"
+            d["AHRS Status"] = "Good" if self.clientThread.ahrs_status else "Failed"
         except:
             pass
 

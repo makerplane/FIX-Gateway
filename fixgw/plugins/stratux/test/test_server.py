@@ -33,7 +33,7 @@ getSituation = """{{
   "GPSLastFixSinceMidnightUTC": 67337.6,
   "GPSLatitude": {LAT},
   "GPSLongitude": {LONG},
-  "GPSFixQuality": 2,
+  "GPSFixQuality": 4,
   "GPSHeightAboveEllipsoid": 115.51,
   "GPSGeoidSep": -17.523,
   "GPSSatellites": 5,
@@ -73,7 +73,7 @@ getSituation = """{{
 
 class TestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        global pitch, roll, dpitch, droll
+        global pitch, roll, dpitch, droll, lat, long
         self.close_connection = True
         if(self.path == "/getSituation"):
             self.send_response(200)
@@ -85,10 +85,14 @@ class TestHandler(http.server.BaseHTTPRequestHandler):
             if(pitch < -10): dpitch = 0.1
             if(roll > 10): droll = -0.15
             if(roll < -10): droll = 0.15
+            lat += 0.01
+            long += 0.015
             s = getSituation.format(PITCH=pitch, ROLL=roll, LAT=lat, LONG=long)
             self.wfile.write(s.encode())
         else:
             self.send_error(404)
+
+#sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 with socketserver.TCPServer(("", PORT), TestHandler) as httpd:
     print("serving at port", PORT)
