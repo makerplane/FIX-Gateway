@@ -68,7 +68,7 @@ getSituation = """{{
   "AHRSGLoadMin": 0.99815989027411,
   "AHRSGLoadMax": 1.0043409597397,
   "AHRSLastAttitudeTime": "0001-01-01T00:06:44.28Z",
-  "AHRSStatus": 15
+  "AHRSStatus": 7
 }}"""
 
 class TestHandler(http.server.BaseHTTPRequestHandler):

@@ -96,7 +96,7 @@ connections:
 
   # CAN-FIX
   canfix:
-    load: no
+    load: yes
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
@@ -308,7 +308,7 @@ connections:
   stratux:
       load: yes
       module: fixgw.plugins.stratux
-      host: localhost
+      host: 192.168.10.1
       rate: 10
       # This matches the Stratux getSituation report with FIX item names
       situation_report:

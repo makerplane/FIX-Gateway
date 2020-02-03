@@ -70,9 +70,9 @@ class StratuxClient(threading.Thread):
                 except Exception as e:
                     self.parent.log.error("Bad Message Received")
                     self.bad_msgs += 1
-                self.ahrs_status = True if (data['AHRSStatus'] & 0x8) else False
+                self.ahrs_status = True if (data['AHRSStatus'] & 0x01) else False
                 # AHRSStatus bitmask values:
-                #  abcd
+                #  dcba
                 #   a = IMU is providing data. 1=yes,0=no.
                 #   b = Pressure sensor is providing data. 1=yes,0=no.
                 #   c = IMU is calibrating. 1=yes,0=no.
