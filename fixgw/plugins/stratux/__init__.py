@@ -39,6 +39,7 @@ stratux_map = {
        ,'GPSTrueCourse' : 'TRACK'
        ,'GPSGroundSpeed' : 'GS'
        ,'BaroVerticalSpeed' : 'VS'
+       ,'GPSAltitude' : 'ALT'
 }
 
 class StratuxClient(threading.Thread):
