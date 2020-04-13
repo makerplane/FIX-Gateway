@@ -27,6 +27,7 @@ inputs:
   - { canid: 0x181, index: 0, fixid: "ROLL", priority: 0 }
   - { canid: 0x183, index: 0, fixid: "IAS", priority: 0 }
   - { canid: 0x184, index: 0, fixid: "ALT", priority: 0 }
+  - { canid: 0x18D, index: 0, fixid: "TAS", priority: 0 }
   - { canid: 0x185, index: 0, fixid: "HEAD", priority: 0 }
   - { canid: 0x186, index: 0, fixid: "VS", priority: 0 }
   - { canid: 0x190, index: 0, fixid: "BARO", priority: 0 }
@@ -72,6 +73,7 @@ inputs:
   - { canid: 0x18B, index: 0, fixid: "ALAT", priority: 0 }
   - { canid: 0x182, index: 0, fixid: "AOA", priority: 0 }
   - { canid: 0x188, index: 0, fixid: "AGL", priority: 0 }
+  - { canid: 0x403, index: 0, fixid: "ROT", priority: 0 }
 
 
   # Output mappings are for data that is read from the FixGW database and

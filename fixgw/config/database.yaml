@@ -204,8 +204,8 @@ entries:
 - key: ROT
   description: Rate of Turn
   type: float
-  min: -10
-  max: 10
+  min: -3000
+  max: 3000
   units: Deg/sec
   initial: 0.0
   tol: 200
@@ -526,7 +526,7 @@ entries:
   units: degC
   initial: 0.0
   tol: 2000
-  aux: [Min,Max]
+  aux: [Min,Max,highWarn,highAlarm]
 
 - key: EGTAVGe
   description: Average Exhaust Gas Temp Engine %e
