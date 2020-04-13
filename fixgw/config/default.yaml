@@ -11,9 +11,10 @@ database file: "{CONFIG}/database.yaml"
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-  - "{CONFIG}/default.ini"
+  # - "{CONFIG}/default.ini"
   # - "{CONFIG}/c170b.ini"
   # - "{CONFIG}/fg_172.ini"
+  - "{CONFIG}/rotax582.ini"
 
 # Connections:
 # if 'load' is 'yes' the connection plugin will be loaded at program start
@@ -114,7 +115,7 @@ connections:
     model: 0      # Model Number
 
   gui:
-    load: yes
+    load: no
     module: fixgw.plugins.gui
 
   system:
@@ -281,14 +282,6 @@ connections:
       - function: sum
         inputs: ["FUELQ1", "FUELQ2"]
         output: FUELQT
-      - function: aoa
-        inputs: ["PITCH", "IAS", "ANORM", "HEAD", "VS",
-                2, 100, 100,
-                100, 50,
-                5, 5,
-                3, 3
-                ]
-        output: AOA
 
 
       # - function: min
@@ -306,7 +299,7 @@ connections:
     Multiplier: 1.0
 
   stratux:
-      load: yes
+      load: no
       module: fixgw.plugins.stratux
       host: 192.168.10.1
       rate: 10
