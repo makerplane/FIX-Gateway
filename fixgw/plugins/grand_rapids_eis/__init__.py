@@ -24,7 +24,6 @@ import time
 from collections import OrderedDict
 import fixgw.plugin as plugin
 import serial
-import struct
 
 class MainThread(threading.Thread):
     def __init__(self, parent):
@@ -32,12 +31,18 @@ class MainThread(threading.Thread):
         self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
-        self.ser = serial.Serial('/dev/ttyUSB0', 9200, timeout=1)
+        serial_port = self.parent.config["port"]
+        self.model = self.parent.config["model"]
+        if (self.model != 2004):
+            print("Unsupported EIS model")
+        self.ser = serial.Serial(serial_port, 9200, timeout=1)
 
     def run(self):
         while not self.getout:
             s = self.ser.read_until(bytes.fromhex('fefffe'), size=100)
-            if(len(s)==48):
+            if(self.model == 2004):
+                if(len(s)!=48):
+                    continue
                 tach1 = int.from_bytes(s[0:2], "big")
                 cht1 = int((int.from_bytes(s[2:4], "big") - 32) * 5.0/9)
                 cht2 = int((int.from_bytes(s[4:6], "big") - 32) * 5.0/9)
