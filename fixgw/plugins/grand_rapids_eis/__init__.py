@@ -35,13 +35,14 @@ class MainThread(threading.Thread):
         self.model = self.parent.config["model"]
         if (self.model != 2004):
             print("Unsupported EIS model")
-        self.ser = serial.Serial(serial_port, 9200, timeout=1)
+        self.ser = serial.Serial(serial_port, 9600, timeout=1)
 
     def run(self):
         while not self.getout:
             s = self.ser.read_until(bytes.fromhex('fefffe'), size=100)
             if(self.model == 2004):
                 if(len(s)!=48):
+                    print("bad frame")
                     continue
                 tach1 = int.from_bytes(s[0:2], "big")
                 cht1 = int((int.from_bytes(s[2:4], "big") - 32) * 5.0/9)
