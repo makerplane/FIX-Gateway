@@ -87,6 +87,7 @@ class MainThread(threading.Thread):
                 self.parent.db_write("BARO", baro)
                 self.parent.db_write("OAT", oat)
                 self.parent.db_write("ALT", altitude)
+                self.parent.db_write("H2OT1", coolant)
 
         self.running = False
 

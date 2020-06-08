@@ -223,6 +223,12 @@ connections:
     DimmerDevice: /sys/class/backlight/backlight/brightness
     Multiplier: 1.0
 
+  grand_rapids_eis:
+    load: no
+    module: fixgw.plugins.grand_rapids_eis
+    port: /dev/ttyUSB0
+    model: 2004
+
 # Logging configuration - See Python logging.config module documenation
 logging:
   version: 1
