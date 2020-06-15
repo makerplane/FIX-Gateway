@@ -61,7 +61,7 @@ class Mapping(object):
 
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
         for each in maps['inputs']:
-            p = canfix.protocol.parameters[each["canid"]]
+            #p = canfix.protocol.parameters[each["canid"]]
             # Parameters start at 0x100 so we subtract that offset to index the array
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:

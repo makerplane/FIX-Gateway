@@ -65,6 +65,15 @@ Many of the plugins will require other dependencies.  See the individual plugin
 documentation for information about those.  We'll discuss some of the more common
 ones.
 
+Under Ubuntu distibutions socketcan can be installed with: `apt install can-utils`
+Some background on linux can can be found here: https://elinux.org/Bringing_CAN_interface_up
+To bring up the vcan0 interface:
+```
+$ modprobe vcan
+$ sudo ip link add dev vcan0 type vcan
+$ sudo ip link set up vcan0
+```
+
 If you intend to use the gui plugin you will also need PyQt installed.  It
 should work with either PyQt4 or PyQt5.  You'll have to consult the PyQt
 documentation on how to install PyQt on your system.  Support for PyQt4 will

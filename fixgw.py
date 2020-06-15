@@ -24,10 +24,10 @@ import logging
 
 import fixgw.server as server
 
-daemonize = server.main_setup()
+args = server.main_setup()
 log = logging.getLogger("fixgw")
 
-if daemonize:
+if args.daemonize:
     log.debug("Sending to Background")
     context = daemon.DaemonContext(
         #working_directory = '/',
@@ -41,8 +41,8 @@ if daemonize:
     }
     with context:
         try:
-            server.main()
+            server.main(args)
         except Exception as e:
             log.error(str(e))
 else:
-    server.main()
+    server.main(args)
