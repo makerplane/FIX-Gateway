@@ -196,11 +196,9 @@ def main_setup():
     if not args.daemonize:
         signal.signal(signal.SIGINT, sig_int_handler)
         signal.signal(signal.SIGTERM, sig_int_handler)
-        return False
-    else:
-        return True  # Tells caller to daemonize
+    return args
 
-def main():
+def main(args):
     for each in plugins:
         log.debug("Attempting to start plugin {0}".format(each))
         try:
