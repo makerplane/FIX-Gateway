@@ -526,7 +526,7 @@ entries:
   units: degC
   initial: 0.0
   tol: 2000
-  aux: [Min,Max,highWarn,highAlarm]
+  aux: [Min,Max,highWarn,highAlarm,lowWarn,lowAlarm]
 
 - key: EGTAVGe
   description: Average Exhaust Gas Temp Engine %e
