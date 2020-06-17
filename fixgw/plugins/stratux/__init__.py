@@ -26,7 +26,21 @@ from collections import OrderedDict
 import fixgw.plugin as plugin
 
 MIN_GPS_FIX_QUALITY = 3
-MAGIC_NUMBER_INVALID = 3276.7
+MAGIC_NUMBER_INVALID=3276.7
+stratux_map = {
+        'AHRSPitch' : 'PITCH'
+       ,'AHRSRoll' : 'ROLL'
+       ,'AHRSMagHeading' : 'HEAD'
+       ,'AHRSSlipSkid' : 'ALAT'
+       ,'AHRSTurnRate' : 'ROT'
+       ,'AHRSGLoad' : 'ANORM'
+       ,'GPSLatitude' : 'LAT'
+       ,'GPSLongitude' : 'LONG'
+       ,'GPSTrueCourse' : 'TRACK'
+       ,'GPSGroundSpeed' : 'GS'
+       ,'BaroVerticalSpeed' : 'VS'
+       ,'GPSAltitude' : 'ALT'
+}
 
 class StratuxClient(threading.Thread):
     def __init__(self, parent, host, rate):
