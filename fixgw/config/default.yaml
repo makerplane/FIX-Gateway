@@ -96,7 +96,7 @@ connections:
 
   # CAN-FIX
   canfix:
-    load: yes
+    load: no
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
@@ -301,6 +301,10 @@ connections:
     module: fixgw.plugins.grand_rapids_eis
     port: /dev/ttyUSB0
     model: 2004
+
+  stratux:
+    load: no
+    module: fixgw.plugins.stratux
 
 # Logging configuration - See Python logging.config module documenation
 logging:
