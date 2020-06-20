@@ -37,6 +37,11 @@ class MainThread(threading.Thread):
         self.parent = parent
         self.log = parent.log
         self.mapping = parent.mapping
+        # We use this to check to see if we are even interested in this frame
+        self.interesting = [False] * 2048
+        for x in range(1280):
+            if self.mapping.input_mapping[x] is not None:
+                self.interesting[x + 0x100] = True
 
 
     def run(self):
@@ -45,20 +50,21 @@ class MainThread(threading.Thread):
         while(True):
             try:
                 msg = self.bus.recv(1.0)
-                if msg:
+                if msg is not None:
                     self.parent.recvcount += 1
-                    try:
-                        cfobj = canfix.parseMessage(msg)
-                    except ValueError as e:
-                        self.log.warning(e)
-                    else:
-                        #self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
-                        if isinstance(cfobj, canfix.Parameter):
-                            self.mapping.inputMap(cfobj)
+                    if self.interesting[msg.arbitration_id]:
+                        try:
+                            cfobj = canfix.parseMessage(msg)
+                        except ValueError as e:
+                            self.log.warning(e)
                         else:
-                            # TODO What to do with the other types
-                            pass
-                #     # TODO increment error counter
+                            #self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
+                            if isinstance(cfobj, canfix.Parameter):
+                                self.mapping.inputMap(cfobj)
+                            else:
+                                # TODO What to do with the other types
+                                pass
+                    #     # TODO increment error counter
             finally:
                 if(self.getout):
                     break

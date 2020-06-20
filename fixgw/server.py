@@ -49,7 +49,7 @@ config_path = None
 plugin_mods = {}
 # This holds the instantiated object of each plugin that we load
 plugins = {}
-
+log = None
 
 def load_plugin(name, module, config):
     plugin_mods[name] = importlib.import_module(module)
@@ -80,9 +80,12 @@ def create_config_dir(basedir):
                     f.write(s)
     copy_dir('config')
 
+def sig_int_handler(signum, frame):
+    plugin.jobQueue.put("QUIT")
 
-def main():
+def main_setup():
     global config_path
+    global log
     # Look for our configuration file in the list of directories
     for directory in path_options:
         # store the first match that we find
@@ -97,6 +100,8 @@ def main():
                         help='Run in debug mode')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Run in verbose mode')
+    parser.add_argument('--daemonize', '-D', action='store_true',
+                        help='Run program in the background')
     parser.add_argument('--config-file', type=argparse.FileType('r'),
                         help='Alternate configuration file')
     parser.add_argument('--log-config', type=argparse.FileType('r'),
@@ -130,7 +135,7 @@ def main():
     else:
         logging.basicConfig()
 
-    log = logging.getLogger()
+    log = logging.getLogger("fixgw")
     if args.verbose:
         log.setLevel(logging.INFO)
     if args.debug:
@@ -153,11 +158,12 @@ def main():
         raise
 
     if "initialization files" in config and config["initialization files"]:
-        log.info("Setting Initial Values")
         ifiles = config["initialization files"]
         for fn in ifiles:
+            filename = fn.format(CONFIG=config_path)
+            log.info("Setting Initial Values - {}".format(filename))
             try:
-                f = open(fn.format(CONFIG=config_path), 'r')
+                f = open(filename, 'r')
                 for line in f.readlines():
                     l = line.strip()
                     if l and l[0] != '#':
@@ -187,13 +193,12 @@ def main():
           "Configuration Path": config_path}
     status.initialize(plugins, ss)
 
-    def sig_int_handler(signum, frame):
-        plugin.jobQueue.put("QUIT")
+    if not args.daemonize:
+        signal.signal(signal.SIGINT, sig_int_handler)
+        signal.signal(signal.SIGTERM, sig_int_handler)
+    return args
 
-    signal.signal(signal.SIGINT, sig_int_handler)
-    signal.signal(signal.SIGTERM, sig_int_handler)
-
-
+def main(args):
     for each in plugins:
         log.debug("Attempting to start plugin {0}".format(each))
         try:
@@ -243,4 +248,5 @@ def main():
 
 if __name__ == "__main__":
     # TODO: Add daemonization
+    main_setup()
     main()

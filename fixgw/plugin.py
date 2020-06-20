@@ -38,7 +38,7 @@ class PluginFail(Exception):
 class PluginBase(object):
     def __init__(self, name, config):
         self.name = name
-        self.log = logging.getLogger('plugin.' + name)
+        self.log = logging.getLogger('fixgw.' + name)
         self.log.info("Initializing")
         self.config = config
         self.log.debug("Config: " + str(self.config))

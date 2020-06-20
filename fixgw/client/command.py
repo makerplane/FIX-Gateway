@@ -42,21 +42,31 @@ class Command(cmd.Cmd):
         args = line.split(" ")
         try:
             x = self.client.read(args[0])
+            if isinstance(x, int):
+                print("Error {}".format(x))
+                return
         except netfix.SendError as e:
             print("Problem Sending Request -", e)
             return
         except netfix.ResponseError as e:
             print("Problem Receiving Response -", e)
             return
-        flags = ""
-        if x[2]: # Do we have any flags?
-            if 'a' in x[2]: flags += " Annuc"
-            if 'o' in x[2]: flags += " Old"
-            if 'f' in x[2]: flags += " Fail"
-            if 'b' in x[2]: flags += " Bad"
-            if 's' in x[2]: flags += " SecFail"
 
-        print(x[1]+flags)
+        try:
+            if '.' in args[0]:
+                print(x[1])
+            else:
+                flags = ""
+                if x[2]: # Do we have any flags?
+                    if 'a' in x[2]: flags += " Annuc"
+                    if 'o' in x[2]: flags += " Old"
+                    if 'f' in x[2]: flags += " Fail"
+                    if 'b' in x[2]: flags += " Bad"
+                    if 's' in x[2]: flags += " SecFail"
+
+                print(x[1]+flags)
+        except:
+            print("Unknown Response {}".format(x[0]))
 
     def do_write(self, line):
         """write [key] [value]\nWrite Value into Database with given key"""

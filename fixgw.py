@@ -17,7 +17,32 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+import daemon
+import lockfile
+import signal
+import logging
 
 import fixgw.server as server
 
-server.main()
+args = server.main_setup()
+log = logging.getLogger("fixgw")
+
+if args.daemonize:
+    log.debug("Sending to Background")
+    context = daemon.DaemonContext(
+        #working_directory = '/',
+        umask=0o002,
+        #pidfile=lockfile.FileLock('/var/run/fixgw.pid'),
+    )
+    context.signal_map = {
+        signal.SIGTERM: server.sig_int_handler,
+        signal.SIGINT: server.sig_int_handler,
+        signal.SIGHUP: 'terminate',
+    }
+    with context:
+        try:
+            server.main(args)
+        except Exception as e:
+            log.error(str(e))
+else:
+    server.main(args)

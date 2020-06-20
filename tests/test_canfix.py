@@ -19,6 +19,7 @@ import subprocess
 import os
 import time
 import yaml
+import random
 import can
 
 import fixgw.database as database
@@ -139,7 +140,7 @@ class TestCanfix(unittest.TestCase):
 
     def test_parameter_writes(self):
         for param in ptests:
-            msg = can.Message(extended_id = False, arbitration_id = param[1])
+            msg = can.Message(is_extended_id = False, arbitration_id = param[1])
             msg.data = string2data(param[2])
             self.bus.send(msg)
             time.sleep(0.03)
@@ -156,6 +157,20 @@ class TestCanfix(unittest.TestCase):
         msg = self.bus.recv(1.0)
         self.assertEqual(msg.arbitration_id, self.node + 1760)
         self.assertEqual(msg.data, bytearray([12, 0x90, 0x01, 0x58, 0x75]))
+
+
+    def test_all_frame_ids(self):
+        """Loop through every CAN ID and every length of data with random data"""
+        random.seed(14)  # We want deterministic input for testing
+        for id in range(2048):
+            for dsize in range(9):
+                msg = can.Message(is_extended_id = False, arbitration_id = id)
+                for x in range(dsize):
+                    msg.data.append(random.randrange(256))
+                msg.dlc = dsize
+                self.bus.send(msg)
+
+
 
     # We don't really have any of these yet
     # def test_owned_outputs(self):
