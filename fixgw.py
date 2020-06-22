@@ -17,8 +17,6 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import daemon
-import lockfile
 import signal
 import logging
 
@@ -28,6 +26,12 @@ args = server.main_setup()
 log = logging.getLogger("fixgw")
 
 if args.daemonize:
+    try:
+        import daemon
+        import lockfile
+    except ModuleNotFoundError:
+        log.error("Unable to load daemon module.")
+        raise
     log.debug("Sending to Background")
     context = daemon.DaemonContext(
         #working_directory = '/',
