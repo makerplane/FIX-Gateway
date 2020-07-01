@@ -3,7 +3,7 @@ variables:
   c: 6  # Cylinders
   a: 8  # Generic Analogs
   b: 16 # Generic Buttons
-  r: 1  # Encoders
+  r: 4  # Encoders
   t: 2  # Fuel Tanks
 
 entries:
