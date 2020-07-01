@@ -88,3 +88,12 @@ inputs:
 
 outputs:
   - { fixid: "BARO", canid: 0x190, index: 0, owner: False }
+
+# Special Input Functions
+encoders:
+    - { fixid: "ENC1, ENC2, BTN11", canid: 0x300, index: 0 }
+    - { fixid: "ENC3,ENC4,BTN12", canid: 0x301, index: 0 }
+
+# Generic Switch Inputs
+switches:
+    - { fixid: "BTN1,BTN2,BTN3,BTN4,BTN5,BTN6", canid: 0x308, index: 0 }

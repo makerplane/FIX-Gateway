@@ -68,6 +68,20 @@ class Mapping(object):
                 self.input_mapping[ix] = [None] * 256
             self.input_mapping[ix][each["index"]] = self.getInputFunction(each["fixid"])
 
+        # each input mapping item := [CANID, Index, FIX DB ID, Priority]
+        for each in maps['encoders']:
+            #p = canfix.protocol.parameters[each["canid"]]
+            # Parameters start at 0x100 so we subtract that offset to index the array
+            ix = each["canid"] - 0x100
+            if self.input_mapping[ix] is None:
+                self.input_mapping[ix] = [None] * 256
+            self.input_mapping[ix][each["index"]] = self.getEncoderFunction(each["fixid"])
+
+        for each in maps['switches']:
+            ix = each["canid"] - 0x100
+            if self.input_mapping[ix] is None:
+                self.input_mapping[ix] = [None] * 256
+            self.input_mapping[ix][each["index"]] = self.getSwitchFunction(each["fixid"])
 
     # The idea here is that we create arrays and dictionaries for each type of
     # mapping.  These contain closure functions that know how to put the data in
@@ -98,7 +112,7 @@ class Mapping(object):
                 self.output_mapping[dbItem.key]["lastValue"] = cfpar.value
             if cfpar.meta:
                 try:
-                    # Check to see if we have a replacemtn string in the dictionary
+                    # Check to see if we have a replacement string in the dictionary
                     if cfpar.meta in self.meta_replacements_in:
                         m = self.meta_replacements_in[cfpar.meta]
                     else: # Just use the one we were sent
@@ -142,6 +156,51 @@ class Mapping(object):
 
         return outputCallback
 
+    # This is a closure that holds the information we need to transfer data
+    # from the CAN-FIX port to the FIXGW Database
+    def getEncoderFunction(self, dbKeys):
+        # the dbKeys parameter should be three fix ids separated by commas
+        # the first two are the encoder ids for each of the encoders that
+        # are contained in the fix message and the third is the button.
+        try:
+            ids = dbKeys.split(",")
+            encoder1 = database.get_raw_item(ids[0].strip())
+            encoder2 = database.get_raw_item(ids[1].strip())
+            button = database.get_raw_item(ids[2].strip())
+        except KeyError:
+            return None
+
+        def InputFunc(cfpar):
+            x = encoder1.value[0]
+            encoder1.value = x + cfpar.value[0]
+            x = encoder2.value[0]
+            encoder2.value = x + cfpar.value[1]
+            button.value = cfpar.value[2][0]
+
+        return InputFunc
+
+
+    def getSwitchFunction(self, dbKeys):
+        try:
+            switches = []
+            ids = dbKeys.split(",")
+            for each in ids:
+                switches.append(database.get_raw_item(each.strip()))
+        except KeyError:
+            return None
+
+        def InputFunc(cfpar):
+            x = cfpar.value
+            bit = 0
+            byte = 0
+            for each in switches:
+                each.value = x[byte][bit]
+                bit += 1
+                if bit >=8:
+                    bit = 0
+                    byte += 1
+
+        return InputFunc
 
     def inputMap(self, par):
         """Retrieve the function that should be called for a given parameter"""
