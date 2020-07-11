@@ -97,7 +97,7 @@ connections:
 
   # CAN-FIX
   canfix:
-    load: yes
+    load: no
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
@@ -249,7 +249,7 @@ connections:
     mosi: 24
     cs: 25
 
-  # if you want several button copie this configuration with different setting like this [conn_button2]
+  # if you want several buttons, copy this configuration with different settings like this [conn_button2]
   button1:
     load: no
     module: fixgw.plugins.rpi_button
@@ -265,7 +265,7 @@ connections:
     rais_server_module: RAIS
     rais_config_path: /home/me/openEFIS/sensors_pubsub.yml
 
-  # Data Coputation
+  # Data Computation
   compute:
     load: yes
     module: fixgw.plugins.compute
@@ -282,7 +282,6 @@ connections:
       - function: sum
         inputs: ["FUELQ1", "FUELQ2"]
         output: FUELQT
-
 
       # - function: min
       #   inputs: []
@@ -305,7 +304,7 @@ connections:
     model: 2004
 
   stratux:
-    load: no
+    load: yes
     module: fixgw.plugins.stratux
 
 # Logging configuration - See Python logging.config module documenation
