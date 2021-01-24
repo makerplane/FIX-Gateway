@@ -74,11 +74,16 @@ $ sudo ip link add dev vcan0 type vcan
 $ sudo ip link set up vcan0
 ```
 
-If you intend to use the gui plugin you will also need PyQt installed.  It
-should work with either PyQt4 or PyQt5.  You'll have to consult the PyQt
-documentation on how to install PyQt on your system.  Support for PyQt4 will
-likely be dropped in the future as well.
+If you intend to use the gui plugin you will also need PyQt installed.  Note that if you use pyEfis
+then PyQt is required. FixGW should work with either PyQt4 or PyQt5, however support for PyQT4 is 
+likely to be dropped. Consult the PyQt documentation on how to install PyQt on your system.  
+Typically it is
+
+sudo apt-get install python3-pyqt5
 
 The canfix plugin will require both the python-can package as well as the
 python-canfix package.  Installing the python-canfix package with pip3 should
 install both.
+
+sudo pip3 install python-canfix
+
