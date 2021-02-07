@@ -30,6 +30,12 @@ or
 
     git clone https://github.com/makerplane/FIX-Gateway.git fixgw
 
+Install requirements
+
+::
+
+    sudo python3 -m pip install -r requirements.txt
+
 Then run one of the two helper scripts.
 
 ::

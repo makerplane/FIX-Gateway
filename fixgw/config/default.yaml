@@ -97,11 +97,12 @@ connections:
 
   # CAN-FIX
   canfix:
-    load: no
+    load: yes
     module: fixgw.plugins.canfix
     # See the python-can documentation for the meaning of these options
     interface: socketcan
-    channel: vcan0
+    #channel: vcan0
+    channel: can0
     #interface: serial
     #channel: /dev/ttyUSB0
 
@@ -304,7 +305,7 @@ connections:
     model: 2004
 
   stratux:
-    load: yes
+    load: no
     module: fixgw.plugins.stratux
 
 # Logging configuration - See Python logging.config module documenation

@@ -1,5 +1,5 @@
 python-can
-python-canfix
+-e git://github.com/birkelbach/python-canfix#egg=python-canfix
 lockfile
 daemon
 pyyaml
