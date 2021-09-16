@@ -1,0 +1,357 @@
+# This is the main configuration file for the FIX-Gateway Server
+
+# For use in this configuration, {CONFIG} will be replaced with the
+# directory where this file is found.
+
+# File that defines the database.
+database file: "{CONFIG}/database.yaml"
+
+# Set initial values after the database is initialized.
+# If there are duplicate assignments in these files, the last
+# file listed will overwrite data in previous files
+# Plugins may overwrite this data as well.
+initialization files:
+  # - "{CONFIG}/default.ini"
+  # - "{CONFIG}/c170b.ini"
+  # - "{CONFIG}/fg_172.ini"
+  - "{CONFIG}/rotax582.ini"
+
+# Connections:
+# if 'load' is 'yes' the connection plugin will be loaded at program start
+# if 'module' should be set to the location of the Python module that
+# represents the connection plugin.
+# All other configuration options will be passed to the connection plugin
+# itself. See the FIX-Gateway documentation for specific connection plugin
+# configuration options.
+connections:
+  # Network FIX Protocol Interface
+  netfix:
+    load: yes
+    module: fixgw.plugins.netfix
+    type: server
+    host: 0.0.0.0
+    port: 3490
+    buffer_size: 1024
+    timeout: 1.0
+
+  # Command Line Module
+  command:
+    load: no
+    module: fixgw.plugins.command
+    prompt: "FIX:"
+    # If set quiting the command interpreter plugin
+    # will end execution of the program
+    quit: yes
+
+  # FlightGear Flight Simulator Module
+  # To start FlightGear with these paramaters, use the following command...
+  #   >fgfs --generic=socket,out,10,localhost,5500,udp,fix_fgfs --generic=socket,in,1,,5501,udp,fix_sgfs
+  # The fix_fgfs.xml file should be in the FG_ROOT/Protocols directory which should be
+  # in one of the following locations...
+  # LINUX: /usr/share/games/flightgear/
+  # OSX: /Applications/FlightGear.app/Contents/Resources/data/
+  # WINDOWS: c:\Program Files\FlightGear\data\
+  fgfs:
+    load: no
+    module: fixgw.plugins.fgfs
+    # This should be the same as $FG_ROOT on your system.  It is used to help
+    # fixgw find the xml configuration files
+    fg_root: /usr/share/games/flightgear/
+    # fg_root: /Applications/FlightGear.app/Contents/Resources/data/
+    # fg_root: c:\Program Files\FlightGear\data\
+
+    # This is the name of the protocol config file that fixgw and fgfs will use to
+    # define the protocol. It is very important that both programs are looking at
+    # the same file.
+    xml_file: fix_fgfs.xml
+    # UDP Address and Ports used for communication to FlightGear.
+    # Host address to listen on
+    recv_host: localhost
+    # port used for the -out argument to FlightGear
+    recv_port: 5500
+    # host address where FlightGear is running
+    send_host: localhost
+    # port used for the -in argument to FlightGear
+    send_port: 5501
+    # Update rate for sending data to FlightGear
+    rate: 10  # updates / second
+
+
+  xplane:
+    load: no
+    module: fixgw.plugins.xplane
+    # IP address where the X-Plane simulator is running
+    ipaddress: 127.0.0.1
+    # UDP Ports to use for sending and receiving data
+    # These should match the configuration in the
+    # "Net Connections" Menu of X-Plane
+    udp_in: 49001   # Port to received data from X-Plane
+    udp_out: 49002  # Port to send data to X-Plane
+
+    # These are the X-Plane data indexes that we will write.  These
+    # would match the
+    #idx8 : CTLPTCH, CTLROLL, CTLYAW, x, x, x, x, x
+    idx25: THR1,  THR2,  x, x, x, x, x, x
+    #idx28: PROP1, PROP2, x, x, x, x, x, x
+    idx29: MIX1,  MIX2,  x, x, x, x, x, x
+
+  # CAN-FIX
+  canfix:
+    load: no
+    module: fixgw.plugins.canfix
+    # See the python-can documentation for the meaning of these options
+    interface: socketcan
+    channel: vcan0
+    #interface: serial
+    #channel: /dev/ttyUSB0
+
+    # This file controls the
+    mapfile: "{CONFIG}/canfix/map.yaml"
+    # The following is our Node Identification Information
+    # See the CAN-FIX Protocol Specification for more information
+    node: 145     # CAN-FIX Node ID
+    device: 145   # CAN-FIX Device Type
+    revision: 0   # Software Revision Number
+    model: 0      # Model Number
+
+  gui:
+    load: no
+    module: fixgw.plugins.gui
+
+  system:
+    load: yes
+    module: fixgw.plugins.system
+    time:
+      enable: yes
+      keys: # Database keys to write the time
+        gmt_seconds: TIMEZS
+        gmt_minutes: TIMEZM
+        gmt_hours: TIMEZH
+        gmt_string: TIMEZ
+        local_seconds:
+        local_minutes:
+        local_hours:
+        local_string: TIMEL
+      gmt_format: "%H:%M:%SZ" # Zulu time format string
+      local_format: "%H:%M:%S %Z" # Local time format string
+
+  # Set the annunciation flag bit on configured database items.
+  annunciate:
+    load: yes
+    module: fixgw.plugins.annunciate
+    # These are the defaults for all the items.  These settings can be
+    # overridden in each item definition
+    defaults:
+      # These are the auxilliary data values that will be used as the
+      # set points for the annunciation
+      low_aux_point: lowAlarm
+      high_aux_point: highAlarm
+      #low_aux_point: lowWarn
+      #high_aux_point: highWarn
+
+      # No annunciation until the value first climbs above the set point
+      start_bypass: no
+      # Bypasses the value on a condition
+      cond_bypass: None
+      #cond_bypass: TACH1 < 1000
+      # Once triggered the annunication will not clear until the value clears
+      # the setpoint plus the deadband.  This cuts down "flashing" annunications
+      # that are caused by values that are very near the set point.  The value
+      # can be in absolute units or in percentage of full range.
+      deadband: 1%
+    items:
+      - key: OILT1
+        start_bypass: yes
+        cond_bypass: TACH1 < 500
+        deadband: 4
+
+      - key: OILP1
+        start_bypass: yes
+        cond_bypass: TACH1 < 500
+        deadband: 2
+
+      - key: CHT11
+      - key: CHT12
+      - key: CHT13
+      - key: CHT14
+
+      - key: CURRNT
+      - key: VOLT
+        cond_bypass: TACH1 < 500
+
+      - key: FUELP1
+      - key: FUELQ1
+      - key: FUELQ2
+      - key: FUELQT
+
+      - key: OAT
+
+
+  test1:
+    load: no
+    module: fixgw.plugins.test
+    key: IAS
+    low: 0.0
+    high: 200.0
+    delay: 1.0
+
+  test2:
+    load: no
+    module: fixgw.plugins.test
+    key: ALT
+    low: 0.0
+    high: 20000.0
+    delay: 1.0
+
+  bno055:
+    load: no
+    module: fixgw.plugins.rpi_bno055
+
+
+  db_persister:
+    load: yes
+    module: fixgw.plugins.db_persister
+    db_schema: "database.yaml"
+    h5f_file: "../data/db_histo.h5"
+    entries_regex: ^(GS|IAS|ALT|HEAD|TRACK|PITCH|ROLL|YAW|ALAT|ALONG|LAT|LONG|TIMEZH|TIMEZM|TIMEZS)$
+
+  bmp085:
+    load: no
+    module: fixgw.plugins.rpi_bmp085
+    tkey: CAT
+    pkey: AIRPRESS
+
+  virtualwire:
+    load: no
+    module: fixgw.plugins.rpi_virtualwire
+    rxpin: 23
+    bps: 2000
+
+  rotary_encoder:
+    load: no
+    module: fixgw.plugins.rpi_rotary_encoder
+    btn: True
+    btnkey: BARO
+    btnstcounter: 29.92
+    btnincr: 0.01
+    btnpin: 4
+    pina: 26
+    pinb: 19
+    stcount: 0
+    rkey: PITCHSET
+    incr: 1
+
+  mcp3008:
+    load: no
+    module: fixgw.plugins.rpi_mcp3008
+    vkey1: VOLT
+    vkey2: ANLG2
+    vkey3: ANLG3
+    vkey4: ANLG4
+    vkey5: ANLG5
+    vkey6: ANLG6
+    vkey7: ANLG7
+    vkey8: ANLG8
+    clk: 18
+    miso: 23
+    mosi: 24
+    cs: 25
+
+  # if you want several buttons, copy this configuration with different settings like this [conn_button2]
+  button1:
+    load: no
+    module: fixgw.plugins.rpi_button
+    btnkey: BTN1
+    btnpin: 4
+    rdelay: 0 # 0 for debouncing or time in seconde to determine the repeat delay
+
+  # RAIS Protocol Interface
+  rais:
+    load: no
+    module: fixgw.plugins.rais
+    rais_directory: /home/me/openEFIS
+    rais_server_module: RAIS
+    rais_config_path: /home/me/openEFIS/sensors_pubsub.yml
+
+  # Data Computation
+  compute:
+    load: yes
+    module: fixgw.plugins.compute
+    functions:
+      - function: average
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTAVG1
+      - function: span
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTSPAN1
+      - function: max
+        inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
+        output: CHTMAX1
+      - function: sum
+        inputs: ["FUELQ1", "FUELQ2"]
+        output: FUELQT
+
+      # - function: min
+      #   inputs: []
+      #   output: x
+      # - function: span
+      #   inputs: []
+      #   output: x
+      # - function: TAS
+      # - function: DALT
+  dimmer:
+    load: no
+    module: fixgw.plugins.dimmer
+    DimmerDevice: /sys/class/backlight/intel_backlight/brightness
+    Multiplier: 1.0
+
+  grand_rapids_eis:
+    load: no
+    module: fixgw.plugins.grand_rapids_eis
+    port: /dev/ttyUSB0
+    model: 2004
+
+  stratux:
+    load: no
+    module: fixgw.plugins.stratux
+
+# Logging configuration - See Python logging.config module documenation
+logging:
+  version: 1
+  disable_existing_loggers: False
+  loggers:
+    '':
+      # messages with levels below the one given will not be logged
+      # level: DEBUG
+      # level: INFO
+      level: WARNING
+      #level: ERROR
+      #level: CRITICAL
+
+      handlers: [stderr, syslog]
+      propagate: True
+
+  formatters:
+    standard:
+      format: "%(levelname)s:%(asctime)s:%(name)s - %(message)s"
+      datefmt: "%Y%m%d-%H:%M:%S"
+      class: logging.Formatter
+
+  handlers:
+    stderr:
+      class: logging.StreamHandler
+      formatter: standard
+      stream: ext://sys.stderr
+
+    file:
+      class: logging.FileHandler
+      formatter: standard
+      filename: fixgw.log
+      mode: w
+      #mode: a
+
+    syslog:
+      class: logging.handlers.SysLogHandler
+      address: /dev/log
+      facility: local6
+      formatter: standard
