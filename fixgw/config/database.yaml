@@ -255,7 +255,7 @@ entries:
   max: 180.0
   units: deg
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: PITCH
   description: Pitch Angle
