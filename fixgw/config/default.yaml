@@ -315,6 +315,7 @@ connections:
     port: /dev/ttyACM0
     options:
       airspeed: true
+      groundspeed: true
       gps: true
       ahrs: true
       accel: true

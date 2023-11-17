@@ -42,6 +42,7 @@ class Mav:
         self._apmodes['GUIDED'] = 15
 
         self._airspeed = options.get('airspeed', False)
+        self._groundspeed = options.get('groundspeed', False)
         self._gps = options.get('gps', False)
         self._ahrs = options.get('ahrs', False)
         self._accel = options.get('accel', False)
@@ -114,39 +115,42 @@ class Mav:
             # I do not think TAS can be obtained from the flight controller
             # Maybe we can calculate it
             if self._airspeed:
-                self.parent.db_write("IAS", msg.airspeed * 1.9438445) #m/s to knots
+                self.parent.db_write("IAS", round(msg.airspeed * 1.9438445,2)) #m/s to knots
+            if self._groundspeed:
+                self.parent.db_write("GS", round(msg.groundspeed * 1.9438445,2)) #m/s to knots
             if self._ahrs:
                 # The AI in pyefis requires TAS
                 # I think we could calculate it but for now we will just use IAS in its place
-                self.parent.db_write("TAS", msg.airspeed * 1.9438445) #m/s to knots
+                self.parent.db_write("TAS", round(msg.airspeed * 1.9438445,2)) #m/s to knotis
+                self.parent.db_write("VS", round(msg.climb * 196.85039)) #m/s to ft/min
         elif msg_type == 'SCALED_IMU':
             #logger.debug(msg.yacc/1000)
             # mavlink is in mG
             # Not exactly sure if G is what pyefis expects for ALAT
             # We can also get other data like xacc and zacc
             if self._accel:
-                self.parent.db_write("ALAT", msg.yacc/1000)
-                self.parent.db_write("ALONG", msg.xacc/1000)
-                self.parent.db_write("ANORM", msg.zacc/1000)
+                self.parent.db_write("ALAT", round(msg.yacc/1000,4))
+                self.parent.db_write("ALONG", round(msg.xacc/1000,4))
+                self.parent.db_write("ANORM", round(msg.zacc/1000,4))
         elif msg_type == "ATTITUDE":
             if self._ahrs:
-                self.parent.db_write("ROLL", math.degrees(msg.roll))
-                self.parent.db_write("PITCH", math.degrees(msg.pitch))
-                self.parent.db_write("YAW", math.degrees(msg.yaw))
+                self.parent.db_write("ROLL", round(math.degrees(msg.roll), 2))
+                self.parent.db_write("PITCH", round(math.degrees(msg.pitch),2))
+                self.parent.db_write("YAW", round(math.degrees(msg.yaw),2))
             #self.parent.db_write("YAW", math.degrees(msg.yaw))
         elif msg_type == "GLOBAL_POSITION_INT":
             if self._ahrs:
-                self.parent.db_write("HEAD", msg.hdg/100)             # uint16_t cdeg 
-                self.parent.db_write("VS", msg.vz *  1.96850394)      # int16_t cm/s to ft/min
-                self.parent.db_write("AGL", msg.relative_alt / 304.8) # int32_t mm to ft
-                self.parent.db_write("ALT", msg.alt / 304.8)          # int32_t mm to ft
+                self.parent.db_write("HEAD", round(msg.hdg/100,2))             # uint16_t cdeg 
+                self.parent.db_write("AGL", round(msg.relative_alt / 304.8,2)) # int32_t mm to ft
+                # Should this be TALT?:
+                self.parent.db_write("ALT", round(msg.alt / 304.8, 2))          # int32_t mm to ft
             if self._gps:
                 self.parent.db_write("LAT",msg.lat/10000000.0)        # int32_t degE7 10**7
                 self.parent.db_write("LONG",msg.lon/10000000.0)       # int32_t degE7 10**7
         elif msg_type == "SCALED_PRESSURE":
             if self._pressure:
-                self.parent.db_write("AIRPRESS", msg.press_abs * 100)       # float hPa to Pa 
-                self.parent.db_write("DIFFAIRPRESS", msg.press_diff * 100)  # float hPa to Pa
+                self.parent.db_write("AIRPRESS", round(msg.press_abs * 100,4))       # float hPa to Pa 
+                self.parent.db_write("DIFFAIRPRESS", round(msg.press_diff * 100,4))  # float hPa to Pa
                 # We can also get temperature and temperature_press_diff i cDegC
                 # HIGHRES_IMU might also be useful
 
