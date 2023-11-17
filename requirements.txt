@@ -3,3 +3,4 @@ python-canfix
 lockfile
 daemon
 pyyaml
+pymavlink

@@ -307,6 +307,14 @@ connections:
     load: yes
     module: fixgw.plugins.stratux
 
+  mavlink:
+    load: no
+    module: fixgw.plugins.mavlink
+    type: serial
+    baud: 115200
+    port: /dev/ttyACM0
+
+
 # Logging configuration - See Python logging.config module documenation
 logging:
   version: 1
