@@ -314,6 +314,9 @@ connections:
     baud: 115200
     port: /dev/ttyACM0
 
+  ifly:
+    load: no
+    module: fixgw.plugins.ifly
 
 # Logging configuration - See Python logging.config module documenation
 logging:
