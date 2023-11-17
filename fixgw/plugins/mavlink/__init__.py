@@ -52,12 +52,13 @@ class MainThread(threading.Thread):
         self._type = self.config['type']
         self.baud = int(self.config['baud']) if ( 'baud' in self.config) else 57600
         self.port = self.config['port'] if ( 'port' in self.config) else '/dev/ttyACM0'
+        self.options = self.config['options'] if ( "options" in self.config) else {}
 
         while not self.getout:
             time.sleep(0.00001)
             try:
                 print("Mav init")
-                self.conn = Mav(self.parent, port=self.port, baud=self.baud)
+                self.conn = Mav(self.parent, port=self.port, baud=self.baud, options=self.options)
             except Exception as e:
                 try:
                     print(e) 

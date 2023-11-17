@@ -130,6 +130,15 @@ entries:
   initial: 101325.0
   tol: 2000
 
+- key: DIFFAIRPRESS
+  description: Differential Air Pressure
+  type: float
+  min: 0.0
+  max: 200000.0
+  units: Pa
+  initial: 101325.0
+  tol: 2000
+
 - key: VS
   description: Vertical Speed
   type: float

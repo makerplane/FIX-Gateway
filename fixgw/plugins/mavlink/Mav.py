@@ -25,7 +25,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Mav:
-    def __init__(self, parent, conn_type='serial',port='/dev/ttyACM0',baud=57600):
+    def __init__(self, parent, conn_type='serial',port='/dev/ttyACM0',baud=57600, options={'airspeed': True, 'gps': True, 'ahrs': True, 'accel': True, 'pressure': True}):
         # Currently all that is supported is serial so conn_type is not yet used
         self.parent = parent
 
@@ -40,6 +40,12 @@ class Mav:
         self._apmodes['AUTOTUNE'] = 8
         self._apmodes['AUTO'] = 10
         self._apmodes['GUIDED'] = 15
+
+        self._airspeed = options.get('airspeed', False)
+        self._gps = options.get('gps', False)
+        self._ahrs = options.get('ahrs', False)
+        self._accel = options.get('accel', False)
+        self._pressure = options.get('pressure', False)
 
         self._waypoint = str           # The current known waypoint 
         self.setStat('ERROR', 'No Communication')
@@ -56,8 +62,19 @@ class Mav:
 
         # Connect
         self.conn = mavutil.mavlink_connection(port, baud=baud)
+        ids = []
+        if self._airspeed:
+            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
 
-        for msg_id in [mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD,mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE,mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU]:
+        if self._gps or self._ahrs:
+            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
+            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
+        if self._accel:
+            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
+        if self._pressure:
+            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE)
+
+        for msg_id in ids:
             # Send message requesting info every 100ms
             message = self.conn.mav.command_long_encode(
                 self.conn.target_system,
@@ -93,26 +110,46 @@ class Mav:
         if msg_type == 'VFR_HUD':
             #logger.debug(msg)
             # We can also get other info like GS, VS, MSL, HEAD from this
-            # I'm not 100% sure if this is TAS or IAS
-            self.parent.db_write("TAS", msg.airspeed * 1.9438445) #m/s to knots
-
+            # msg.airspeed is CAS or IAS, at the speeds we fly the different is insignificant
+            # I do not think TAS can be obtained from the flight controller
+            # Maybe we can calculate it
+            if self._airspeed:
+                self.parent.db_write("IAS", msg.airspeed * 1.9438445) #m/s to knots
+            if self._ahrs:
+                # The AI in pyefis requires TAS
+                # I think we could calculate it but for now we will just use IAS in its place
+                self.parent.db_write("TAS", msg.airspeed * 1.9438445) #m/s to knots
         elif msg_type == 'SCALED_IMU':
             #logger.debug(msg.yacc/1000)
             # mavlink is in mG
             # Not exactly sure if G is what pyefis expects for ALAT
             # We can also get other data like xacc and zacc
-            self.parent.db_write("ALAT", msg.yacc/1000)
+            if self._accel:
+                self.parent.db_write("ALAT", msg.yacc/1000)
+                self.parent.db_write("ALONG", msg.xacc/1000)
+                self.parent.db_write("ANORM", msg.zacc/1000)
         elif msg_type == "ATTITUDE":
-            self.parent.db_write("ROLL", math.degrees(msg.roll))
-            self.parent.db_write("PITCH", math.degrees(msg.pitch))
+            if self._ahrs:
+                self.parent.db_write("ROLL", math.degrees(msg.roll))
+                self.parent.db_write("PITCH", math.degrees(msg.pitch))
+                self.parent.db_write("YAW", math.degrees(msg.yaw))
             #self.parent.db_write("YAW", math.degrees(msg.yaw))
         elif msg_type == "GLOBAL_POSITION_INT":
-            self.parent.db_write("HEAD", msg.hdg/100)             # uint16_t cdeg 
-            self.parent.db_write("VS", msg.vz *  1.96850394)      # int16_t cm/s to ft/min
-            self.parent.db_write("AGL", msg.relative_alt / 304.8) # int32_t mm to ft
-            self.parent.db_write("ALT", msg.alt / 304.8)          # int32_t mm to ft
-            self.parent.db_write("LAT",msg.lat/10000000.0)        # int32_t degE7 10**7
-            self.parent.db_write("LONG",msg.lon/10000000.0)       # int32_t degE7 10**7
+            if self._ahrs:
+                self.parent.db_write("HEAD", msg.hdg/100)             # uint16_t cdeg 
+                self.parent.db_write("VS", msg.vz *  1.96850394)      # int16_t cm/s to ft/min
+                self.parent.db_write("AGL", msg.relative_alt / 304.8) # int32_t mm to ft
+                self.parent.db_write("ALT", msg.alt / 304.8)          # int32_t mm to ft
+            if self._gps:
+                self.parent.db_write("LAT",msg.lat/10000000.0)        # int32_t degE7 10**7
+                self.parent.db_write("LONG",msg.lon/10000000.0)       # int32_t degE7 10**7
+        elif msg_type == "SCALED_PRESSURE":
+            if self._pressure:
+                self.parent.db_write("AIRPRESS", msg.press_abs * 100)       # float hPa to Pa 
+                self.parent.db_write("DIFFAIRPRESS", msg.press_diff * 100)  # float hPa to Pa
+                # We can also get temperature and temperature_press_diff i cDegC
+                # HIGHRES_IMU might also be useful
+
         #if msg_type == "EKF_STATUS_REPORT":
         # This might be useful to get some info about the state of the
         # imus/gyros

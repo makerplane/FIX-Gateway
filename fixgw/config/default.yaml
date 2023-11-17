@@ -313,6 +313,12 @@ connections:
     type: serial
     baud: 115200
     port: /dev/ttyACM0
+    options:
+      airspeed: true
+      gps: true
+      ahrs: true
+      accel: true
+      pressure: true
 
   ifly:
     load: no
