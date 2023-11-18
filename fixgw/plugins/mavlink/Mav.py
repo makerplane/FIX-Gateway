@@ -142,8 +142,9 @@ class Mav:
             if self._ahrs:
                 self.parent.db_write("HEAD", round(msg.hdg/100,2))             # uint16_t cdeg 
                 self.parent.db_write("AGL", round(msg.relative_alt / 304.8,2)) # int32_t mm to ft
-                # Should this be TALT?:
+                # Seems like MSD is TALT and ALT should be indicated, not sure hoe to get both:
                 self.parent.db_write("ALT", round(msg.alt / 304.8, 2))          # int32_t mm to ft
+                self.parent.db_write("TALT", round(msg.alt / 304.8, 2))          # int32_t mm to ft
             if self._gps:
                 self.parent.db_write("LAT",msg.lat/10000000.0)        # int32_t degE7 10**7
                 self.parent.db_write("LONG",msg.lon/10000000.0)       # int32_t degE7 10**7
