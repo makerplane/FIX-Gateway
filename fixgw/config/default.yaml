@@ -313,6 +313,24 @@ connections:
     load: yes
     module: fixgw.plugins.stratux
 
+  mavlink:
+    load: no
+    module: fixgw.plugins.mavlink
+    type: serial
+    baud: 115200
+    port: /dev/ttyACM0
+    options:
+      airspeed: true
+      groundspeed: true
+      gps: true
+      ahrs: true
+      accel: true
+      pressure: true
+
+  ifly:
+    load: no
+    module: fixgw.plugins.ifly
+
 # Logging configuration - See Python logging.config module documenation
 logging:
   version: 1
