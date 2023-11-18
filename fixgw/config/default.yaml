@@ -314,7 +314,7 @@ connections:
     module: fixgw.plugins.stratux
 
   mavlink:
-    load: no
+    load: yes
     module: fixgw.plugins.mavlink
     type: serial
     baud: 115200
@@ -328,7 +328,7 @@ connections:
       pressure: true
 
   ifly:
-    load: no
+    load: yes
     module: fixgw.plugins.ifly
 
 # Logging configuration - See Python logging.config module documenation
