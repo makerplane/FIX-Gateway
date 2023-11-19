@@ -51,6 +51,7 @@ class Mav:
         # but they are often quite inaccurate on the exact pressure
         # This option allows adding/subtracting from the reading to make it more accurate
         self._pascal_offset = options.get('pascal_offset', 0)
+        self._min_airspeed = options.get('min_airspeed', 10)
 
         self._waypoint = str           # The current known waypoint 
         self.setStat('ERROR', 'No Communication')
@@ -119,13 +120,19 @@ class Mav:
             # I do not think TAS can be obtained from the flight controller
             # Maybe we can calculate it
             if self._airspeed:
-                self.parent.db_write("IAS", round(msg.airspeed * 1.9438445,2)) #m/s to knots
+                if self._min_airspeed < (msg.airspeed * 1.9438445):
+                    self.parent.db_write("IAS", round(msg.airspeed * 1.9438445,2)) #m/s to knots
+                else:
+                    self.parent.db_write("IAS",0)
             if self._groundspeed:
                 self.parent.db_write("GS", round(msg.groundspeed * 1.9438445,2)) #m/s to knots
             if self._ahrs:
                 # The AI in pyefis requires TAS
                 # I think we could calculate it but for now we will just use IAS in its place
-                self.parent.db_write("TAS", round(msg.airspeed * 1.9438445,2)) #m/s to knotis
+                if self._min_airspeed < (msg.airspeed * 1.9438445):
+                    self.parent.db_write("TAS", round(msg.airspeed * 1.9438445,2)) #m/s to knots
+                else:
+                    self.parent.db_write("TAS",0)
                 self.parent.db_write("VS", round(msg.climb * 196.85039)) #m/s to ft/min
         elif msg_type == 'SCALED_IMU':
             #logger.debug(msg.yacc/1000)
