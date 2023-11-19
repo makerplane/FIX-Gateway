@@ -47,6 +47,10 @@ class Mav:
         self._ahrs = options.get('ahrs', False)
         self._accel = options.get('accel', False)
         self._pressure = options.get('pressure', False)
+        # Pressure sensors are typically quite accurate at detecting pressure change with altitude
+        # but they are often quite inaccurate on the exact pressure
+        # This option allows adding/subtracting from the reading to make it more accurate
+        self._pascal_offset = options.get('pascal_offset', 0)
 
         self._waypoint = str           # The current known waypoint 
         self.setStat('ERROR', 'No Communication')
@@ -150,7 +154,7 @@ class Mav:
                 self.parent.db_write("LONG",msg.lon/10000000.0)       # int32_t degE7 10**7
         elif msg_type == "SCALED_PRESSURE":
             if self._pressure:
-                self.parent.db_write("AIRPRESS", round(msg.press_abs * 100,4))       # float hPa to Pa 
+                self.parent.db_write("AIRPRESS", round((msg.press_abs * 100) + self._pascal_offset,4))       # float hPa to Pa 
                 self.parent.db_write("DIFFAIRPRESS", round(msg.press_diff * 100,4))  # float hPa to Pa
                 # We can also get temperature and temperature_press_diff i cDegC
                 # HIGHRES_IMU might also be useful
