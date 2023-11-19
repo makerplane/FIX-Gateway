@@ -20,8 +20,9 @@ from pymavlink import mavutil, mavwp
 from os import stat
 import math
 import time 
+from collections import defaultdict
+import statistics
 import logging
-
 logger = logging.getLogger(__name__)
 
 class Mav:
@@ -65,6 +66,9 @@ class Mav:
         if not stat(port):
             self.setStat('ERROR', 'No Communication')
             raise Exception(f"serial port {port} is not found!")
+
+        self._data = defaultdict(list)
+        self._max_average = 15
 
         # Connect
         self.conn = mavutil.mavlink_connection(port, baud=baud)
@@ -120,8 +124,9 @@ class Mav:
             # I do not think TAS can be obtained from the flight controller
             # Maybe we can calculate it
             if self._airspeed:
-                if self._min_airspeed < (msg.airspeed * 1.9438445):
-                    self.parent.db_write("IAS", round(msg.airspeed * 1.9438445,2)) #m/s to knots
+                spd = self.avg('IAS',msg.airspeed * 1.9438445,2)
+                if self._min_airspeed < spd:
+                    self.parent.db_write("IAS", spd) #m/s to knots
                 else:
                     self.parent.db_write("IAS",0)
             if self._groundspeed:
@@ -129,8 +134,9 @@ class Mav:
             if self._ahrs:
                 # The AI in pyefis requires TAS
                 # I think we could calculate it but for now we will just use IAS in its place
-                if self._min_airspeed < (msg.airspeed * 1.9438445):
-                    self.parent.db_write("TAS", round(msg.airspeed * 1.9438445,2)) #m/s to knots
+                spd = self.avg('TAS',msg.airspeed * 1.9438445,2)
+                if self._min_airspeed < spd:
+                    self.parent.db_write("TAS", spd) #m/s to knots
                 else:
                     self.parent.db_write("TAS",0)
                 self.parent.db_write("VS", round(msg.climb * 196.85039)) #m/s to ft/min
@@ -401,4 +407,10 @@ class Mav:
             # TODO Likely need more logic here
             pass 
 
+
+    def avg(self,item,value,decimals):
+        self._data[item].append(value)
+        if len(self._data[item]) > self._max_average:
+            self._data[item].pop(0)
+        return round(statistics.mean(self._data[item]),decimals)
 
