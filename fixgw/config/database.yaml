@@ -3,6 +3,7 @@ variables:
   c: 6  # Cylinders
   a: 8  # Generic Analogs
   b: 16 # Generic Buttons
+  g: 4  # Egt Buttons
   r: 4  # Encoders
   t: 2  # Fuel Tanks
 
@@ -18,6 +19,11 @@ entries:
 
 - key: BTNb
   description: Generic Button %b
+  type: bool
+  tol: 0
+
+- key: EGTBTNg
+  description: EGT Button %b
   type: bool
   tol: 0
 
@@ -273,7 +279,7 @@ entries:
   max: 90.0
   units: deg
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: ORISYSW
   description: Orientation System Warning
@@ -730,6 +736,43 @@ entries:
   min: -1000
   max: 1000
   initial: 0
+- key: BTNTRIMUP
+  description: Trim up button
+  type: bool
+  initial: false
+- key: BTNTRIMDN
+  description: Trim down button
+  type: bool
+  initial: false
+- key: BTNTRIMCT
+  description: Trim center button
+  type: bool
+  initial: false
+- key: BTNTRIMYL
+  description: Yaw Left button
+  type: bool
+  initial: false
+- key: BTNTRIMYR
+  description: Yaw Right button
+  type: bool
+  initial: false
+- key: BTNTRIMYC
+  description: Yaw center button
+  type: bool
+  initial: false
+- key: BTNTRIMRL
+  description: Roll Left button
+  type: bool
+  initial: false
+- key: BTNTRIMRR
+  description: Roll Right button
+  type: bool
+  initial: false
+- key: BTNTRIMRC
+  description: Roll center button
+  type: bool
+  initial: false
+
 - key: BTNAP
   description: AP button state
   type: bool
