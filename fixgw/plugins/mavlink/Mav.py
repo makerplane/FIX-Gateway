@@ -54,6 +54,15 @@ class Mav:
         self._pascal_offset = options.get('pascal_offset', 0)
         self._min_airspeed = options.get('min_airspeed', 10)
 
+        self._outputPitch = 0
+        self._outputRoll = 0
+        self._outputYaw = 0
+
+        self._trimsSaved      = False 
+        self._trimsSavedRoll  = 0
+        self._trimsSavedPitch = 0
+        self._trimsSavedYaw   = 0
+
         self._waypoint = str           # The current known waypoint 
         self.setStat('ERROR', 'No Communication')
 
@@ -73,6 +82,7 @@ class Mav:
         # Connect
         self.conn = mavutil.mavlink_connection(port, baud=baud)
         ids = []
+        ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW)
         if self._airspeed:
             ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
 
@@ -85,6 +95,7 @@ class Mav:
             ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE)
 
         for msg_id in ids:
+            logger.debug(f"Requesting msg_id:{msg_id}")
             # Send message requesting info every 100ms
             message = self.conn.mav.command_long_encode(
                 self.conn.target_system,
@@ -117,6 +128,8 @@ class Mav:
         if not msg:
           return
         msg_type = msg.get_type()
+        #logger.debug(repr(msg))
+        #logger.debug(msg_type)
         if msg_type == 'VFR_HUD':
             #logger.debug(msg)
             # We can also get other info like GS, VS, MSL, HEAD from this
@@ -182,7 +195,7 @@ class Mav:
             if msg.type == 1:
               # custom_mode has current flight mode
               # 0 = manual, 8 = autotune, 10 = auto, 7 = cruise https://ardupilot.org/plane/docs/parameters.html#fltmod
-              
+               
               logger.debug(f"custom_mode: {msg.custom_mode}") # What mode we are in
               if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED !=0:
                   logger.debug("MAV_MODE_FLAG_SAFETY_ARMED")
@@ -269,7 +282,14 @@ class Mav:
             else:
                 pass 
                 # TODO Maybe we can set some status to indicate we cannot arm?
-
+        elif msg_type == "SERVO_OUTPUT_RAW":
+            #logger.debug(f"SERVO_OUTPUT_RAW:{dir(msg)}")
+            #logger.debug(f"roll:servo1_raw:{msg.servo1_raw}:{(msg.servo1_raw - 1500) * 2.5}")
+            #logger.debug(f"pich:servo2_raw:{msg.servo2_raw}:{(msg.servo2_raw - 1500) * 2.5}")
+            #logger.debug(f"yaw :servo4_raw:{msg.servo4_raw}:{(msg.servo4_raw - 1500) * 2.5}")
+            self._outputRoll = int((msg.servo1_raw - 1500) * 2.5) #1100-1900us 1500 center
+            self._outputPitch = int((msg.servo2_raw - 1500) * 2.5)
+            self._outputYaw = int((msg.servo4_raw - 1500) * 2.5)
 
            # TODO We need to drop out of AP mode, alert pilot if system is in a bad state
            # unhealthy GPS signal is one such state
@@ -311,14 +331,41 @@ class Mav:
         # Pilot could hold up/down to change altitude or 
         # hold right/left to change heading
         # Once on heading let go of switch and AP will maintain
-        self.conn.mav.manual_control_send(
-            self.conn.target_system,
-            self.parent.db_read("TRIMP")[0], #pitch
-            self.parent.db_read("TRIMR")[0], #roll
-            0, #Throttle
-            self.parent.db_read("TRIMY")[0], #Yaw
-            0
-        )
+
+        # TODO
+        # When changing out of trim mode save the trims
+        # Then start updating TRIM keys with the data from servo outputs
+
+        # IF yaw or pitch trim change while not in trim mode
+        # This should be used as input to change altitude or heading
+        # Operator can move trims off center, when at desired alt or heading press center
+
+        # How can we detect that the operator is making changes?
+        # Seems like we would need another value to set by operator
+        # Maybe a fly by wire button?
+        if self._apmode == 'TRIM':
+            if self._trimsSaved:
+                self._trimsSaved = False
+                self.parent.db_write("TRIMR", self._trimsSavedRoll)
+                self.parent.db_write("TRIMP", self._trimsSavedPitch)
+                self.parent.db_write("TRIMY", self._trimsSavedYaw)
+            self.conn.mav.manual_control_send(
+                self.conn.target_system,
+                self.parent.db_read("TRIMP")[0], #pitch
+                self.parent.db_read("TRIMR")[0], #roll
+                0, #Throttle
+                self.parent.db_read("TRIMY")[0], #Yaw
+                0
+            )
+        else:
+            if not self._trimsSaved:
+                self._trimsSaved = True
+                self._trimsSavedRoll  = self.parent.db_read("TRIMR")[0]
+                self._trimsSavedPitch = self.parent.db_read("TRIMP")[0]
+                self._trimsSavedYaw   = self.parent.db_read("TRIMY")[0]
+            self.parent.db_write("TRIMP",self._outputPitch) 
+            self.parent.db_write("TRIMR",self._outputRoll)
+            self.parent.db_write("TRIMY",self._outputYaw) 
 
     def checkMode(self):
         self.checkWaypoint()
