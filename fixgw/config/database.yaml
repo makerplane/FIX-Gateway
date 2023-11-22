@@ -807,6 +807,10 @@ entries:
   description: Mode of auto pilot that is requested
   type: str
   initial: "INIT"
+- key: APADJ
+  description: Adjust heading/altitude of auto pilot using trim controls
+  type: bool
+  initial: False
 
 # Used by ifly and mavlink
 - key: WPLAT

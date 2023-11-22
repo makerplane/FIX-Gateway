@@ -58,6 +58,7 @@ class Mav:
         self._outputRoll = 0
         self._outputYaw = 0
 
+        self._apAdjust        = False
         self._trimsSaved      = False 
         self._trimsSavedRoll  = 0
         self._trimsSavedPitch = 0
@@ -343,12 +344,23 @@ class Mav:
         # How can we detect that the operator is making changes?
         # Seems like we would need another value to set by operator
         # Maybe a fly by wire button?
-        if self._apmode == 'TRIM':
-            if self._trimsSaved:
+        if not self._apAdjust and self.parent.db_read("APADJ")[0]:
+            self._apAdjust = True
+            self.parent.db_write("TRIMR",0)
+            self.parent.db_write("TRIMP",0)
+            self.parent.db_write("TRIMY",0)
+
+        if self._apAdjust and not self.parent.db_read("APADJ")[0]:
+            self._apAdjust = False
+
+        if self._apmode == 'TRIM' or self._apAdjust:
+            if not self._apAdjust and self._trimsSaved:
                 self._trimsSaved = False
                 self.parent.db_write("TRIMR", self._trimsSavedRoll)
                 self.parent.db_write("TRIMP", self._trimsSavedPitch)
                 self.parent.db_write("TRIMY", self._trimsSavedYaw)
+
+
             self.conn.mav.manual_control_send(
                 self.conn.target_system,
                 self.parent.db_read("TRIMP")[0], #pitch
