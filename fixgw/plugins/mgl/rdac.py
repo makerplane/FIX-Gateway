@@ -5,6 +5,7 @@ import ctypes
 from . import tables
 import time
 from collections import defaultdict
+import numpy as np
 
 class MGLStruct(ctypes.BigEndianStructure):
     _fields_ = [
@@ -36,7 +37,8 @@ class Get(threading.Thread):
             #print(conf['key'])
             #print(key)
             self.rdac_get_items[mgl_host_id][mgl_id][conf['key']] = { 
-                'key':key
+                'key':key,
+                'calibration':conf.get('calibration', False)
                 # We will likely need more things like calibration data 
             }
         #print(self.rdac_get_items[1]['TC2'])
@@ -127,6 +129,9 @@ class Get(threading.Thread):
                                     # voltage is scaled, we limit to 2 deciam digits
                                     data_value = round(data_value * 0.017428951,2)
 
+                                if d['calibration']:
+                                    x,y = list(zip(*d['calibration']))
+                                    data_value = np.interp(data_value, y, x)
                                 self.log.debug(f"host:{mgl.host} msig_id:{mgl.msg_id} mgl_key:{k} fix_key:{d['key']} value:{data_value}")
                                 self.parent.db_write(d['key'],data_value)
  
