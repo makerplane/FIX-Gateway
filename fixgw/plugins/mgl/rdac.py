@@ -157,6 +157,12 @@ class Send(threading.Thread):
         self.rdac_frequencies = dict()
         self.rdac_id = self.config.get('default_id',1)
 
+        # MGL Requires sending all RDAC data and at specific intervals.
+        # Some of their other equipment collects messages and re-sends on another
+        # network in one burst. if messages are missing then data is not passed along.
+        # So we build a list of default values, update any we want to send using a callback.
+        # Then in the main loop we send all the messages for each interval when interval 
+        # amount of time has passed.
         for key,data in tables.rdac.items():
             # Build: self.rdac_send_items[freq][msg_id][key] = value
             if not data['freq'] in self.rdac_send_items:
@@ -190,7 +196,7 @@ class Send(threading.Thread):
     def run(self):
         self.bus = self.parent.bus
         while(True):
-            time.sleep(0.001)
+            time.sleep(0.01)
             try:
                 for t,s in self.rdac_frequencies.items():
                     self.log.debug(f"{t}:{s}:{((time.time_ns() // 1000000) - t)}####################################")
@@ -204,7 +210,11 @@ class Send(threading.Thread):
                                 self.log.debug(f"key:{key} value:{val}")
                                 b = tables.rdac[key]['bytes']
                                 # TODO Need to deal with data conversion, decimal points etc
-                                v = int(val).to_bytes(2,'little',signed=False)
+                                # Some data is signed, some is not
+                                signed = tables.rdac[key]['type'] == 'sint'
+                                # TODO Deal with min/max/calibration
+
+                                v = int(val).to_bytes(2,'little',signed=signed)
                                 self.log.debug(v)
                                 msg[b[0]] = v[0]
                                 msg[b[1]] = v[1]
@@ -213,7 +223,7 @@ class Send(threading.Thread):
                                 # for each rdac we are sending as
                                 # send msg_id:msg
                                 rdac_id = 20 - 1 + i
-                                print(f"0x{rdac_id}{mid:x}")
+                                #print(f"0x{rdac_id}{mid:x}")
                                 msg_id = int(f"0x{rdac_id}{mid:x}",16)
                                 self.log.debug(f"msg_id:{msg_id}: msg:{msg}")
                                 message = can.Message(is_extended_id=False,arbitration_id=msg_id,data=msg)
