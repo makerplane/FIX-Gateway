@@ -6,8 +6,8 @@ rdac = {
   'bytes': [0,1],
   'type': 'word',
   'min': 0,
-  'max': 65536,
-  'error': 65536,
+  'max': 65535,
+  'error': 65535,
   'freq': 4000 },
 'FF1PR': {
   'description': 'Fuel flow 1 pulse ratio',
@@ -17,7 +17,7 @@ rdac = {
   'scale': 0.1,
   'min': 0,
   'max': 1000,
-  'error': 65536,
+  'error': 65535,
   'freq': 4000 },
 'FF2PC': {
   'description': 'Fuel flow 2 pulse count',
@@ -25,8 +25,8 @@ rdac = {
   'bytes': [4,5],
   'type': 'word',
   'min': 0,
-  'max': 65536,
-  'error': 65536,
+  'max': 65535,
+  'error': 65535,
   'freq': 4000},
 'FF2PR': {
   'description': 'Fuel flow 2 pulse ratio',
@@ -36,7 +36,7 @@ rdac = {
   'min': 0,
   'max': 1000,
   'scale': 0.1,
-  'error': 65536, 
+  'error': 65535, 
   'freq': 4000},
 # msg_id 2
 'TC1': {

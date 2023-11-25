@@ -43,6 +43,10 @@ class Plugin(plugin.PluginBase):
             # We have rdac configured
             if self.config['rdac'].get('get',False):
                 self.threads.append(rdac.Get(self,self.config['rdac']))
+        if self.config.get('rdac',False):
+            # We have rdac configured
+            if self.config['rdac'].get('send',False):
+                self.threads.append(rdac.Send(self,self.config['rdac']))
 
         #self.thread = rdac.Get(self, config)
         self.recvcount = 0

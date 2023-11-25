@@ -6,6 +6,7 @@ from . import tables
 import time
 from collections import defaultdict
 import numpy as np
+import can
 
 class MGLStruct(ctypes.BigEndianStructure):
     _fields_ = [
@@ -135,6 +136,88 @@ class Get(threading.Thread):
                                 self.log.debug(f"host:{mgl.host} msig_id:{mgl.msg_id} mgl_key:{k} fix_key:{d['key']} value:{data_value}")
                                 self.parent.db_write(d['key'],data_value)
  
+            finally:
+                if(self.getout):
+                    break
+
+    def stop(self):
+        self.getout = True
+        self.join()
+
+
+class Send(threading.Thread):
+    def __init__(self, parent, config):
+        super(Send,self).__init__()
+        self.parent = parent
+        self.config = config
+        self.getout = False
+        self.log = parent.log
+        self.rdac_send_items = dict()
+        self.rdac_ids = []
+        self.rdac_frequencies = dict()
+        self.rdac_id = self.config.get('default_id',1)
+
+        for key,data in tables.rdac.items():
+            # Build: self.rdac_send_items[freq][msg_id][key] = value
+            if not data['freq'] in self.rdac_send_items:
+                self.rdac_send_items[data['freq']] = dict()
+            if not data['msg_id'] in self.rdac_send_items[data['freq']]:
+                self.rdac_send_items[data['freq']][data['msg_id']] = dict()
+            if not key in self.rdac_send_items[data['freq']][data['msg_id']]:
+                self.rdac_send_items[data['freq']][data['msg_id']][key] = data.get('error', 0)
+            # TODO If any send items are for this key, connect them
+            #if self.rdac_ids
+            if not data['freq'] in self.rdac_frequencies:
+                self.rdac_frequencies[data['freq']] = time.time_ns() // 1000000
+            for k,conf in self.config['send'].items():
+                self.log.debug(f"key:{key}")
+                #time.sleep(0.1)
+                if key == conf['key']:
+                    self.parent.db_callback_add(k,self.getOutputFunction(data['freq'],data['msg_id'],key))
+                if not conf.get('id',self.rdac_id) in self.rdac_ids:
+                    self.rdac_ids.append(conf.get('id',self.rdac_id))
+
+
+    def getOutputFunction(self, freq, msg_id, key):
+        def outputCallback(fixkey, value, udata):
+            # TODO Manipulate the data to fit rdac
+            # set error code if needed
+            self.log.debug(f"output: freq:{freq} msg_id:{msg_id} key:{key}")
+            self.rdac_send_items[freq][msg_id][key] = value[0]
+
+        return outputCallback 
+
+    def run(self):
+        self.bus = self.parent.bus
+        while(True):
+            time.sleep(0.001)
+            try:
+                for t,s in self.rdac_frequencies.items():
+                    self.log.debug(f"{t}:{s}:{((time.time_ns() // 1000000) - t)}####################################")
+                    if ((time.time_ns() // 1000000) - t) >= s:
+                        # Time to send the values for frequency t
+                        for mid,keys in self.rdac_send_items[t].items():
+                            # Each message id
+                            msg = bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00')
+                            for key,val in self.rdac_send_items[t][mid].items():#keys.items(): #self.rdac_send_items[t][mid].items():
+                                # each item in message id, populate msg
+                                self.log.debug(f"key:{key} value:{val}")
+                                b = tables.rdac[key]['bytes']
+                                # TODO Need to deal with data conversion, decimal points etc
+                                v = int(val).to_bytes(2,'little',signed=False)
+                                self.log.debug(v)
+                                msg[b[0]] = v[0]
+                                msg[b[1]] = v[1]
+                            #msg = ''.join(msg)
+                            for i in self.rdac_ids:
+                                # for each rdac we are sending as
+                                # send msg_id:msg
+                                rdac_id = 20 - 1 + i
+                                print(f"0x{rdac_id}{mid:x}")
+                                msg_id = int(f"0x{rdac_id}{mid:x}",16)
+                                self.log.debug(f"msg_id:{msg_id}: msg:{msg}")
+                                message = can.Message(is_extended_id=False,arbitration_id=msg_id,data=msg)
+                                self.bus.send(message, timeout=0.2)
             finally:
                 if(self.getout):
                     break
