@@ -5,7 +5,7 @@ variables:
   b: 16 # Generic Buttons
   g: 4  # Egt Buttons
   r: 4  # Encoders
-  t: 2  # Fuel Tanks
+  t: 3  # Fuel Tanks
 
 entries:
 - key: ANLGa
@@ -571,6 +571,15 @@ entries:
   initial: 0.0
   tol: 0
   aux: [Min,Max]
+
+- key: EGTMAXe
+  description: Maximum Exhaust Gas Temp Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
 
 - key: CHTec
   description: Cylinder Head Temp Engine %e, Cylinder %c
