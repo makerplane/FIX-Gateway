@@ -48,6 +48,16 @@ class Get(threading.Thread):
                             value = int.from_bytes(msg.data[offset:offset+size],byteorder='big', signed=signed)
                             value = value * factor + add
                             # TODO deal with unit conversions 
+                            # Of the units I've looked at I am not seeing any others that need conversion at the moment.
+                            if units == "cc/min":
+                                #Convert cc/min to GHP, this unit only exists for 'fuelflow'
+                                value = round(value * 0.01585,2)
+                            elif units == "kPa":
+                                value = round(value * 0.296133971 ,2)
+                            elif units == "%":
+                                # I am not sure this is correct since I do not have a real megasquirt to test with yet
+                                value = round(value * 0.01 ,4)
+
                             self.log.debug(f"{fixkey}:{value}") 
                             self.parent.db_write(fixkey,value)
  
