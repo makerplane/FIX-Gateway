@@ -11,10 +11,10 @@ database file: "{CONFIG}/database.yaml"
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-  # - "{CONFIG}/default.ini"
+   - "{CONFIG}/default.ini"
   # - "{CONFIG}/c170b.ini"
   # - "{CONFIG}/fg_172.ini"
-  - "{CONFIG}/rotax582.ini"
+  #- "{CONFIG}/rotax582.ini"
 
 # Connections:
 # if 'load' is 'yes' the connection plugin will be loaded at program start
@@ -132,7 +132,7 @@ connections:
         local_minutes:
         local_hours:
         local_string: TIMEL
-      gmt_format: "%H:%M:%SZ" # Zulu time format string
+      gmt_format: "%H:%M:%S Z" # Zulu time format string
       local_format: "%H:%M:%S %Z" # Local time format string
 
   # Set the annunciation flag bit on configured database items.
@@ -174,6 +174,12 @@ connections:
       - key: CHT12
       - key: CHT13
       - key: CHT14
+
+      - key: EGT11
+      - key: EGT12
+      - key: EGT13
+      - key: EGT14
+
 
       - key: CURRNT
       - key: VOLT
@@ -277,6 +283,9 @@ connections:
         inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
         output: EGTSPAN1
       - function: max
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTMAX1
+      - function: max
         inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
         output: CHTMAX1
       - function: sum
@@ -314,7 +323,7 @@ connections:
     module: fixgw.plugins.stratux
 
   mavlink:
-    load: yes
+    load: no
     module: fixgw.plugins.mavlink
     type: serial
     baud: 115200
@@ -326,10 +335,122 @@ connections:
       ahrs: true
       accel: true
       pressure: true
+      pascal_offset: 2800
 
   ifly:
     load: yes
     module: fixgw.plugins.ifly
+
+  megasquirt:
+    load: no
+    module: fixgw.plugins.megasquirt
+    interface: socketcan
+    channel: vcan0
+    items:
+      rpm: TACH1
+      fuelflow: FUELF1 
+      clt: H2OT1
+      map: MAP1
+      tps: THR1
+      #airtemp: intakeairtemp
+      #afrtgt1: AFR Target for bank 1
+      #AFR1: AFT for cyl1
+      #egocor1: EGO Bank 1 correction
+      #Ignition timing?
+ 
+  mgl:
+    load: no
+    module: fixgw.plugins.mgl
+    # See the python-can documentation for the meaning of these options
+    interface: socketcan
+    channel: vcan0
+    rdac:
+      default_id: 1
+      sendd:
+          EGT12:
+            id: 2
+            key: TC1
+      get:
+        EGT11:
+          key: TC1
+        EGT12:
+          key: TC2
+        EGT13:
+          key: TC3
+        EGT14:
+          key: TC4
+
+        CHT11:
+          key: TC5
+        CHT12:
+          key: TC6
+        CHT13:
+          key: TC7
+        CHT14:
+          key: TC8
+
+        OILT1:
+          key: OILT
+
+        OILP1:
+          key: OILP
+        FUELQ3:
+          key: AUX1
+          calibration: [
+            [0, 500],
+            [1, 1000],
+            [2, 1500],
+            [3, 2000],
+            [4, 2500],
+            [5, 3000],
+            [6, 3500],
+            [7, 4000] ]
+# Maybe this should be for current?
+# Need to check with the RDAC Docs for standard
+        OAT:
+            key: AUX2
+        FUELP1:
+          key: FUELP
+# Maybe use this for battery current?
+ #       H2OT1:
+ #         key: COOL
+
+        
+        FUELQ1:
+          key: FUELLEVEL1
+          calibration: [
+            [0, 500],
+            [1, 1000],
+            [2, 1500],
+            [3, 2000],
+            [4, 2500],
+            [5, 3000],
+            [6, 3500],
+            [7, 4000] ]
+        FUELQ1:
+          key: FUELLEVEL2
+          calibration: [
+            [0, 500],
+            [1, 1000],
+            [2, 1500],
+            [3, 2000],
+            [4, 2500],
+            [5, 3000],
+            [6, 3500],
+            [7, 4000] ]
+
+#        ENGBAYT:
+#          key: RDACTEMP
+        VOLT:
+          key: RDACVOLT
+#        TACH1:
+#          key: RPM1
+# Maybe use MAP input for cabin temp?
+#MAP
+
+  demo:
+    load: yes
+    module: fixgw.plugins.demo
 
 # Logging configuration - See Python logging.config module documenation
 logging:
