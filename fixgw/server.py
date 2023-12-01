@@ -198,7 +198,37 @@ def main_setup():
         signal.signal(signal.SIGTERM, sig_int_handler)
     return args
 
-def main(args):
+def main():
+    args = main_setup()
+    log = logging.getLogger("fixgw")
+    if args.daemonize:
+        try:
+            import daemon
+            import lockfile
+        except ModuleNotFoundError:
+            log.error("Unable to load daemon module.")
+            raise
+        log.debug("Sending to Background")
+        context = daemon.DaemonContext(
+            #working_directory = '/',
+            umask=0o002,
+            #pidfile=lockfile.FileLock('/var/run/fixgw.pid'),
+        )
+        context.signal_map = {
+            signal.SIGTERM: server.sig_int_handler,
+            signal.SIGINT: server.sig_int_handler,
+            signal.SIGHUP: 'terminate',
+        }
+        with context:
+            try:
+                run(args)
+            except Exception as e:
+                log.error(str(e))
+    else:
+        run(args)
+
+
+def run(args):
     for each in plugins:
         log.debug("Attempting to start plugin {0}".format(each))
         try:
