@@ -6,8 +6,22 @@ variables:
   g: 4  # Egt Buttons
   r: 4  # Encoders
   t: 3  # Fuel Tanks
+  n: 5  # Nodes
 
 entries:
+- key: QVOTEn
+  description: Quorum vote for node %n
+  type: int
+  tol: 1000
+  initial: 0
+  min: 0
+  max: 500
+
+- key: LEADER
+  description: "The quorum plugin will set this false if those is not the leader, use it when making decisions to take actions"
+  type: bool
+  initial: true
+
 - key: ANLGa
   description: Generic Analog %a
   type: float
