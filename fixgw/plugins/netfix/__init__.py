@@ -27,6 +27,7 @@ try:
 except:
     import Queue as queue
 from collections import OrderedDict
+from collections import defaultdict
 from collections import deque
 import json
 import fixgw.plugin as plugin
@@ -34,9 +35,12 @@ import fixgw.status as status
 import fixgw.netfix as netfix
 import time
 
+# Track where data came from to prevent loops
+client_block = defaultdict(set)
 
 # This holds the data and functions that are needed by both connection threads.
 class Connection(object):
+    global client_block
     def __init__(self, parent, conn, addr):
         self.parent = parent # This should point to the plugin object
         self.conn = conn
@@ -144,6 +148,8 @@ class Connection(object):
             return
         try:
             self.output_inhibit = True
+            # Track inputs so we do not send back to same client
+            client_block[self.addr[0]].add(a[0])
             self.parent.db_write(a[0], a[1])
         except KeyError:
             self.queue.put("@w{0}!001\n".format(a[0]).encode())
@@ -255,6 +261,8 @@ class Connection(object):
                         #self.output_inhibit = True
                         item.secfail = False
                 self.output_inhibit = True
+                # Track inputs so we do not send back to same client
+                client_block[self.addr[0]].add(x[0])
                 self.parent.db_write(x[0], x[1])
             except Exception as e:
                 # We pretty much ignore this stuff for now
@@ -433,6 +441,7 @@ class ServerThread(threading.Thread):
         return d
 
 class ClientThread(threading.Thread):
+    global client_block
     def __init__(self, parent):
         super(ClientThread, self).__init__()
         self.getout = False    # indicator for when to stop
@@ -460,32 +469,35 @@ class ClientThread(threading.Thread):
             if self.getout:
                 break
             #Do stuff here
-            if len(self.queue) > 0:
-                print(f"Queue Length: {len(self.queue)}")
+            while len(self.queue) > 0:
+                # Maybe a pause when exception?
                 key = self.queue.popleft()
                 for c in self.clients:
                     try:
-                        c.writeValue(key, self.parent.db_read(key)[0])
-                    except:
-                        pass
+                        # Block sending back to self
+                        if key not in client_block[c.cthread.host]:
+                            c.writeValue(key, self.parent.db_read(key)[0])
+                        else:
+                            # Remove the block since we just blocked it
+                            client_block[c.cthread.host].discard(key)
+                    except Exception as e:
                         if key not in self.queue:
                             self.queue.append(key)
-                        # TODO Push back onto the queue?
+                time.sleep(0.0001)
             # Limit how often we send data to other nodes
             time.sleep(0.2)
             
     def getOutputFunction(self, key):
         def outputCallback(fixkey, value, udata):
-            # How can we block sending loops?
-            # The only time I could see this being an issue is a single
-            # client rapidly updating a value, for example a rotary encoder
-            # Get value from encoder, add to existing value
-            # send
-            # get value from encoder, add to existing value
-            # send
-            # get back the value you send the first time
+            if True in value[1:]:
+                # This callback is likely only for old/fail etc we only care about the value itself
+                # Maybe this could be improved in the future
+                # But currently the goal is just sending the value and 
+                # preventing loops
+                return
             if key not in self.queue:
                 self.queue.append(key)
+
         return outputCallback
 
     def stop(self):
@@ -494,18 +506,19 @@ class ClientThread(threading.Thread):
             c.disconnect()
 
     def get_status(self):
-        return OrderedDict()
-#        d = OrderedDict({"Current Clients":len(self.clients)})
-#        for i, t in enumerate(self.clients):
-#            c = OrderedDict()
-#            c["Client"] = t[0].addr
-#            c["Messages Received"] = t[0].msg_recv
-#            c["Messages Sent"] = t[1].msg_sent
-#                 #"Subscriptions":','.join(t[0].co.subscriptions)}
-#            c["Subscriptions"] = len(t[0].co.subscriptions)
-#            d["Connection {0}".format(i)] = c
-#        return d
-
+        connected = 0
+        disconnected = 0
+        for c in clients:
+            if c.isConnected:
+                connected += 1
+            else:
+                disconnected += 1
+        d = OrderedDict({"Current Clients":connected+disconnected})
+        d["Connected"] = connected
+        d["Disonnected"] = disconnected
+        
+        return d
+   
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
