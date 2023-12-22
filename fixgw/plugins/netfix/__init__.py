@@ -27,9 +27,12 @@ try:
 except:
     import Queue as queue
 from collections import OrderedDict
+from collections import deque
 import json
 import fixgw.plugin as plugin
 import fixgw.status as status
+import fixgw.netfix as netfix
+import time
 
 
 # This holds the data and functions that are needed by both connection threads.
@@ -429,27 +432,120 @@ class ServerThread(threading.Thread):
             d["Connection {0}".format(i)] = c
         return d
 
+class ClientThread(threading.Thread):
+    def __init__(self, parent):
+        super(ClientThread, self).__init__()
+        self.getout = False    # indicator for when to stop
+        self.parent = parent   # parent plugin object
+        self.log = parent.log  # simplifies logging
+        self.config = parent.config
+        self.queue = deque()
+        
+        # Connect to each client here
+        self.clients = []
 
+        for c in self.config['clients']:
+            self.clients.append(
+                netfix.Client( c['host'], c.get('port', 3490))
+            )
+            self.clients[-1].connect()
+
+        for o in self.config['outputs']:
+            self.parent.db_callback_add(o.upper(), self.getOutputFunction(o.upper()))
+
+
+
+    def run(self):
+        while True:
+            if self.getout:
+                break
+            #Do stuff here
+            if len(self.queue) > 0:
+                print(f"Queue Length: {len(self.queue)}")
+                key = self.queue.popleft()
+                for c in self.clients:
+                    try:
+                        c.writeValue(key, self.parent.db_read(key)[0])
+                    except:
+                        pass
+                        if key not in self.queue:
+                            self.queue.append(key)
+                        # TODO Push back onto the queue?
+            # Limit how often we send data to other nodes
+            time.sleep(0.2)
+            
+    def getOutputFunction(self, key):
+        def outputCallback(fixkey, value, udata):
+            # How can we block sending loops?
+            # The only time I could see this being an issue is a single
+            # client rapidly updating a value, for example a rotary encoder
+            # Get value from encoder, add to existing value
+            # send
+            # get value from encoder, add to existing value
+            # send
+            # get back the value you send the first time
+            if key not in self.queue:
+                self.queue.append(key)
+        return outputCallback
+
+    def stop(self):
+        self.getout = True
+        for c in self.clients:
+            c.disconnect()
+
+    def get_status(self):
+        return OrderedDict()
+#        d = OrderedDict({"Current Clients":len(self.clients)})
+#        for i, t in enumerate(self.clients):
+#            c = OrderedDict()
+#            c["Client"] = t[0].addr
+#            c["Messages Received"] = t[0].msg_recv
+#            c["Messages Sent"] = t[1].msg_sent
+#                 #"Subscriptions":','.join(t[0].co.subscriptions)}
+#            c["Subscriptions"] = len(t[0].co.subscriptions)
+#            d["Connection {0}".format(i)] = c
+#        return d
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
-        if config['type'] == 'server':
+        if config['type'] in [ 'server', 'both' ]:
             self.thread = ServerThread(self)
-        else:
-            raise ValueError("Only server type is implemented")
+        if config['type'] in [ 'client', 'both' ]:
+            self.client = ClientThread(self)
+        if config['type'] not in [ 'server', 'client', 'both' ]:
+            raise ValueError("Must specify server. client or both")
 
 
     def run(self):
-        self.thread.start()
+        if self.config['type'] in [ 'server', 'both' ]:
+            self.thread.start()
+        if self.config['type'] in [ 'client', 'both' ]:
+            self.client.start()
 
 
     def stop(self):
-        self.thread.stop()
-        if self.thread.is_alive():
-            self.thread.join(2.0)
-        if self.thread.is_alive():
-            raise plugin.PluginFail
+        if self.config['type'] in [ 'server', 'both' ]:
+            self.thread.stop()
+            if self.thread.is_alive():
+                self.thread.join(2.0)
+        if self.config['type'] in [ 'client', 'both' ]:
+            self.client.stop()
+            if self.client.is_alive():
+                self.client.join(2.0)
+        if self.config['type'] == 'both':
+            if self.thread.is_alive() or self.client.is_alive():
+                raise plugin.PluginFail
+        elif self.config['type'] == 'server':
+            if self.thread.is_alive():
+                raise plugin.PluginFail
+        elif self.config['type'] == 'client':
+            if self.client.is_alive():
+                self.client.join(2.0)
+
+
+            #if self.thread.is_alive():
+            #    raise plugin.PluginFail
 
 
     def get_status(self):
