@@ -19,12 +19,12 @@ class MainThread(threading.Thread):
         while not self.getout:
             time.sleep(0.001)
             self.parent.db_write(self.vote_key,self.vote_value)
-            largest_vote = 0
+            highest_vote = 0
             for nodeid in range(1, self.config['total_nodes'] + 1):
                 data = self.parent.db_read(f"QVOTE{nodeid}")
-                if True not in data[1:] and data[0] > largest_vote:
-                    largest_vote = data[0]
-            self.parent.db_write("LEADER", largest_vote >= self.vote_value)
+                if True not in data[1:] and highest_vote < data[0]:
+                    highest_vote = data[0]
+            self.parent.db_write("LEADER", self.vote_value == highest_vote )
 
 
     def stop(self):
