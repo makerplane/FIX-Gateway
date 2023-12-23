@@ -67,6 +67,8 @@ class Get(threading.Thread):
 
     def stop(self):
         self.getout = True
-        self.join()
-
+        try:
+            self.join()
+        except:
+            pass
 
