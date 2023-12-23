@@ -75,7 +75,7 @@ class Get(threading.Thread):
 
     def run(self):
         self.bus = self.parent.bus
-        while(True):
+        while( not self.getout ):
             try:
                 msg = self.bus.recv(1.0)
                 if msg is not None:
@@ -142,8 +142,10 @@ class Get(threading.Thread):
 
     def stop(self):
         self.getout = True
-        self.join()
-
+        try:
+            self.join()
+        except:
+            pass
 
 class Send(threading.Thread):
     def __init__(self, parent, config):
