@@ -74,7 +74,7 @@ class MainThread(threading.Thread):
         while not self.getout:
             msg, (adr, port) = self.s.recvfrom(8192)
 
-            if len(msg) < 1:
+            if len(msg) < 1 or not self.parent.db_read("LEADER")[0]:
                 continue
             nmea_msg = re.findall(r"\$.*$", msg.decode(errors='ignore'),re.M)
             if len(nmea_msg) > 0:
@@ -86,7 +86,7 @@ class MainThread(threading.Thread):
                     if data.dest_lat_dir == 'N':
                         lat = 1
                     if data.dest_lon_dir == 'E':
-                        long = 1  
+                        long = 1
                     self.parent.db_write("WPLAT", lat * nmea_utils.dm_to_sd(data.dest_lat))
                     self.parent.db_write("WPLON", lon * nmea_utils.dm_to_sd(data.dest_lon))
 
