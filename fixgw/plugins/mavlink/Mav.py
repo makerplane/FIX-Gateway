@@ -309,7 +309,9 @@ class Mav:
         if self._apmode == 'INIT':
             self._apmode = mode
             self._apreq = mode
-            self.parent.db_write("APMODE", mode) 
+            self.parent.db_write("APMODE", mode)
+            # set APREQ to match the mode in use at startup
+            self.parent.db_write("APREQ", mode)
 
     def sendMode(self,mode,msg):
         self.parent.db_write("APMODE", mode)
@@ -346,9 +348,10 @@ class Mav:
         # Maybe a fly by wire button?
         if not self._apAdjust and self.parent.db_read("APADJ")[0]:
             self._apAdjust = True
-            self.parent.db_write("TRIMR",0)
-            self.parent.db_write("TRIMP",0)
-            self.parent.db_write("TRIMY",0)
+            if self.parent.db_read("LEADER")[0]:
+                self.parent.db_write("TRIMR",0)
+                self.parent.db_write("TRIMP",0)
+                self.parent.db_write("TRIMY",0)
 
         if self._apAdjust and not self.parent.db_read("APADJ")[0]:
             self._apAdjust = False
@@ -356,20 +359,21 @@ class Mav:
         if self._apmode == 'TRIM' or self._apAdjust:
             if not self._apAdjust and self._trimsSaved:
                 self._trimsSaved = False
-                self.parent.db_write("TRIMR", self._trimsSavedRoll)
-                self.parent.db_write("TRIMP", self._trimsSavedPitch)
-                self.parent.db_write("TRIMY", self._trimsSavedYaw)
+                if self.parent.db_read("LEADER")[0]:
+                    self.parent.db_write("TRIMR", self._trimsSavedRoll)
+                    self.parent.db_write("TRIMP", self._trimsSavedPitch)
+                    self.parent.db_write("TRIMY", self._trimsSavedYaw)
 
-
-            self.conn.mav.manual_control_send(
-                self.conn.target_system,
-                self.parent.db_read("TRIMP")[0], #pitch
-                self.parent.db_read("TRIMR")[0], #roll
-                0, #Throttle
-                self.parent.db_read("TRIMY")[0], #Yaw
-                0
-            )
-        else:
+            if self.parent.db_read("LEADER")[0]:
+                self.conn.mav.manual_control_send(
+                    self.conn.target_system,
+                    self.parent.db_read("TRIMP")[0], #pitch
+                    self.parent.db_read("TRIMR")[0], #roll
+                    0, #Throttle
+                    self.parent.db_read("TRIMY")[0], #Yaw
+                    0
+                )
+        elif self.parent.db_read("LEADER")[0]:
             if not self._trimsSaved:
                 self._trimsSaved = True
                 self._trimsSavedRoll  = self.parent.db_read("TRIMR")[0]
