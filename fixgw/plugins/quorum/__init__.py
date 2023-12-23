@@ -1,3 +1,21 @@
+
+# In an effort to have some redundancy I wanted a way to control some things,
+# such as the auto pilot, from only one gateway at a time. But should one gateway fail
+# the other can takover sending commands to the auto pilot. 
+# From keys were created in the database:
+# QVOTEn, n is the node id and each node will set its own value.
+# LEADER, leader is true if this gateway has the highest vote.
+#
+# Each node should be configured to send their QVOTEn key to all other nodes in the cluster
+# Using the netfix or canfix plugins. It is not necessary to send the other QVOTEs just the local one.
+#
+# LEADER is set to true by default, so if this plugin is not used, LEADER will always be true, unless you change it.
+# So LEADER can be used in plugins for making decision on actions to ensure only the leader is performing those actions.
+# The mavlink plugin is the first one I updated to support this, it will only send commands to the auto pilot
+# from the LEADER node. Sinec the auto pilot has multiple serial ports it can be connected to multiple nodes
+# at the same time but only receive commands from one node.
+
+
 import threading
 import time
 import logging
@@ -17,7 +35,7 @@ class MainThread(threading.Thread):
 
     def run(self):
         while not self.getout:
-            time.sleep(0.001)
+            time.sleep(0.05)
             self.parent.db_write(self.vote_key,self.vote_value)
             highest_vote = 0
             for nodeid in range(1, self.config['total_nodes'] + 1):
