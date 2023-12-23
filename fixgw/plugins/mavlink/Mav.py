@@ -398,7 +398,7 @@ class Mav:
         if self.parent.db_read('WPLAT')[2] or self.parent.db_read('WPLON')[2] or (self.parent.db_read('WPLAT')[0] == 0.0 or self.parent.db_read('WPLON')[0] == 0.0):
             # The WPLAT/LON are old or not set
             # IF we are in GUIDED mode we want to drop to CRUISE mode
-            if self._apreq == 'GUIDED':
+            if self._apreq == 'GUIDED' and self.parent.db_read("LEADER")[0]:
                 # drop to CRUISE mode ( Heading Hold )
                 self.setMode('CRUISE')
                 self.parent.db_write('APMSG', "Drop to Heading Hold")
@@ -410,7 +410,8 @@ class Mav:
             self._apwpv = True
             # Did the waypoint change?
             if self._waypoint != f"{self.parent.db_read('WPLON')[0]}{self.parent.db_read('WPLAT')[0]}{self.parent.db_read('WPNAME')[0]}" and self._apmode == 'GUIDED':
-                self.setMode('GUIDED')
+                if self.parent.db_read("LEADER")[0]:
+                    self.setMode('GUIDED')
  
     def setMode(self, mode):
         # Can we set that mode?
@@ -425,7 +426,8 @@ class Mav:
                 time.sleep(3)
                 self.parent.db_write("APREQ", self._apmode)
                 return
-
+            if not self.parent.db_read("LEADER")[0]:
+                return
             if mode == 'GUIDED':
                 # Request is for guided mode so we need to set the mode differently
                 self._waypoint = f"{self.parent.db_read('WPLON')[0]}{self.parent.db_read('WPLAT')[0]}{self.parent.db_read('WPNAME')[0]}"
