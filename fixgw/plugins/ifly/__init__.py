@@ -67,7 +67,7 @@ class MainThread(threading.Thread):
         self.log = parent.log  # simplifies logging
 
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.s.bind(('', 2000))
+        self.s.bind(('192.168.1.1', 2000))
 
     def run(self):
 
@@ -78,7 +78,13 @@ class MainThread(threading.Thread):
                 continue
             nmea_msg = re.findall(r"\$.*$", msg.decode(errors='ignore'),re.M)
             if len(nmea_msg) > 0:
-                data = pynmea2.parse(nmea_msg[0])
+                try:
+                    data = pynmea2.parse(nmea_msg[0])
+                except:
+                    continue
+                #print(repr(data))
+                if not hasattr(data,'sentence_type'):
+                    continue
                 if data.sentence_type == 'RMB':
                     # Info about destination, only sent when waypoint is active
                     lat = -1
