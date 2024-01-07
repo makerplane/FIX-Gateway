@@ -34,6 +34,7 @@ def altPressure(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -78,6 +79,7 @@ def altDensity(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -154,6 +156,24 @@ def averageFunction(inputs, output):
         o.secfail = flag_secfail
     return func
 
+def encoderFunction(inputs, output, multiplier):
+    """Multiplies the input by the multiplier and adds the result to the output"""
+    def func(key, value, parent):
+        if type(value) != tuple: return # This might be a meta data update
+        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+
+        nonlocal output
+        nonlocal multiplier
+
+        
+        o = parent.db_get_item(output)
+        try: 
+            total = ( value[0] * multiplier ) + o.value[0]
+        except TypeError:
+            print(f"WTF Encoder output {output}")
+            raise
+        o.value = total
+    return func
 
 def sumFunction(inputs, output):
     """Determines the sum of the inputs and writes that to output"""
@@ -162,6 +182,8 @@ def sumFunction(inputs, output):
         vals[each] = None
     def func(key, value, parent):
         if type(value) != tuple: return # This might be a meta data update
+        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+
         nonlocal vals
         nonlocal output
         vals[key] = value
@@ -198,6 +220,7 @@ def maxFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -240,6 +263,7 @@ def minFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -282,6 +306,7 @@ def spanFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
         nonlocal vals
         if type(value) != tuple: return # This might be a meta data update
         vals[key] = value
@@ -329,6 +354,7 @@ def AOAFunction(inputs, output):
     for each in inputs[:5]:
         vals[each] = None
     def func(key, value, parent):
+        if not self.parent.db_read("LEADER")[0]: return # Only the leader can do calculations
         global AOA_pitch_history, AOA_ias_history, AOA_lift_constant, \
                 AOA_acc_history, AOA_vs_history, AOA_heading_history
         nonlocal vals, AOA_pitch_root, AOA_smooth_min_len, \
@@ -523,13 +549,17 @@ class Plugin(plugin.PluginBase):
                                "span":spanFunction,
                                "aoa":AOAFunction,
                                "altp":altPressure,
-                               "altd":altDensity
+                               "altd":altDensity,
+                               "encoder":encoderFunction
                                }
 
         for function in self.config["functions"]:
             fname = function["function"].lower()
             if fname in aggregate_functions:
-                f = aggregate_functions[fname](function["inputs"], function["output"])
+                if fname == "encoder":
+                    f = aggregate_functions[fname](function["inputs"], function["output"], function["multiplier"])
+                else:
+                    f = aggregate_functions[fname](function["inputs"], function["output"])
                 for each in function["inputs"]:
                     if isinstance(each,str):
                         self.db_callback_add(each, f, self)
