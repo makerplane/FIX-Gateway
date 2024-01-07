@@ -164,25 +164,36 @@ class Mapping(object):
         # the dbKeys parameter should be three fix ids separated by commas
         # the first two are the encoder ids for each of the encoders that
         # are contained in the fix message and the third is the button.
+        buttons = list()
+        encoders = list()
         try:
             ids = dbKeys.split(",")
-            encoder1 = database.get_raw_item(ids[0].strip())
-            encoder2 = database.get_raw_item(ids[1].strip())
-            button = database.get_raw_item(ids[2].strip())
-            # TODO Support up to 8 buttons?
+            skip = 1
+            # allow 1 or more encoders
+            encoders.append( database.get_raw_item(ids[0].strip()) )
+            if len(ids) > 1:
+                encoders.append( database.get_raw_item(ids[1].strip()) )
+                skip += 1
+            # Allow 0 to 8 buttons too
+            if len(ids) > 2 and len(ids) < 11:
+                for bc, btn in enumerate(ids[2:]):
+                    print(btn)
+                    buttons.append( database.get_raw_item(ids[bc + skip].strip()) )
 
         except KeyError:
             return None
 
         def InputFunc(cfpar):
-            x = 0
-            if sum:
-                x = encoder1.value[0]
-            encoder1.value = x + cfpar.value[0]
-            if sum:
-                x = encoder2.value[0]
-            encoder2.value = x + cfpar.value[1]
-            button.value = cfpar.value[2][0]
+            for ec, e in enumerate(encoders):
+                if sum:
+                    e.value =  e.value[0] + cfpar.value[ec]
+                else:
+                    e.value = cfpar.value[ec]
+            for bc, b in enumerate(buttons):
+                print(bc)
+                print(cfpar.value[2])
+                print(cfpar.value[2][bc])
+                b.value = cfpar.value[2][bc]
 
         return InputFunc
 
