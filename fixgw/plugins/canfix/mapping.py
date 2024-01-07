@@ -160,7 +160,7 @@ class Mapping(object):
 
     # This is a closure that holds the information we need to transfer data
     # from the CAN-FIX port to the FIXGW Database
-    def getEncoderFunction(self, dbKeys, sum):
+    def getEncoderFunction(self, dbKeys, add):
         # the dbKeys parameter should be three fix ids separated by commas
         # the first two are the encoder ids for each of the encoders that
         # are contained in the fix message and the third is the button.
@@ -185,14 +185,20 @@ class Mapping(object):
 
         def InputFunc(cfpar):
             for ec, e in enumerate(encoders):
-                if sum:
-                    e.value =  e.value[0] + cfpar.value[ec]
+                print(cfpar.value)
+                print(cfpar.value[ec])
+                print(ec)
+                print(add)
+                if add:
+                    print(f"adding {encoders[ec].value[0]} + {cfpar.value[ec]}")
+                    encoders[ec].value =  encoders[ec].value[0] + cfpar.value[ec]
                 else:
-                    e.value = cfpar.value[ec]
+                    encoders[ec].value = cfpar.value[ec]
+                print(e.value)
             for bc, b in enumerate(buttons):
-                print(bc)
-                print(cfpar.value[2])
-                print(cfpar.value[2][bc])
+                #print(bc)
+                #print(cfpar.value[2])
+                #print(cfpar.value[2][bc])
                 b.value = cfpar.value[2][bc]
 
         return InputFunc
