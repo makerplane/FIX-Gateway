@@ -31,6 +31,7 @@ class Mapping(object):
 
         # This is a list of function closures
         self.input_mapping = [None] * 1280
+        self.input_nodespecific = [None] * 1280
         self.output_mapping = {}
         self.log = log
         self.sendcount = 0
@@ -58,7 +59,7 @@ class Mapping(object):
                       'exclude':False,
                       'lastValue':None}
             self.output_mapping[each['fixid']] = output
-
+            
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
         for each in maps['inputs']:
             #p = canfix.protocol.parameters[each["canid"]]
@@ -67,7 +68,7 @@ class Mapping(object):
             if self.input_mapping[ix] is None:
                 self.input_mapping[ix] = [None] * 256
             self.input_mapping[ix][each["index"]] = self.getInputFunction(each["fixid"])
-
+            self.input_nodespecific[ix] = each.get('nodespecific',False)
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
         for each in maps['encoders']:
             #p = canfix.protocol.parameters[each["canid"]]
@@ -75,8 +76,9 @@ class Mapping(object):
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:
                 self.input_mapping[ix] = [None] * 256
-            self.input_mapping[ix][each["index"]] = self.getEncoderFunction(each["fixid"])
-
+            self.input_mapping[ix][each["index"]] = self.getEncoderFunction(each["fixid"], each.get('sum', False))
+            self.input_nodespecific[each["canid"]] = each.get('nodespecific',False)
+            #print(f"###########{each['canid']}:{each.get('nodespecific',None)}")
         for each in maps['switches']:
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:
@@ -158,7 +160,7 @@ class Mapping(object):
 
     # This is a closure that holds the information we need to transfer data
     # from the CAN-FIX port to the FIXGW Database
-    def getEncoderFunction(self, dbKeys):
+    def getEncoderFunction(self, dbKeys, sum):
         # the dbKeys parameter should be three fix ids separated by commas
         # the first two are the encoder ids for each of the encoders that
         # are contained in the fix message and the third is the button.
@@ -167,13 +169,18 @@ class Mapping(object):
             encoder1 = database.get_raw_item(ids[0].strip())
             encoder2 = database.get_raw_item(ids[1].strip())
             button = database.get_raw_item(ids[2].strip())
+            # TODO Support up to 8 buttons?
+
         except KeyError:
             return None
 
         def InputFunc(cfpar):
-            x = encoder1.value[0]
+            x = 0
+            if sum:
+                x = encoder1.value[0]
             encoder1.value = x + cfpar.value[0]
-            x = encoder2.value[0]
+            if sum:
+                x = encoder2.value[0]
             encoder2.value = x + cfpar.value[1]
             button.value = cfpar.value[2][0]
 

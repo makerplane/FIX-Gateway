@@ -52,13 +52,49 @@ class MainThread(threading.Thread):
                 msg = self.bus.recv(1.0)
                 if msg is not None:
                     self.parent.recvcount += 1
+                    # Node Specific
+                    #ncanid = msg.arbitration_id - canfix.NODE_SPECIFIC_MSGS
+                    # Is this a node specific message?
+                    # id between 1760 and 2015
+                    # control code, first data byte is between 12 and 19
+                    if (msg.arbitration_id > 1759 and msg.arbitration_id < 2016) and \
+                       (msg.data[0] > 11 and msg.data[0] < 20):
+                        ns = canfix.NodeSpecific(msg)
+                        nsid = int.from_bytes(bytearray(ns.data[0:2]), byteorder='little') #- 0x100
+                        print(f"msg.arbitration_id: {msg.arbitration_id}, nsid: {nsid}:{hex(nsid)}")
+                        #print(self.mapping.input_nodespecific[nsid])
+                        #print(self.mapping.input_nodespecific)
+                        # TODO Need check range for nsid here
+                        # Is this a node specific we are interested in?
+                        if self.mapping.input_nodespecific[nsid]:
+                            # If we want to allow node specific messages
+                            # modify the message so it looks like a
+                            # normal parameter update
+                            # We clear out the function code bits
+                            nid = msg.arbitration_id - canfix.NODE_SPECIFIC_MSGS
+                            print(hex(nid))
+                            print(msg.data)
+                            t = msg.data[0] #- 0x0C
+                            print(t)
+                            msg.arbitration_id = nsid
+                            data = bytearray([])
+                            data.append(nid) # Node ID
+                            data.append(t - 0x0C) # Index
+                            data.append(0x00) # Function codes
+                            data.extend(msg.data[3:])
+                            #print(data)
+                            msg.data = data 
+                        print(msg.arbitration_id)
+                        print(msg.data)
                     if self.interesting[msg.arbitration_id]:
                         try:
                             cfobj = canfix.parseMessage(msg)
                         except ValueError as e:
                             self.log.warning(e)
                         else:
-                            #self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
+                            self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
+                            print(dir(cfobj))
+                            print(cfobj.node)
                             if isinstance(cfobj, canfix.Parameter):
                                 self.mapping.inputMap(cfobj)
                             else:
@@ -86,7 +122,6 @@ class Plugin(plugin.PluginBase):
         self.thread = MainThread(self, config)
         self.recvcount = 0
         self.errorcount = 0
-
 
     def run(self):
         self.bus = can.ThreadSafeBus(self.channel, bustype = self.interface)
