@@ -63,10 +63,6 @@ class MainThread(threading.Thread):
                         try:
                             ns = canfix.NodeSpecific(msg)
                             nsid = int.from_bytes(bytearray(ns.data[0:2]), byteorder='little') #- 0x100
-                            print(f"msg.arbitration_id: {msg.arbitration_id}, nsid: {nsid}:{hex(nsid)}")
-                            #print(self.mapping.input_nodespecific[nsid])
-                            #print(self.mapping.input_nodespecific)
-                            # TODO Need check range for nsid here
                             # Is this a node specific we are interested in?
                             if self.mapping.input_nodespecific[nsid]:
                                 # If we want to allow node specific messages
@@ -74,20 +70,14 @@ class MainThread(threading.Thread):
                                 # normal parameter update
                                 # We clear out the function code bits
                                 nid = msg.arbitration_id - canfix.NODE_SPECIFIC_MSGS
-                                print(hex(nid))
-                                print(msg.data)
                                 t = msg.data[0] #- 0x0C
-                                print(t)
                                 msg.arbitration_id = nsid
                                 data = bytearray([])
                                 data.append(nid) # Node ID
                                 data.append(t - 0x0C) # Index
                                 data.append(0x00) # Function codes
                                 data.extend(msg.data[3:])
-                                #print(data)
                                 msg.data = data 
-                            print(msg.arbitration_id)
-                            print(msg.data)
                         except:
                             pass
 
@@ -98,8 +88,6 @@ class MainThread(threading.Thread):
                             self.log.warning(e)
                         else:
                             self.log.debug("Fix Thread parseFrame() returned, {0}".format(cfobj))
-                            print(dir(cfobj))
-                            print(cfobj.node)
                             if isinstance(cfobj, canfix.Parameter):
                                 self.mapping.inputMap(cfobj)
                             else:

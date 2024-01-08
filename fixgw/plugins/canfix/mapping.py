@@ -78,7 +78,6 @@ class Mapping(object):
                 self.input_mapping[ix] = [None] * 256
             self.input_mapping[ix][each["index"]] = self.getEncoderFunction(each["fixid"], each.get('sum', False))
             self.input_nodespecific[each["canid"]] = each.get('nodespecific',False)
-            #print(f"###########{each['canid']}:{each.get('nodespecific',None)}")
         for each in maps['switches']:
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:
@@ -149,12 +148,8 @@ class Mapping(object):
                 m["lastValue"] = value[0]
                 p = canfix.ParameterSet(parameter=m["canid"], value=value[0])
                 p.sendNode = node
-                # print(p.msg)
-                # print("Output Callback {} = {}".format(key, value))
                 bus.send(p.msg)
                 self.sendcount += 1
-                # print(bus)
-                # print(self.output_mapping[dbKey])
 
         return outputCallback
 
@@ -177,7 +172,6 @@ class Mapping(object):
             # Allow 0 to 8 buttons too
             if len(ids) > 2 and len(ids) < 11:
                 for bc, btn in enumerate(ids[2:]):
-                    print(btn)
                     buttons.append( database.get_raw_item(ids[bc + skip].strip()) )
 
         except KeyError:
@@ -185,20 +179,11 @@ class Mapping(object):
 
         def InputFunc(cfpar):
             for ec, e in enumerate(encoders):
-                print(cfpar.value)
-                print(cfpar.value[ec])
-                print(ec)
-                print(add)
                 if add:
-                    print(f"adding {encoders[ec].value[0]} + {cfpar.value[ec]}")
                     encoders[ec].value =  encoders[ec].value[0] + cfpar.value[ec]
                 else:
                     encoders[ec].value = cfpar.value[ec]
-                print(e.value)
             for bc, b in enumerate(buttons):
-                #print(bc)
-                #print(cfpar.value[2])
-                #print(cfpar.value[2][bc])
                 b.value = cfpar.value[2][bc]
 
         return InputFunc
