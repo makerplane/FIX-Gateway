@@ -23,7 +23,7 @@
 import fixgw.database as database
 import yaml
 import canfix
-import can
+import fixgw.quorum as quorum
 
 class Mapping(object):
     def __init__(self, mapfile, log=None):
@@ -57,8 +57,11 @@ class Mapping(object):
             output = {'canid':each['canid'],
                       'index':each['index'],
                       'owner':each['owner'],
+                      'require_leader':each.get("require_leader", True),
+                      'on_change':each.get("on_change", True),
                       'exclude':False,
-                      'lastValue':None}
+                      'lastValue':None,
+                      'lastFlag':None}
             self.output_mapping[each['fixid']] = output
             
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
@@ -133,6 +136,10 @@ class Mapping(object):
 
         def outputCallback(key, value, udata):
             m = self.output_mapping[dbKey]
+
+            if m["require_leader"] and not quorum.leader:
+                print("Not Leader")
+                return
             # If the exclude flag is set we just recieved the value
             # from the bus so we don't turn around and write it back out
             if m['exclude']:
@@ -140,14 +147,41 @@ class Mapping(object):
                 return
             if m["owner"]:
                 # If we are the owner we send a regular parameter update
-                # TODO Implement this
-                pass
+                # We do not send unless the flags or value have changed
+                # unless on_change==False
+
+                if value[0] == m["lastValue"] and m["on_change"] \
+                   and m["lastFlag"] == value:
+                    return
+                # TODO Ideally we would not send if the only difference is old changing
+                # canfix does not have a way to send old
+
+                m["lastValue"] = value[0]
+                m["lastFlag"] = value
+
+                p = canfix.Parameter()
+                print(value) 
+                p.identifier = m["canid"]
+                p.value=value[0]
+                p.index = index=m["index"]
+                p.annunciate = value[1]
+                # 2 is old
+                p.quality = value[3]
+                p.failure = value[4]
+                # 5 is secondary fail
+                p.node= node
+                bus.send(p.msg)
+                self.sendcount += 1
+
             else:
                 # If we are not the owner we don't worry about the flags or
-                # sending values that have not changed.
-                if value[0] == m["lastValue"]:
+                # sending values that have not changed unless
+                # on_change==False
+                if value[0] == m["lastValue"] and m["on_change"]:
                     return
+                print("Sending")
                 m["lastValue"] = value[0]
+                m["lastFlag"] = value
                 p = canfix.ParameterSet(parameter=m["canid"], value=value[0])
                 p.sendNode = node
                 bus.send(p.msg)
