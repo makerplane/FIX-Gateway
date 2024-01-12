@@ -24,6 +24,7 @@
 from collections import OrderedDict
 import fixgw.plugin as plugin
 from fixgw.database import read
+import fixgw.quorum as quorum
 
 # Determine pressure altitude
 # inputs: BARO, ALTMSL
@@ -34,7 +35,7 @@ def altPressure(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+        if not quorum.leader: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -79,7 +80,7 @@ def altDensity(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+        if not quorum.leader: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -160,7 +161,7 @@ def encoderFunction(inputs, output, multiplier):
     """Multiplies the input by the multiplier and adds the result to the output"""
     def func(key, value, parent):
         if type(value) != tuple: return # This might be a meta data update
-        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+        if not quorum.leader: return # Only the leader can do calculations
 
         nonlocal output
         nonlocal multiplier
@@ -182,7 +183,7 @@ def sumFunction(inputs, output):
         vals[each] = None
     def func(key, value, parent):
         if type(value) != tuple: return # This might be a meta data update
-        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+        if not quorum.leader: return # Only the leader can do calculations
 
         nonlocal vals
         nonlocal output
@@ -220,7 +221,7 @@ def maxFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+        if not quorum.leader: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -263,7 +264,7 @@ def minFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+        if not quorum.leader: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -306,7 +307,7 @@ def spanFunction(inputs, output):
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
-        if not parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+        if not quorum.leader: return # Only the leader can do calculations
         nonlocal vals
         if type(value) != tuple: return # This might be a meta data update
         vals[key] = value
@@ -354,7 +355,7 @@ def AOAFunction(inputs, output):
     for each in inputs[:5]:
         vals[each] = None
     def func(key, value, parent):
-        if not self.parent.db_read("LEADER")[0]: return # Only the leader can do calculations
+        if not quorum.leader: return # Only the leader can do calculations
         global AOA_pitch_history, AOA_ias_history, AOA_lift_constant, \
                 AOA_acc_history, AOA_vs_history, AOA_heading_history
         nonlocal vals, AOA_pitch_root, AOA_smooth_min_len, \
