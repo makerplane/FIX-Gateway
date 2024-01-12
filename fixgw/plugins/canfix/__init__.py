@@ -43,7 +43,6 @@ class MainThread(threading.Thread):
             if self.mapping.input_mapping[x] is not None:
                 self.interesting[x + 0x100] = True
 
-
     def run(self):
         self.bus = self.parent.bus
 
@@ -54,7 +53,6 @@ class MainThread(threading.Thread):
                     self.parent.recvcount += 1
                     # Node Specific
                     #ncanid = msg.arbitration_id - canfix.NODE_SPECIFIC_MSGS
-                    # TODO Should we add a try somewhere in his node specific code?
                     # Is this a node specific message?
                     # id between 1760 and 2015
                     # control code, first data byte is between 12 and 19
@@ -80,6 +78,14 @@ class MainThread(threading.Thread):
                                 msg.data = data 
                         except:
                             pass
+                    if ( self.parent.quorum.enabled and msg.data[0] == 6 and msg.data[1] == 9) and \
+                       (msg.arbitration_id > 1759 and msg.arbitration_id < 2016):
+                        # This is a quorum node status message
+                        # We only want ones that are not our own
+                        cfobj = canfix.parseMessage(msg)
+                        if cfobj.value != self.parent.quorum.nodeid:
+                            # This is not ourself
+                            self.parent.db_write(f"QVOTE{cfobj.value}",cfobj.value)
 
                     if self.interesting[msg.arbitration_id]:
                         try:
@@ -120,6 +126,22 @@ class Plugin(plugin.PluginBase):
         self.bus = can.ThreadSafeBus(self.channel, bustype = self.interface)
         for each in self.mapping.output_mapping:
             self.db_callback_add(each, self.mapping.getOutputFunction(self.bus, each, self.node))
+        if self.quorum.enabled:
+            # canfix needs updated to support quorum so we will monkey patch it for now
+            # Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
+            # Request to add this to the canfix specification: https://github.com/makerplane/canfix-spec/issues/4
+            canfix.NodeStatus.knownTypes = (("Status","WORD",1),
+                  ("Unit Temperature", "INT",0.1),
+                  ("Supply Voltage","INT",0.1),
+                  ("CAN Transmit Frame Count", "UDINT",1),
+                  ("CAN Receive Frame Count", "UDINT",1),
+                  ("CAN Transmit Error Count", "UDINT",1),
+                  ("CAN Transmit Error Count", "UDINT",1),
+                  ("CAN Receive Overrun Count", "UDINT",1),
+                  ("Serial Number", "UDINT",1),
+                  ("Quorum", "UINT", 1))
+            # Added callback to transmit our quorum vote on the bus
+            self.db_callback_add(self.quorum.vote_key, self.mapping.getQuorumOutputFunction(self.bus, self.quorum.vote_key, self.node))
         self.thread.start()
 
     def stop(self):

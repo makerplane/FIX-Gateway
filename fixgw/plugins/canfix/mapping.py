@@ -23,6 +23,7 @@
 import fixgw.database as database
 import yaml
 import canfix
+import can
 
 class Mapping(object):
     def __init__(self, mapfile, log=None):
@@ -139,6 +140,7 @@ class Mapping(object):
                 return
             if m["owner"]:
                 # If we are the owner we send a regular parameter update
+                # TODO Implement this
                 pass
             else:
                 # If we are not the owner we don't worry about the flags or
@@ -150,6 +152,19 @@ class Mapping(object):
                 p.sendNode = node
                 bus.send(p.msg)
                 self.sendcount += 1
+
+        return outputCallback
+
+    # Returns a closure that should be used as the callback for database item
+    # changes to the quorum voting fixid that should be written to the CAN Bus
+    def getQuorumOutputFunction(self, bus, dbKey, node):
+        def outputCallback(key, value, udata):
+            p = canfix.NodeStatus()
+            p.sendNode = node
+            p.parameter = 0x09
+            p.value = value[0]
+            bus.send(p.msg)
+            self.sendcount += 1
 
         return outputCallback
 

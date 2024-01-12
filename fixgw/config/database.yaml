@@ -15,7 +15,7 @@ entries:
   tol: 1000
   initial: 0
   min: 0
-  max: 500
+  max: 9
 
 - key: LEADER
   description: "The quorum plugin will set this false if those is not the leader, use it when making decisions to take actions"
