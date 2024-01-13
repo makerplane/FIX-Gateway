@@ -31,7 +31,7 @@ class Mapping(object):
 
         # This is a list of function closures
         self.input_mapping = [None] * 1280
-        self.input_nodespecific = [None] * 1280
+        self.input_nodespecific = [None] * 1536
         self.output_mapping = {}
         self.log = log
         self.sendcount = 0
@@ -72,7 +72,7 @@ class Mapping(object):
             if self.input_mapping[ix] is None:
                 self.input_mapping[ix] = [None] * 256
             self.input_mapping[ix][each["index"]] = self.getInputFunction(each["fixid"])
-            self.input_nodespecific[ix] = each.get('nodespecific',False)
+            self.input_nodespecific[each["canid"]] = each.get('nodespecific',False)
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
         for each in maps['encoders']:
             #p = canfix.protocol.parameters[each["canid"]]
