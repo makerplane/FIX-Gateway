@@ -61,7 +61,8 @@ class Mapping(object):
                       'on_change':each.get("on_change", True),
                       'exclude':False,
                       'lastValue':None,
-                      'lastFlag':None}
+                      'lastFlags':None,
+                      'lastOld': None}
             self.output_mapping[each['fixid']] = output
             
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
@@ -138,7 +139,6 @@ class Mapping(object):
             m = self.output_mapping[dbKey]
 
             if m["require_leader"] and not quorum.leader:
-                print("Not Leader")
                 return
             # If the exclude flag is set we just recieved the value
             # from the bus so we don't turn around and write it back out
@@ -149,18 +149,29 @@ class Mapping(object):
                 # If we are the owner we send a regular parameter update
                 # We do not send unless the flags or value have changed
                 # unless on_change==False
+                r = False
+                if m['lastOld'] != value[2] and \
+                   m["lastFlags"] == ( value[1], value[3], value[4] ) and \
+                   value[0] == m["lastValue"]:
+                    # The only thing that changed was old, we do not care about that
+                    r = True
 
-                if value[0] == m["lastValue"] and m["on_change"] \
-                   and m["lastFlag"] == value:
-                    return
-                # TODO Ideally we would not send if the only difference is old changing
-                # canfix does not have a way to send old
+                if m["on_change"] and \
+                   value[0] == m["lastValue"] and \
+                   m["lastFlags"] == ( value[1], value[3], value[4] ):
+                    # Nothing we care about changed and we only send changes
+                    r = True  
+
+                # When comparing the flags, we only care about the flags 
+                # that we can use in canfix
 
                 m["lastValue"] = value[0]
-                m["lastFlag"] = value
+                m["lastFlags"] = ( value[1], value[3], value[4] )
+                m['lastOld'] = value[2]
 
+                if r:
+                    return
                 p = canfix.Parameter()
-                print(value) 
                 p.identifier = m["canid"]
                 p.value=value[0]
                 p.index = index=m["index"]
@@ -179,9 +190,11 @@ class Mapping(object):
                 # on_change==False
                 if value[0] == m["lastValue"] and m["on_change"]:
                     return
-                print("Sending")
+
                 m["lastValue"] = value[0]
-                m["lastFlag"] = value
+                m["lastFlags"] = ( value[1], value[3], value[4] )
+                m['lastOld'] = value[2]
+
                 p = canfix.ParameterSet(parameter=m["canid"], value=value[0])
                 p.sendNode = node
                 bus.send(p.msg)
