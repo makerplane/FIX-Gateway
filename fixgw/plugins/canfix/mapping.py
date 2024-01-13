@@ -19,7 +19,6 @@
 
 # This file controls mapping CAN-FIX parameter ids to FIX database keys
 
-
 import fixgw.database as database
 import yaml
 import canfix
@@ -144,10 +143,8 @@ class Mapping(object):
             # from the bus so we don't turn around and write it back out
             if m['exclude']:
                 m['exclude'] = False
-                self.log.debug(f"Output {dbKey}: excluded")
                 return
             if m["owner"]:
-                self.log.debug(f"Output {dbKey}: as owner")
                 # If we are the owner we send a regular parameter update
                 # We do not send unless the flags or value have changed
                 # unless on_change==False
@@ -157,14 +154,12 @@ class Mapping(object):
                    value[0] == m["lastValue"]:
                     # The only thing that changed was old, we do not care about that
                     r = True
-                    self.log.debug(f"Output {dbKey}: Only old changed. nothing sent")
 
                 if m["on_change"] and \
                    value[0] == m["lastValue"] and \
                    m["lastFlags"] == ( value[1], value[3], value[4] ):
                     # Nothing we care about changed and we only send changes
                     r = True
-                    self.log.debug(f"Output {dbKey}: No changes to send")
 
                 # When comparing the flags, we only care about the flags 
                 # that we can use in canfix
@@ -194,18 +189,24 @@ class Mapping(object):
                 # on_change==False
                 self.log.debug(f"Output {dbKey}: sending NodeSpecific")
                 if value[0] == m["lastValue"] and m["on_change"]:
-                    self.log.debug(f"Output {dbKey}: no changes to send")
                     return
 
                 m["lastValue"] = value[0]
                 m["lastFlags"] = ( value[1], value[3], value[4] )
                 m['lastOld'] = value[2]
-
-                p = canfix.ParameterSet(parameter=m["canid"], value=value[0])
+                # Workaround for bug in python-canfix
+                # https://github.com/birkelbach/python-canfix/pull/14
+                p = canfix.ParameterSet()
+                p.parameter=m["canid"]
+                if p.multiplier == None:
+                    p.multiplier = 1.0
+                p.value = value[0]
+                # End workaround
+                #p = canfix.ParameterSet(parameter=m["canid"], value=value[0])
                 p.sendNode = node
                 bus.send(p.msg)
                 self.sendcount += 1
-                self.log.debug(f"Output {dbKey}: Sent")
+                self.log.debug(f"Output {dbKey}: Sent {p.msg}")
 
         return outputCallback
 
