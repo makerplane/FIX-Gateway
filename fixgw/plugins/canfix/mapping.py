@@ -137,15 +137,17 @@ class Mapping(object):
 
         def outputCallback(key, value, udata):
             m = self.output_mapping[dbKey]
-
+            self.log.debug(f"Output {dbKey}: {value[0]}")
             if m["require_leader"] and not quorum.leader:
                 return
             # If the exclude flag is set we just recieved the value
             # from the bus so we don't turn around and write it back out
             if m['exclude']:
                 m['exclude'] = False
+                self.log.debug(f"Output {dbKey}: excluded")
                 return
             if m["owner"]:
+                self.log.debug(f"Output {dbKey}: as owner")
                 # If we are the owner we send a regular parameter update
                 # We do not send unless the flags or value have changed
                 # unless on_change==False
@@ -155,12 +157,14 @@ class Mapping(object):
                    value[0] == m["lastValue"]:
                     # The only thing that changed was old, we do not care about that
                     r = True
+                    self.log.debug(f"Output {dbKey}: Only old changed. nothing sent")
 
                 if m["on_change"] and \
                    value[0] == m["lastValue"] and \
                    m["lastFlags"] == ( value[1], value[3], value[4] ):
                     # Nothing we care about changed and we only send changes
-                    r = True  
+                    r = True
+                    self.log.debug(f"Output {dbKey}: No changes to send")
 
                 # When comparing the flags, we only care about the flags 
                 # that we can use in canfix
@@ -183,12 +187,14 @@ class Mapping(object):
                 p.node= node
                 bus.send(p.msg)
                 self.sendcount += 1
-
+                self.log.debug(f"Output {dbKey}: Sent")
             else:
                 # If we are not the owner we don't worry about the flags or
                 # sending values that have not changed unless
                 # on_change==False
+                self.log.debug(f"Output {dbKey}: sending NodeSpecific")
                 if value[0] == m["lastValue"] and m["on_change"]:
+                    self.log.debug(f"Output {dbKey}: no changes to send")
                     return
 
                 m["lastValue"] = value[0]
@@ -199,6 +205,7 @@ class Mapping(object):
                 p.sendNode = node
                 bus.send(p.msg)
                 self.sendcount += 1
+                self.log.debug(f"Output {dbKey}: Sent")
 
         return outputCallback
 
