@@ -53,7 +53,16 @@ class Mapping(object):
         # We really just assign all the outputs to a dictionary for the main
         # plugin code to use to assign callbacks.
         for each in maps['outputs']:
-            output = {'canid':each['canid'],
+            fixids = []
+            switch = False 
+            if each['canid'] > 0x307 and each['canid'] < 0x310:
+                switch = True
+                for fid in each['fixid'].split(","):
+                    fixids.append(fid.strip())
+            else:
+                fixids.append(each['fixid'])
+            for ea in fixids: 
+                output = {'canid':each['canid'],
                       'index':each['index'],
                       'owner':each['owner'],
                       'require_leader':each.get("require_leader", True),
@@ -61,8 +70,10 @@ class Mapping(object):
                       'exclude':False,
                       'lastValue':None,
                       'lastFlags':None,
-                      'lastOld': None}
-            self.output_mapping[each['fixid']] = output
+                      'lastOld': None,
+                      'switch': switch,
+                      'fixids': fixids}
+                self.output_mapping[ea] = output
             
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
         for each in maps['inputs']:
@@ -133,7 +144,6 @@ class Mapping(object):
     # Returns a closure that should be used as the callback for database item
     # changes that should be written to the CAN Bus
     def getOutputFunction(self, bus, dbKey, node):
-
         def outputCallback(key, value, udata):
             m = self.output_mapping[dbKey]
             self.log.debug(f"Output {dbKey}: {value[0]}")
@@ -144,6 +154,25 @@ class Mapping(object):
             if m['exclude']:
                 m['exclude'] = False
                 return
+            if m['switch']:
+                # This is a switch output
+                # merge value of all switches
+                val = bytearray([0x0] * 5)
+                for b, valByte in enumerate(val):
+                    # Each byte of val
+                    for bt in range(8):
+                        # Each bit in the byte
+                        if b + bt + 1 > len(m['fixids']):
+                            break
+                        else:
+                            if database.get_raw_item(m['fixids'][ b + bt ]).value[0]:
+                                val[b] = val[b] | ( 1 << bt )
+                                # Do not need to set 0 since that is default 
+                    if b + bt + 1 > len(m['fixids']):
+                        break
+                # Not setting the flags for the buttons because it is not
+                # possible to set them for each individual button
+                value = ( val, 0, 0, 0, 0, 0 ) 
             if m["owner"]:
                 # If we are the owner we send a regular parameter update
                 # We do not send unless the flags or value have changed
