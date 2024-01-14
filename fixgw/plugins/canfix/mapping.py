@@ -98,6 +98,7 @@ class Mapping(object):
             if self.input_mapping[ix] is None:
                 self.input_mapping[ix] = [None] * 256
             self.input_mapping[ix][each["index"]] = self.getSwitchFunction(each["fixid"])
+            self.input_nodespecific[each["canid"]] = each.get('nodespecific',False)
 
     # The idea here is that we create arrays and dictionaries for each type of
     # mapping.  These contain closure functions that know how to put the data in
