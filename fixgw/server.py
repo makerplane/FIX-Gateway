@@ -29,6 +29,7 @@ import signal
 import os
 import sys
 import io
+import traceback
 
 import fixgw.database as database
 import fixgw.status as status
@@ -236,7 +237,11 @@ def run(args):
         except Exception as e:
             log.error("Problem Starting Plugin: {} - {}".format(each,e))
             if args.debug:
-                raise e  # If we have debuggin set we'll raise this exception
+                log.debug(traceback.format_exc())
+                plugin.jobQueue.put("QUIT")
+                break
+                # We cannot raise exception here, it will lock up
+                # instead we exit
 
     iteration = 0
     while True:
