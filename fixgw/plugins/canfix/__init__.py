@@ -85,8 +85,11 @@ class MainThread(threading.Thread):
                         cfobj = canfix.parseMessage(msg)
                         if cfobj.value != self.parent.quorum.nodeid:
                             # This is not ourself
-                            self.parent.db_write(f"QVOTE{cfobj.value}",cfobj.value)
-
+                            if cfobj.value > 0 and cfobj.value < 100:
+                                try:
+                                    self.parent.db_write(f"QVOTE{cfobj.value}",cfobj.value)
+                                except:
+                                    log.warning(f"Received a vote for QVOTE{cfobj.value} but this fixid does not exist")
                     if self.interesting[msg.arbitration_id]:
                         try:
                             cfobj = canfix.parseMessage(msg)
