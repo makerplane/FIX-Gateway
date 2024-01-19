@@ -19,6 +19,7 @@ import threading
 import time
 import yaml
 import copy
+import fixgw.quorum as quorum
 
 __database = {}
 
@@ -299,7 +300,11 @@ def add_item(entry):
     x = entry.get('units', '')
     newitem.units = x if x != None else ''
     newitem.tol = entry.get('tol', 0)
-    newitem.value = entry.get('initial', None)
+    if entry['key'] == 'LEADER':
+        # Make sure LEADER matches quorum.leader at startup
+        newitem.value = quorum.leader
+    else:
+        newitem.value = entry.get('initial', None)
     newitem.init_aux(entry.get('aux', []))
     __database[entry['key']] = newitem
     return newitem

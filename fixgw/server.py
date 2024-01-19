@@ -34,6 +34,7 @@ import traceback
 import fixgw.database as database
 import fixgw.status as status
 import fixgw.plugin as plugin
+import fixgw.quorum as quorum
 
 config_filename = "default.yaml"
 user_home = os.path.expanduser("~")
@@ -144,6 +145,17 @@ def main_setup():
     log.info("Starting FIX Gateway")
     log.info("Configuration Found at {}".format(config_file))
 
+    # If quorum is enabled, set leader to false
+    # When the database is started default values are set
+    # We do not want to send those values out unless we are indeed the leader
+    # and we do not know who the leader is when we are first starting
+    if 'connections' in config:
+        for con in config["connections"]:
+            if 'module' in config["connections"][con]:
+                if config["connections"][con]['module'].lower() == 'fixgw.plugins.quorum':
+                    if config["connections"][con]['load']:
+                        quorum.leader = False
+                        break
 
     # Open database definition file and send to database initialization
     try:

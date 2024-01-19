@@ -47,6 +47,8 @@ class MainThread(threading.Thread):
         self.parent.quorum.total_nodes = self.config["total_nodes"]
 
     def run(self):
+        # Wait for data exchanges at initial startup before becoming leader
+        time.sleep(3)
         while not self.getout:
             time.sleep(0.3)
             self.parent.db_write(self.vote_key,self.vote_value)
