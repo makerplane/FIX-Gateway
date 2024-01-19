@@ -34,13 +34,12 @@ class MainThread(threading.Thread):
         self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
-        self.keylist = {
-                        "TACH1":2450, "MAP1":24.2, "FUELP1":31.5, "OILP1":56.4,
+        self.keylist = {"ROLL":3, "PITCH":0, "IAS":113, "ALT":4220,
+                        "TACH1":2450, "MAP1":24.2, "FUELP1":28.5, "OILP1":56.4,
                         "OILT1":95, "FUELQ1":11.2, "FUELQ2":19.8, "OAT": 32,
                         "CHT11":201,"CHT12":202,"CHT13":199,"CHT14":200,
-                        "EGT11":610,"EGT12":600,"EGT13":604,"EGT14":602,
-                        "FUELF1":8.7,"VOLT":13.7,"CURRNT":45.6,
-                        "H2OT1":100,"CAT":25,"THR1":0.80
+                        "EGT11":710,"EGT12":700,"EGT13":704,"EGT14":702,
+                        "FUELF1":8.7,"VOLT":13.7,"CURRNT":45.6
                         }
         # Initialize the points
         for each in self.keylist:
