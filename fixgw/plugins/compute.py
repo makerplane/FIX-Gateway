@@ -176,6 +176,18 @@ def encoderFunction(inputs, output, multiplier):
         o.value = total
     return func
 
+def setFunction(inputs, output, val):
+    """When fixids in inputs are True, set to output to val"""
+    def func(key,value, parent):
+        if type(value) != tuple: return # This might be a meta data update
+        if not quorum.leader: return # Only the leader can do calculations
+        nonlocal output
+        nonlocal val
+        if value[0]:
+            o = parent.db_get_item(output)
+            o.value = val
+    return func
+     
 def sumFunction(inputs, output):
     """Determines the sum of the inputs and writes that to output"""
     vals = {}
@@ -551,7 +563,8 @@ class Plugin(plugin.PluginBase):
                                "aoa":AOAFunction,
                                "altp":altPressure,
                                "altd":altDensity,
-                               "encoder":encoderFunction
+                               "encoder":encoderFunction,
+                               "set":setFunction
                                }
 
         for function in self.config["functions"]:
@@ -559,6 +572,8 @@ class Plugin(plugin.PluginBase):
             if fname in aggregate_functions:
                 if fname == "encoder":
                     f = aggregate_functions[fname](function["inputs"], function["output"], function["multiplier"])
+                elif fname == "set":
+                    f = aggregate_functions[fname](function["inputs"], function["output"], function["value"])
                 else:
                     f = aggregate_functions[fname](function["inputs"], function["output"])
                 for each in function["inputs"]:
