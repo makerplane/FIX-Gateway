@@ -47,8 +47,21 @@ class MainThread(threading.Thread):
         self.parent.quorum.total_nodes = self.config["total_nodes"]
 
     def run(self):
-        # Wait for data exchanges at initial startup before becoming leader
-        time.sleep(3)
+        # If a client, such as pyEFIS is already running and has the value LEADER set to True and FIX is starting.
+        # The LEADER in pyEFIS might not get updated because we start with LEADER false, and if it stays false
+        # nothing will trigger the update.
+        # If we make LEADER True at startup, so it can be changed to false to trigger an update, it still might not always
+        # notify pyEFIS.  pyEFIS tries to reconnect every two seconds, if we change LEADER from false to true before 
+        # pyEFIS reconnects and subscribes to LEADER then pyEFIS will not get the first change.
+        # The only solution I could come up for this is to startup with LEADER set to true
+        # Before we set it based on quorum, we pause long enough to allow pyEFIS the time to reconnect and subscribe.
+        # I picked 2x time reconnect interval set in pyEFIS
+
+        # This should not cause any issues in the gateway, plugins in here should use quorum.leader, not the fixid LEADER.
+        # This workaround is only needed to ensure that clients get the proper fixid value for LEADER.
+
+        time.sleep(4)
+
         while not self.getout:
             time.sleep(0.3)
             self.parent.db_write(self.vote_key,self.vote_value)

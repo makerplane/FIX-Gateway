@@ -301,8 +301,10 @@ def add_item(entry):
     newitem.units = x if x != None else ''
     newitem.tol = entry.get('tol', 0)
     if entry['key'] == 'LEADER':
-        # Make sure LEADER matches quorum.leader at startup
-        newitem.value = quorum.leader
+        # Always set the fixid LEADER to True on startup
+        # The quorum plugin will ensure the correct value gets set
+        # and clients who are reconnecting will get the proper value
+        newitem.value = True
     else:
         newitem.value = entry.get('initial', None)
     newitem.init_aux(entry.get('aux', []))
