@@ -367,10 +367,10 @@ class Mav:
             if self.parent.quorum.leader:
                 self.conn.mav.manual_control_send(
                     self.conn.target_system,
-                    self.parent.db_read("TRIMP")[0] * 10, #pitch
-                    self.parent.db_read("TRIMR")[0] * 10, #roll
+                    int(self.parent.db_read("TRIMP")[0] * 10), #pitch
+                    int(self.parent.db_read("TRIMR")[0] * 10), #roll
                     0, #Throttle
-                    self.parent.db_read("TRIMY")[0] * 10, #Yaw
+                    int(self.parent.db_read("TRIMY")[0] * 10), #Yaw
                     0
                 )
         elif self.parent.quorum.leader:
