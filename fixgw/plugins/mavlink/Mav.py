@@ -360,28 +360,28 @@ class Mav:
             if not self._apAdjust and self._trimsSaved:
                 self._trimsSaved = False
                 if self.parent.db_read("LEADER")[0]:
-                    self.parent.db_write("TRIMR", self._trimsSavedRoll)
-                    self.parent.db_write("TRIMP", self._trimsSavedPitch)
-                    self.parent.db_write("TRIMY", self._trimsSavedYaw)
+                    self.parent.db_write("TRIMR", self._trimsSavedRoll / 10)
+                    self.parent.db_write("TRIMP", self._trimsSavedPitch / 10)
+                    self.parent.db_write("TRIMY", self._trimsSavedYaw / 10)
 
             if self.parent.db_read("LEADER")[0]:
                 self.conn.mav.manual_control_send(
                     self.conn.target_system,
-                    self.parent.db_read("TRIMP")[0], #pitch
-                    self.parent.db_read("TRIMR")[0], #roll
+                    self.parent.db_read("TRIMP")[0] * 10, #pitch
+                    self.parent.db_read("TRIMR")[0] * 10, #roll
                     0, #Throttle
-                    self.parent.db_read("TRIMY")[0], #Yaw
+                    self.parent.db_read("TRIMY")[0] * 10, #Yaw
                     0
                 )
         elif self.parent.db_read("LEADER")[0]:
             if not self._trimsSaved:
                 self._trimsSaved = True
-                self._trimsSavedRoll  = self.parent.db_read("TRIMR")[0]
-                self._trimsSavedPitch = self.parent.db_read("TRIMP")[0]
-                self._trimsSavedYaw   = self.parent.db_read("TRIMY")[0]
-            self.parent.db_write("TRIMP",self._outputPitch) 
-            self.parent.db_write("TRIMR",self._outputRoll)
-            self.parent.db_write("TRIMY",self._outputYaw) 
+                self._trimsSavedRoll  = self.parent.db_read("TRIMR")[0] * 10
+                self._trimsSavedPitch = self.parent.db_read("TRIMP")[0] * 10
+                self._trimsSavedYaw   = self.parent.db_read("TRIMY")[0] * 10
+            self.parent.db_write("TRIMP",self._outputPitch / 10) 
+            self.parent.db_write("TRIMR",self._outputRoll / 10)
+            self.parent.db_write("TRIMY",self._outputYaw / 10) 
 
     def checkMode(self):
         self.checkWaypoint()
