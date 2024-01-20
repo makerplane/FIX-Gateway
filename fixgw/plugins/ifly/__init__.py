@@ -74,7 +74,7 @@ class MainThread(threading.Thread):
         while not self.getout:
             msg, (adr, port) = self.s.recvfrom(8192)
 
-            if len(msg) < 1 or not self.parent.db_read("LEADER")[0]:
+            if len(msg) < 1 or not self.parent.quorum.leader:
                 continue
             nmea_msg = re.findall(r"\$.*$", msg.decode(errors='ignore'),re.M)
             if len(nmea_msg) > 0:

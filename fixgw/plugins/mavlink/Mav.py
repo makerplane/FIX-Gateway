@@ -348,7 +348,7 @@ class Mav:
         # Maybe a fly by wire button?
         if not self._apAdjust and self.parent.db_read("APADJ")[0]:
             self._apAdjust = True
-            if self.parent.db_read("LEADER")[0]:
+            if self.parent.quorum.leader:
                 self.parent.db_write("TRIMR",0)
                 self.parent.db_write("TRIMP",0)
                 self.parent.db_write("TRIMY",0)
@@ -359,12 +359,12 @@ class Mav:
         if self._apmode == 'TRIM' or self._apAdjust:
             if not self._apAdjust and self._trimsSaved:
                 self._trimsSaved = False
-                if self.parent.db_read("LEADER")[0]:
+                if self.parent.quorum.leader:
                     self.parent.db_write("TRIMR", self._trimsSavedRoll / 10)
                     self.parent.db_write("TRIMP", self._trimsSavedPitch / 10)
                     self.parent.db_write("TRIMY", self._trimsSavedYaw / 10)
 
-            if self.parent.db_read("LEADER")[0]:
+            if self.parent.quorum.leader:
                 self.conn.mav.manual_control_send(
                     self.conn.target_system,
                     self.parent.db_read("TRIMP")[0] * 10, #pitch
@@ -373,7 +373,7 @@ class Mav:
                     self.parent.db_read("TRIMY")[0] * 10, #Yaw
                     0
                 )
-        elif self.parent.db_read("LEADER")[0]:
+        elif self.parent.quorum.leader:
             if not self._trimsSaved:
                 self._trimsSaved = True
                 self._trimsSavedRoll  = self.parent.db_read("TRIMR")[0] * 10
@@ -398,7 +398,7 @@ class Mav:
         if self.parent.db_read('WPLAT')[2] or self.parent.db_read('WPLON')[2] or (self.parent.db_read('WPLAT')[0] == 0.0 or self.parent.db_read('WPLON')[0] == 0.0):
             # The WPLAT/LON are old or not set
             # IF we are in GUIDED mode we want to drop to CRUISE mode
-            if self._apreq == 'GUIDED' and self.parent.db_read("LEADER")[0]:
+            if self._apreq == 'GUIDED' and self.parent.quorum.leader:
                 # drop to CRUISE mode ( Heading Hold )
                 self.setMode('CRUISE')
                 self.parent.db_write('APMSG', "Drop to Heading Hold")
@@ -410,7 +410,7 @@ class Mav:
             self._apwpv = True
             # Did the waypoint change?
             if self._waypoint != f"{self.parent.db_read('WPLON')[0]}{self.parent.db_read('WPLAT')[0]}{self.parent.db_read('WPNAME')[0]}" and self._apmode == 'GUIDED':
-                if self.parent.db_read("LEADER")[0]:
+                if self.parent.quorum.leader:
                     self.setMode('GUIDED')
  
     def setMode(self, mode):
@@ -426,7 +426,7 @@ class Mav:
                 time.sleep(3)
                 self.parent.db_write("APREQ", self._apmode)
                 return
-            if not self.parent.db_read("LEADER")[0]:
+            if not self.parent.quorum.leader:
                 return
             if mode == 'GUIDED':
                 # Request is for guided mode so we need to set the mode differently
