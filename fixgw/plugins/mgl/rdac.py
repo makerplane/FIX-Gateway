@@ -35,46 +35,15 @@ class Get(threading.Thread):
             mgl_id = tables.rdac[conf['key']]['msg_id']
             if not mgl_id in self.rdac_get_items[mgl_host_id]:
                 self.rdac_get_items[mgl_host_id][mgl_id] = dict()
-            #print(conf['key'])
-            #print(key)
             self.rdac_get_items[mgl_host_id][mgl_id][conf['key']] = { 
                 'key':key,
                 'calibration':conf.get('calibration', False)
                 # We will likely need more things like calibration data 
             }
-        #print(self.rdac_get_items[1]['TC2'])
-        #print(self.rdac_get_items[2]['TC1'])  
-        #print(self.rdac_get_items)
-        #time.sleep(5)
-#    rdac:             
-#      default_id: 1   
-#      get:            
-#        EGT11:        
-#          id: 1       
-#          value: TC1  
-
-        # I'm not sure if borrowing the callback method from canfix is useful or not
-        # In the main loop we wait for can messages.
-        # Each message is parsed.
-        # In the parsing method if it has data we want, we can just write it to the fix db at that time.
-        # So what we need to do is:
-        # In the init, build a lookup table of all the times we want.
-        # The table should be indexed to be easy to use for parsing.
-        # parsing will extract the RDAC ID, the RDAC messageID and then then individual values in each message.
-        #
-        # wanted_messages[rdac_id][rdac_msg_id][{fixkey,bytes,type}]
-        #
-
-        # Connect or throw error
-        # A thread should process incomming messages 
-        # And update an array of key/values
-        # data stored in dict
-        # data['rdac_id']['rdac_msg_id'] = [bytes,type,key]
-        #for each in maps['inputs']:
-        #    self.input_mapping[ix][each["index"]] = self.getInputFunction(each["fixid"])
 
     def run(self):
         self.bus = self.parent.bus
+        rdac_temp = 0
         while( not self.getout ):
             try:
                 msg = self.bus.recv(1.0)
@@ -100,6 +69,7 @@ class Get(threading.Thread):
                                 self.parent.wantcount += 1
                                 data_bytes = tables.rdac[k]['bytes']
                                 data_type = tables.rdac[k]['type']
+                                add = tables.rdac[k].get('add',False)
                                 #data_min = tables.rdac.get('min',False)
                                 #data_max = tables.rdac.get('max',False)
                                 data_error = tables.rdac.get('error',False)
@@ -129,6 +99,15 @@ class Get(threading.Thread):
                                 if 'RDACVOLT' == k:
                                     # voltage is scaled, we limit to 2 deciam digits
                                     data_value = round(data_value * 0.017428951,2)
+
+                                if 'RDACTEMP' == k:
+                                    # TC inputs need this value added to them for cold junction compensation
+                                    rdac_temp = data_value
+                                    # For the cold junction compensation to work you must collect the RDACTEMP into a fixid in the config.
+
+                                if add == 'RDACTEMP':
+                                     # Cold junction compensation
+                                     data_value = data_value + rdac_temp
 
                                 if d['calibration']:
                                     x,y = list(zip(*d['calibration']))
