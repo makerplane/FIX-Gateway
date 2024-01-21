@@ -82,20 +82,26 @@ class Mav:
 
         # Connect
         self.conn = mavutil.mavlink_connection(port, baud=baud)
-        ids = []
-        ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW)
+        self.ids = []
+        self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW)
         if self._airspeed:
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
 
         if self._gps or self._ahrs:
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
         if self._accel:
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
         if self._pressure:
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE)
 
-        for msg_id in ids:
+        self.request_ids()
+        self.no_msg_count = 0
+        # Init data
+        self.init()
+
+    def request_ids(self):
+        for msg_id in self.ids:
             logger.debug(f"Requesting msg_id:{msg_id}")
             # Send message requesting info every 100ms
             message = self.conn.mav.command_long_encode(
@@ -111,11 +117,8 @@ class Mav:
                 0,       # param5: not used
                 0        # param6: not used
             )
-            # Send the command 
+            # Send the command
             self.conn.mav.send(message)
-
-        # Init data
-        self.init()
 
     def close(self):
         self.conn.close()
@@ -125,8 +128,11 @@ class Mav:
 
     def process(self):
         # Process recenived messages
-        msg = self.conn.recv_match()
+        msg = self.conn.recv_match(timeout=0.1, blocking=True)
         if not msg:
+          self.no_msg_count += 1
+          if self.no_msg_count > 15:
+              self.request_ids()
           return
         msg_type = msg.get_type()
         #logger.debug(repr(msg))
