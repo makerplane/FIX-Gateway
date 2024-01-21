@@ -210,7 +210,14 @@ class Mapping(object):
                 p.failure = value[4]
                 # 5 is secondary fail
                 p.node= node
-                bus.send(p.msg)
+                try:
+                    bus.send(p.msg)
+                except Exception as e:
+                    self.log.error("CAN send failure:" + str(e))
+                    # This does not seem to always flush the buffer
+                    # a full tx queue seems to be the most common error
+                    # when the bus is disrupted
+                    bus.flush_tx_buffer()
                 self.sendcount += 1
                 self.log.debug(f"Output {dbKey}: Sent")
             else:
@@ -234,7 +241,14 @@ class Mapping(object):
                 # End workaround
                 #p = canfix.ParameterSet(parameter=m["canid"], value=value[0])
                 p.sendNode = node
-                bus.send(p.msg)
+                try:
+                    bus.send(p.msg)
+                except Exception as e:
+                    self.log.error("CAN send failure:" + str(e))
+                    # This does not seem to always flush the buffer
+                    # a full tx queue seems to be the most common error
+                    # when the bus is disrupted
+                    bus.flush_tx_buffer()
                 self.sendcount += 1
                 self.log.debug(f"Output {dbKey}: Sent {p.msg}")
 
@@ -248,7 +262,14 @@ class Mapping(object):
             p.sendNode = node
             p.parameter = 0x09
             p.value = value[0]
-            bus.send(p.msg)
+            try:
+                bus.send(p.msg)
+            except Exception as e:
+                self.log.error("CAN send failure:" + str(e))
+                # This does not seem to always flush the buffer
+                # a full tx queue seems to be the most common error
+                # when the bus is disrupted
+                bus.flush_tx_buffer()
             self.sendcount += 1
 
         return outputCallback
