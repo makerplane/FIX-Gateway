@@ -97,7 +97,7 @@ class Mapping(object):
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:
                 self.input_mapping[ix] = [None] * 256
-            self.input_mapping[ix][each["index"]] = self.getSwitchFunction(each["fixid"])
+            self.input_mapping[ix][each["index"]] = self.getSwitchFunction(each["fixid"],each.get('toggle', None))
             self.input_nodespecific[each["canid"]] = each.get('nodespecific',False)
 
     # The idea here is that we create arrays and dictionaries for each type of
@@ -310,12 +310,18 @@ class Mapping(object):
         return InputFunc
 
 
-    def getSwitchFunction(self, dbKeys):
+    def getSwitchFunction(self, dbKeys, toggle):
         try:
             switches = []
             ids = dbKeys.split(",")
             for each in ids:
                 switches.append(database.get_raw_item(each.strip()))
+            toggles = dict()
+            if toggle:
+                ids = toggle.split(",")
+                for each in ids:
+                    toggles[each.strip()] = True
+
         except KeyError:
             return None
 
@@ -324,7 +330,12 @@ class Mapping(object):
             bit = 0
             byte = 0
             for each in switches:
-                each.value = x[byte][bit]
+                if toggles.get(each.key,False):
+                    if x[byte][bit]:
+                        # toggle only when we receive True
+                        each.value = not each.value[0]
+                else:
+                    each.value = x[byte][bit]
                 bit += 1
                 if bit >=8:
                     bit = 0

@@ -109,6 +109,17 @@ encoders:
 # Switches can be input by specifying the fixids as a comma seperated list.
 # switches are identified as canids 0x308 to 0x30F, each canid can handle up to 
 # a total of 40 switches
+# Any dbkey that is used with a pyEFIS touchscreen toggle button ( NOT simple or repeating )
+# Should be listed in the optional key 'toggle' as a comma seperated list same as fixid.
+# CAN devices sending toggle or simple button data should send one true message 
+# followed by one false message every one time the button is pressed.
+# see one shot mode: https://github.com/e100/mp-canfix-devices/blob/main/switches/code.py
+# CAN devices sending repeating button data should sent one true when pressed and 
+# one false when released.
+#
+# The above rules are needed because multiple buttons are sent with a single can message.
+# Without these rules and features a user pressing one button and while holding it presses another
+# button could result in the first button looking as if it was pressed twice.
 
 switches:
-    - { fixid: "BTN1,BTN2,BTN3,BTN4,BTN5,BTN6", canid: 0x308, index: 0 }
+    - { fixid: "BTN1,BTN2,BTN3,BTN4,BTN5,BTN6", canid: 0x308, index: 0, toggle: "" }
