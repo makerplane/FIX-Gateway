@@ -23,7 +23,7 @@ class MainThread(threading.Thread):
             # Pause collection while writing and clearing
             while not self.collect:
                 time.sleep(0.001)
-            self.data[key] = value
+            self.data[key] = [ value[0], int(value[1]), int(value[2]), int(value[3]), int(value[4]), int(value[5]) ] 
 
         # Create callbacks for defined keys
         for key in database.listkeys():
