@@ -46,11 +46,11 @@ class MainThread(threading.Thread):
                 filepath = os.path.join( path, d.strftime("%Y-%m-%d.%H.json") )
                 # On first loop or at hour change, write the frequency and current time
                 with open(filepath, 'a') as f:
-                    f.write(json.dumps({"frequency": f"{self.config['frequency']}", "starttime": f"{datetime.datetime.now().isoformat()}" }) + "\n")
+                    f.write(json.dumps({"frequency": f"{self.config['frequency']}", "starttime": f"{datetime.datetime.now().isoformat()}" }, separators=(',', ':')) + "\n")
             # Lock collection
             self.collect = False    
             with open(filepath, 'a') as f:
-                f.write( f"{json.dumps(self.data)}\n")
+                f.write( f"{json.dumps(self.data, separators=(',', ':'))}\n")
             # Clear data
             self.data = dict()
             # Unlock collection
