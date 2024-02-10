@@ -21,8 +21,13 @@ class MainThread(threading.Thread):
         # callback
         def persist(key, value, udata=None):
             # Pause collection while writing and clearing
+            # to ensure data is not lost
+            start = time.monotonic()
             while not self.collect:
-                time.sleep(0.001)
+                time.sleep(0.005)
+                # If writing is stalled, continue on
+                if ( start - time.monotonic() ) > 0.125:
+                    break
             self.data[key] = [ value[0], int(value[1]), int(value[2]), int(value[3]), int(value[4]), int(value[5]) ] 
 
         # Create callbacks for defined keys
@@ -38,7 +43,13 @@ class MainThread(threading.Thread):
 
     def run(self):
         hour = -1
+        # Init Error log output by time so first loop will log any errors
+        log_time = time.monotonic() - 601
+        freq_time = time.monotonic() - 601
         while not self.getout:
+            log_loop_time = time.monotonic()
+            freq_loop_time = time.monotonic()
+
             # Create new file for each hour
             # First entry into loop is considered new hour
             if datetime.datetime.now().hour != hour:
@@ -48,12 +59,27 @@ class MainThread(threading.Thread):
                 os.makedirs( path, exist_ok = True )
                 filepath = os.path.join( path, d.strftime("%Y-%m-%d.%H.json") )
                 # On first loop or at hour change, write the frequency and current time
-                with open(filepath, 'a') as f:
-                    f.write(json.dumps({"frequency": f"{self.config['frequency']}", "starttime": f"{datetime.datetime.now().isoformat()}" }, separators=(',', ':')) + "\n")
+                try:
+                    with open(filepath, 'a') as f:
+                        f.write(json.dumps({"frequency": f"{self.config['frequency']}", "starttime": f"{datetime.datetime.now().isoformat()}" }, separators=(',', ':')) + "\n")
+                except:
+                    # Only log message every 5 minutes, no sense spamming the logs
+                    if ( freq_loop_time - freq_time ) > 300:
+                        freq_time = freq_loop_time
+                        self.log.warning(f"Unable to write frequency to the file: {filepath}")
+                    # Reset and try to write this on the next loop
+                    hour = -1
             # Lock collection
-            self.collect = False    
-            with open(filepath, 'a') as f:
-                f.write( f"{json.dumps(self.data, separators=(',', ':'))}\n")
+            self.collect = False
+            try:    
+                with open(filepath, 'a') as f:
+                    f.write( f"{json.dumps(self.data, separators=(',', ':'))}\n")
+            except:
+                # Only log message every 5 minutes, no sense spamming the logs
+                if ( log_loop_time - log_time ) > 300:
+                    log_time = log_loop_time
+                    self.log.warning(f"Unable to write data to the file: {filepath}")
+
             # Clear data
             self.data = dict()
             # Unlock collection
