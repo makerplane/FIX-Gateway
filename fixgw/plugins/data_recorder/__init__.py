@@ -27,10 +27,13 @@ class MainThread(threading.Thread):
 
         # Create callbacks for defined keys
         for key in database.listkeys():
-            for sw in self.config['key_prefixes']:
-                if key.startswith(sw):
-                    self.parent.db_callback_add(key, persist)
-                    break
+            if isinstance(self.config['key_prefixes'], str):
+                self.parent.db_callback_add(key, persist)
+            else:
+                for sw in self.config['key_prefixes']:
+                    if key.startswith(sw):
+                        self.parent.db_callback_add(key, persist)
+                        break
         self.starttime = time.monotonic()
 
     def run(self):

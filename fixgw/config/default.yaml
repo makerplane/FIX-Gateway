@@ -29,10 +29,29 @@ connections:
   data_recorder:
     load: no
     module: fixgw.plugins.data_recorder
-    # Prefix of keys you want to record, ie BTN would record BTN1, BTN2, BTN3, etc etc
-    key_prefixes: [ CHT, EGT, GS, IAS, ALT, HEAD, TRACK ,PITCH, ROLL, YAW, ALAT, ALONG, LAT, LONG, TIMEZH, TIMEZM, TIMEZS ]
+    # key_prefixes define the specific dbkeys that you want to record.
+    # If you want to log all keys specify 'key_prefixes: all'
+    # If you only want to log some dbkeys specify and array of prefixes you want to record.
+    # Any key starting with the prefix will be logged. ie CHT would record CHT11, CHT12, CHTMAX1, etc etc
+    #key_prefixes: [ CHT, EGT, GS, IAS, ALT, HEAD, TRACK ,PITCH, ROLL, YAW, ALAT, ALONG, LAT, LONG, TIMEZH, TIMEZM, TIMEZS ]
+    key_prefixes: all
     # How often in ms should data be recorded
+    # 200-250ms results in smoother playback
+    # higher numbers typically produce smaller files
     frequency: 500 #ms
+    # Once file is produced for each hour.
+    # Each time the fix gateway is started during that hour it will record the frequency set above
+    # The data_playback plugin will adjust playback according the that setting changes even if
+    # it happens mid-file.
+    # The files are named using the data: YYYY-MM-DD.HH.json
+    # The files are stored into a directory structure to organize them into a useful structure.
+    # The folder paths are YYYY/MM/DD/ 
+    # With the example filepath below a file generated in the 21st hour of 2024-02-08 would be stored as:
+    # {CONFIG}/../fdr/2024/02/08/2024-02-08.21.json2024-02-08.21.json
+    # {CONFIG} is the path to this file, if this file was located at:
+    # ~/.makerplane/fixgw/config/default.yaml
+    # The example fdr file above would be located at:
+    # ~/.makerplane/fixgw/fdr/2024/02/08/2024-02-08.21.json2024-02-08.21.json
     filepath: "{CONFIG}/../fdr"
 
   # Network FIX Protocol Interface
