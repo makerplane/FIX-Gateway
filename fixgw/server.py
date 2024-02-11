@@ -30,6 +30,7 @@ import os
 import sys
 import io
 import traceback
+import datetime
 
 import fixgw.database as database
 import fixgw.status as status
@@ -108,7 +109,8 @@ def main_setup():
                         help='Alternate configuration file')
     parser.add_argument('--log-config', type=argparse.FileType('r'),
                         help='Alternate logger configuration file')
-
+    parser.add_argument('--playback-start-time', type=datetime.datetime.fromisoformat, 
+                        help='ISOformat - YYYY-MM-DD:HH:mm:ss') 
     args, unknown_args = parser.parse_known_args()
 
     # if we passed in a configuration file on the command line...
@@ -191,16 +193,49 @@ def main_setup():
 
     # run through the plugin_list dict and find all the plugins that are
     # configured to be loaded and load them.
+    print(args.playback_start_time)
+    if args.playback_start_time:
+        # We are in playback mode, if logs for the time provided exist we will play them back
+        for each in config['connections']:
+            if config['connections'][each]["module"] == 'fixgw.plugins.data_recorder':
+                # Find the data recorder config
+                path = os.path.join( config['connections'][each]['filepath'].format(CONFIG=config_path), args.playback_start_time.strftime("%Y"), args.playback_start_time.strftime("%m"), args.playback_start_time.strftime("%d") )
+                filepath = os.path.join( path, args.playback_start_time.strftime("%Y-%m-%d.%H.json") )
+                print(filepath)
+                file_list = [filepath] 
+                if not os.path.isfile(filepath): raise Exception("No logs found for the date and time provided")
+                # TODO Check the next hour, if file exists add it to the array.
+                # Build the array until you have found 24 hours OR a hour file is missing
+                more_files = True
+                next_hour = args.playback_start_time + datetime.timedelta(hours=1)
+                while more_files:
+                    more_path = os.path.join( config['connections'][each]['filepath'].format(CONFIG=config_path), next_hour.strftime("%Y"), next_hour.strftime("%m"), next_hour.strftime("%d") )
+                    more_file = os.path.join( more_path, next_hour.strftime("%Y-%m-%d.%H.json") )
+                    if os.path.isfile(more_file):
+                        file_list.append(more_file)
+                        next_hour += datetime.timedelta(hours=1)
+                    else:
+                        more_files = False
+                module = 'fixgw.plugins.data_playback'
+                try:
+                    load_plugin('netfix', 'fixgw.plugins.netfix', {'module': 'fixgw.plugins.netfix', 'load': True, 'type': 'server', 'host': '0.0.0.0', 'port': '3490', 'buffer_size': 1024})
+                    load_plugin('data_playback', module,{'module': module, 'load': True, 'files': file_list, 'start_time': args.playback_start_time})
 
-    for each in config['connections']:
-        if config['connections'][each]['load']:
-            module = config['connections'][each]["module"]
-            try:
-                load_plugin(each, module, config['connections'][each])
-            except Exception as e:
-                logging.critical("Unable to load module - " + module + ": " + str(e))
-                if args.debug:
-                    raise
+                except Exception as e:
+                    logging.critical("Unable to load module - " + module + ": " + str(e))
+                    if args.debug:
+                        raise
+
+    else:
+        for each in config['connections']:
+            if config['connections'][each]['load']:
+                module = config['connections'][each]["module"]
+                try:
+                    load_plugin(each, module, config['connections'][each])
+                except Exception as e:
+                    logging.critical("Unable to load module - " + module + ": " + str(e))
+                    if args.debug:
+                        raise
 
     ss = {"Configuration File": config_file,
           "Configuration Path": config_path}
