@@ -40,7 +40,7 @@ import fixgw.quorum as quorum
 config_filename = "default.yaml"
 user_home = os.path.expanduser("~")
 prefix_path = sys.prefix
-path_options = ['{USER}/.makerplane/fixgw/config',
+path_options = ['{USER}/makerplane/fixgw/config',
                 '{PREFIX}/local/etc/fixgw',
                 '{PREFIX}/etc/fixgw',
                 '/etc/fixgw',
@@ -121,10 +121,10 @@ def main_setup():
         cf = open(config_file)
     else:
         # If all else fails copy the configuration from the package
-        # to ~/.makerplane/fixgw/config
-        create_config_dir("{USER}/.makerplane/fixgw".format(USER=user_home))
+        # to ~/makerplane/fixgw/config
+        create_config_dir("{USER}/makerplane/fixgw".format(USER=user_home))
         # Reset this stuff like we found it
-        config_file = "{USER}/.makerplane/fixgw/config/{FILE}".format(USER=user_home, FILE=config_filename)
+        config_file = "{USER}/makerplane/fixgw/config/{FILE}".format(USER=user_home, FILE=config_filename)
         cf = open(config_file)
 
     config_path = os.path.dirname(cf.name)
