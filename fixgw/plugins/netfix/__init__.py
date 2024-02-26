@@ -27,13 +27,20 @@ try:
 except:
     import Queue as queue
 from collections import OrderedDict
+from collections import defaultdict
+from collections import deque
 import json
 import fixgw.plugin as plugin
 import fixgw.status as status
+import fixgw.netfix as netfix
+import time
 
+# Track where data came from to prevent loops
+client_block = defaultdict(set)
 
 # This holds the data and functions that are needed by both connection threads.
 class Connection(object):
+    global client_block
     def __init__(self, parent, conn, addr):
         self.parent = parent # This should point to the plugin object
         self.conn = conn
@@ -141,6 +148,8 @@ class Connection(object):
             return
         try:
             self.output_inhibit = True
+            # Track inputs so we do not send back to same client
+            client_block[self.addr[0]].add(a[0])
             self.parent.db_write(a[0], a[1])
         except KeyError:
             self.queue.put("@w{0}!001\n".format(a[0]).encode())
@@ -252,6 +261,8 @@ class Connection(object):
                         #self.output_inhibit = True
                         item.secfail = False
                 self.output_inhibit = True
+                # Track inputs so we do not send back to same client
+                client_block[self.addr[0]].add(x[0])
                 self.parent.db_write(x[0], x[1])
             except Exception as e:
                 # We pretty much ignore this stuff for now
@@ -429,27 +440,125 @@ class ServerThread(threading.Thread):
             d["Connection {0}".format(i)] = c
         return d
 
+class ClientThread(threading.Thread):
+    global client_block
+    def __init__(self, parent):
+        super(ClientThread, self).__init__()
+        self.getout = False    # indicator for when to stop
+        self.parent = parent   # parent plugin object
+        self.log = parent.log  # simplifies logging
+        self.config = parent.config
+        self.queue = deque()
+        
+        # Connect to each client here
+        self.clients = []
 
+        for c in self.config['clients']:
+            self.clients.append(
+                netfix.Client( c['host'], c.get('port', 3490))
+            )
+            self.clients[-1].connect()
 
-class Plugin(plugin.PluginBase):
-    def __init__(self, name, config):
-        super(Plugin, self).__init__(name, config)
-        if config['type'] == 'server':
-            self.thread = ServerThread(self)
-        else:
-            raise ValueError("Only server type is implemented")
+        for o in self.config['outputs']:
+            self.parent.db_callback_add(o.upper(), self.getOutputFunction(o.upper()))
+
 
 
     def run(self):
-        self.thread.start()
+        while True:
+            if self.getout:
+                break
+            #Do stuff here
+            while len(self.queue) > 0:
+                # Maybe a pause when exception?
+                key = self.queue.popleft()
+                for c in self.clients:
+                    try:
+                        # Block sending back to self
+                        if key not in client_block[c.cthread.host]:
+                            c.writeValue(key, self.parent.db_read(key)[0])
+                        else:
+                            # Remove the block since we just blocked it
+                            client_block[c.cthread.host].discard(key)
+                    except Exception as e:
+                        if key not in self.queue:
+                            self.queue.append(key)
+                time.sleep(0.0001)
+            # Limit how often we send data to other nodes
+            time.sleep(0.2)
+            
+    def getOutputFunction(self, key):
+        def outputCallback(fixkey, value, udata):
+            if True in value[1:]:
+                # This callback is likely only for old/fail etc we only care about the value itself
+                # Maybe this could be improved in the future
+                # But currently the goal is just sending the value and 
+                # preventing loops
+                return
+            if key not in self.queue:
+                self.queue.append(key)
+
+        return outputCallback
+
+    def stop(self):
+        self.getout = True
+        for c in self.clients:
+            c.disconnect()
+
+    def get_status(self):
+        connected = 0
+        disconnected = 0
+        for c in clients:
+            if c.isConnected:
+                connected += 1
+            else:
+                disconnected += 1
+        d = OrderedDict({"Current Clients":connected+disconnected})
+        d["Connected"] = connected
+        d["Disonnected"] = disconnected
+        
+        return d
+   
+class Plugin(plugin.PluginBase):
+    def __init__(self, name, config):
+        super(Plugin, self).__init__(name, config)
+        if config['type'] in [ 'server', 'both' ]:
+            self.thread = ServerThread(self)
+        if config['type'] in [ 'client', 'both' ]:
+            self.client = ClientThread(self)
+        if config['type'] not in [ 'server', 'client', 'both' ]:
+            raise ValueError("Must specify server. client or both")
+
+
+    def run(self):
+        if self.config['type'] in [ 'server', 'both' ]:
+            self.thread.start()
+        if self.config['type'] in [ 'client', 'both' ]:
+            self.client.start()
 
 
     def stop(self):
-        self.thread.stop()
-        if self.thread.is_alive():
-            self.thread.join(2.0)
-        if self.thread.is_alive():
-            raise plugin.PluginFail
+        if self.config['type'] in [ 'server', 'both' ]:
+            self.thread.stop()
+            if self.thread.is_alive():
+                self.thread.join(2.0)
+        if self.config['type'] in [ 'client', 'both' ]:
+            self.client.stop()
+            if self.client.is_alive():
+                self.client.join(2.0)
+        if self.config['type'] == 'both':
+            if self.thread.is_alive() or self.client.is_alive():
+                raise plugin.PluginFail
+        elif self.config['type'] == 'server':
+            if self.thread.is_alive():
+                raise plugin.PluginFail
+        elif self.config['type'] == 'client':
+            if self.client.is_alive():
+                self.client.join(2.0)
+
+
+            #if self.thread.is_alive():
+            #    raise plugin.PluginFail
 
 
     def get_status(self):

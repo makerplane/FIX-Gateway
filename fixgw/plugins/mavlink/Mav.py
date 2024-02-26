@@ -54,6 +54,16 @@ class Mav:
         self._pascal_offset = options.get('pascal_offset', 0)
         self._min_airspeed = options.get('min_airspeed', 10)
 
+        self._outputPitch = 0
+        self._outputRoll = 0
+        self._outputYaw = 0
+
+        self._apAdjust        = False
+        self._trimsSaved      = False 
+        self._trimsSavedRoll  = 0
+        self._trimsSavedPitch = 0
+        self._trimsSavedYaw   = 0
+
         self._waypoint = str           # The current known waypoint 
         self.setStat('ERROR', 'No Communication')
 
@@ -72,19 +82,27 @@ class Mav:
 
         # Connect
         self.conn = mavutil.mavlink_connection(port, baud=baud)
-        ids = []
+        self.ids = []
+        self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW)
         if self._airspeed:
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
 
         if self._gps or self._ahrs:
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
         if self._accel:
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
         if self._pressure:
-            ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE)
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE)
 
-        for msg_id in ids:
+        self.request_ids()
+        self.no_msg_count = 0
+        # Init data
+        self.init()
+
+    def request_ids(self):
+        for msg_id in self.ids:
+            logger.debug(f"Requesting msg_id:{msg_id}")
             # Send message requesting info every 100ms
             message = self.conn.mav.command_long_encode(
                 self.conn.target_system,
@@ -99,11 +117,8 @@ class Mav:
                 0,       # param5: not used
                 0        # param6: not used
             )
-            # Send the command 
+            # Send the command
             self.conn.mav.send(message)
-
-        # Init data
-        self.init()
 
     def close(self):
         self.conn.close()
@@ -113,10 +128,15 @@ class Mav:
 
     def process(self):
         # Process recenived messages
-        msg = self.conn.recv_match()
+        msg = self.conn.recv_match(timeout=0.1, blocking=True)
         if not msg:
+          self.no_msg_count += 1
+          if self.no_msg_count > 15:
+              self.request_ids()
           return
         msg_type = msg.get_type()
+        #logger.debug(repr(msg))
+        #logger.debug(msg_type)
         if msg_type == 'VFR_HUD':
             #logger.debug(msg)
             # We can also get other info like GS, VS, MSL, HEAD from this
@@ -182,7 +202,7 @@ class Mav:
             if msg.type == 1:
               # custom_mode has current flight mode
               # 0 = manual, 8 = autotune, 10 = auto, 7 = cruise https://ardupilot.org/plane/docs/parameters.html#fltmod
-              
+               
               logger.debug(f"custom_mode: {msg.custom_mode}") # What mode we are in
               if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED !=0:
                   logger.debug("MAV_MODE_FLAG_SAFETY_ARMED")
@@ -269,7 +289,14 @@ class Mav:
             else:
                 pass 
                 # TODO Maybe we can set some status to indicate we cannot arm?
-
+        elif msg_type == "SERVO_OUTPUT_RAW":
+            #logger.debug(f"SERVO_OUTPUT_RAW:{dir(msg)}")
+            #logger.debug(f"roll:servo1_raw:{msg.servo1_raw}:{(msg.servo1_raw - 1500) * 2.5}")
+            #logger.debug(f"pich:servo2_raw:{msg.servo2_raw}:{(msg.servo2_raw - 1500) * 2.5}")
+            #logger.debug(f"yaw :servo4_raw:{msg.servo4_raw}:{(msg.servo4_raw - 1500) * 2.5}")
+            self._outputRoll = int((msg.servo1_raw - 1500) * 2.5) #1100-1900us 1500 center
+            self._outputPitch = int((msg.servo2_raw - 1500) * 2.5)
+            self._outputYaw = int((msg.servo4_raw - 1500) * 2.5)
 
            # TODO We need to drop out of AP mode, alert pilot if system is in a bad state
            # unhealthy GPS signal is one such state
@@ -288,7 +315,9 @@ class Mav:
         if self._apmode == 'INIT':
             self._apmode = mode
             self._apreq = mode
-            self.parent.db_write("APMODE", mode) 
+            self.parent.db_write("APMODE", mode)
+            # set APREQ to match the mode in use at startup
+            self.parent.db_write("APREQ", mode)
 
     def sendMode(self,mode,msg):
         self.parent.db_write("APMODE", mode)
@@ -311,14 +340,54 @@ class Mav:
         # Pilot could hold up/down to change altitude or 
         # hold right/left to change heading
         # Once on heading let go of switch and AP will maintain
-        self.conn.mav.manual_control_send(
-            self.conn.target_system,
-            self.parent.db_read("TRIMP")[0], #pitch
-            self.parent.db_read("TRIMR")[0], #roll
-            0, #Throttle
-            self.parent.db_read("TRIMY")[0], #Yaw
-            0
-        )
+
+        # TODO
+        # When changing out of trim mode save the trims
+        # Then start updating TRIM keys with the data from servo outputs
+
+        # IF yaw or pitch trim change while not in trim mode
+        # This should be used as input to change altitude or heading
+        # Operator can move trims off center, when at desired alt or heading press center
+
+        # How can we detect that the operator is making changes?
+        # Seems like we would need another value to set by operator
+        # Maybe a fly by wire button?
+        if not self._apAdjust and self.parent.db_read("APADJ")[0]:
+            self._apAdjust = True
+            if self.parent.quorum.leader:
+                self.parent.db_write("TRIMR",0)
+                self.parent.db_write("TRIMP",0)
+                self.parent.db_write("TRIMY",0)
+
+        if self._apAdjust and not self.parent.db_read("APADJ")[0]:
+            self._apAdjust = False
+
+        if self._apmode == 'TRIM' or self._apAdjust:
+            if not self._apAdjust and self._trimsSaved:
+                self._trimsSaved = False
+                if self.parent.quorum.leader:
+                    self.parent.db_write("TRIMR", self._trimsSavedRoll / 10)
+                    self.parent.db_write("TRIMP", self._trimsSavedPitch / 10)
+                    self.parent.db_write("TRIMY", self._trimsSavedYaw / 10)
+
+            if self.parent.quorum.leader:
+                self.conn.mav.manual_control_send(
+                    self.conn.target_system,
+                    int(self.parent.db_read("TRIMP")[0] * 10), #pitch
+                    int(self.parent.db_read("TRIMR")[0] * 10), #roll
+                    0, #Throttle
+                    int(self.parent.db_read("TRIMY")[0] * 10), #Yaw
+                    0
+                )
+        elif self.parent.quorum.leader:
+            if not self._trimsSaved:
+                self._trimsSaved = True
+                self._trimsSavedRoll  = self.parent.db_read("TRIMR")[0] * 10
+                self._trimsSavedPitch = self.parent.db_read("TRIMP")[0] * 10
+                self._trimsSavedYaw   = self.parent.db_read("TRIMY")[0] * 10
+            self.parent.db_write("TRIMP",self._outputPitch / 10) 
+            self.parent.db_write("TRIMR",self._outputRoll / 10)
+            self.parent.db_write("TRIMY",self._outputYaw / 10) 
 
     def checkMode(self):
         self.checkWaypoint()
@@ -335,7 +404,7 @@ class Mav:
         if self.parent.db_read('WPLAT')[2] or self.parent.db_read('WPLON')[2] or (self.parent.db_read('WPLAT')[0] == 0.0 or self.parent.db_read('WPLON')[0] == 0.0):
             # The WPLAT/LON are old or not set
             # IF we are in GUIDED mode we want to drop to CRUISE mode
-            if self._apreq == 'GUIDED':
+            if self._apreq == 'GUIDED' and self.parent.quorum.leader:
                 # drop to CRUISE mode ( Heading Hold )
                 self.setMode('CRUISE')
                 self.parent.db_write('APMSG', "Drop to Heading Hold")
@@ -347,7 +416,8 @@ class Mav:
             self._apwpv = True
             # Did the waypoint change?
             if self._waypoint != f"{self.parent.db_read('WPLON')[0]}{self.parent.db_read('WPLAT')[0]}{self.parent.db_read('WPNAME')[0]}" and self._apmode == 'GUIDED':
-                self.setMode('GUIDED')
+                if self.parent.quorum.leader:
+                    self.setMode('GUIDED')
  
     def setMode(self, mode):
         # Can we set that mode?
@@ -362,7 +432,8 @@ class Mav:
                 time.sleep(3)
                 self.parent.db_write("APREQ", self._apmode)
                 return
-
+            if not self.parent.quorum.leader:
+                return
             if mode == 'GUIDED':
                 # Request is for guided mode so we need to set the mode differently
                 self._waypoint = f"{self.parent.db_read('WPLON')[0]}{self.parent.db_read('WPLAT')[0]}{self.parent.db_read('WPNAME')[0]}"

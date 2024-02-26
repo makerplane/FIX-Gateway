@@ -22,6 +22,9 @@ meta replacements:
 # fixid - The FIX Database ID (This should match an individual point
 #         in the database configuration)
 # priority - The redundancy priority of this point 0 = primary, 1 secondary, etc.
+# nodespecific - If True nodespecific messages will be accepted the same as 
+#                messages send as owner
+
 inputs:
   - { canid: 0x180, index: 0, fixid: "PITCH", priority: 0 }
   - { canid: 0x181, index: 0, fixid: "ROLL", priority: 0 }
@@ -85,15 +88,38 @@ inputs:
   #         in the database configuration)
   # owner - If true the message will be sent as a normal data update
   #         otherwise a node specific parameter set message will be sent
+  # on_change - Default is True, when True data is only sent if it is different
+  #             from from previous value sent. Setting this to False will send every
+  #             message.
+  # Switches - Like the inputs switches can be output in the same manner by
+  #            specifying a comma seperated list of fixids, up to 40 ids are supported.
 
 outputs:
-  - { fixid: "BARO", canid: 0x190, index: 0, owner: False }
+    - { fixid: "BARO", canid: 0x190, index: 0, owner: False }
+    - { fixid: "BTN11,BTN12,BTN13,BTN14,BTN15,BTN16", canid: 0x308, index: 0 }
 
 # Special Input Functions
+# Each canid for encoders can support two encoders and 0 or up to 8 buttons.
+# defines the fixid as a comma seperated list with the first two being the encoders
 encoders:
     - { fixid: "ENC1, ENC2, BTN11", canid: 0x300, index: 0 }
     - { fixid: "ENC3,ENC4,BTN12", canid: 0x301, index: 0 }
 
 # Generic Switch Inputs
+# Switches can be input by specifying the fixids as a comma seperated list.
+# switches are identified as canids 0x308 to 0x30F, each canid can handle up to 
+# a total of 40 switches
+# Any dbkey that is used with a pyEFIS touchscreen toggle button ( NOT simple or repeating )
+# Should be listed in the optional key 'toggle' as a comma seperated list same as fixid.
+# CAN devices sending toggle or simple button data should send one true message 
+# followed by one false message every one time the button is pressed.
+# see one shot mode: https://github.com/e100/mp-canfix-devices/blob/main/switches/code.py
+# CAN devices sending repeating button data should sent one true when pressed and 
+# one false when released.
+#
+# The above rules are needed because multiple buttons are sent with a single can message.
+# Without these rules and features a user pressing one button and while holding it presses another
+# button could result in the first button looking as if it was pressed twice.
+
 switches:
-    - { fixid: "BTN1,BTN2,BTN3,BTN4,BTN5,BTN6", canid: 0x308, index: 0 }
+    - { fixid: "BTN1,BTN2,BTN3,BTN4,BTN5,BTN6", canid: 0x308, index: 0, toggle: "" }

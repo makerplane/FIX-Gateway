@@ -67,18 +67,24 @@ class MainThread(threading.Thread):
         self.log = parent.log  # simplifies logging
 
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.s.bind(('', 2000))
+        self.s.bind(('192.168.1.1', 2000))
 
     def run(self):
 
         while not self.getout:
             msg, (adr, port) = self.s.recvfrom(8192)
 
-            if len(msg) < 1:
+            if len(msg) < 1 or not self.parent.quorum.leader:
                 continue
             nmea_msg = re.findall(r"\$.*$", msg.decode(errors='ignore'),re.M)
             if len(nmea_msg) > 0:
-                data = pynmea2.parse(nmea_msg[0])
+                try:
+                    data = pynmea2.parse(nmea_msg[0])
+                except:
+                    continue
+                #print(repr(data))
+                if not hasattr(data,'sentence_type'):
+                    continue
                 if data.sentence_type == 'RMB':
                     # Info about destination, only sent when waypoint is active
                     lat = -1
@@ -86,7 +92,7 @@ class MainThread(threading.Thread):
                     if data.dest_lat_dir == 'N':
                         lat = 1
                     if data.dest_lon_dir == 'E':
-                        long = 1  
+                        long = 1
                     self.parent.db_write("WPLAT", lat * nmea_utils.dm_to_sd(data.dest_lat))
                     self.parent.db_write("WPLON", lon * nmea_utils.dm_to_sd(data.dest_lon))
 

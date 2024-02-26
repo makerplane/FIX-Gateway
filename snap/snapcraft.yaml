@@ -1,0 +1,28 @@
+name: fixgateway
+version: "0.5"
+summary: makerplane FIX gateway server
+description: |
+    A service that collects and distributes avionics data
+architectures:
+  - build-on: arm64
+  - build-on: armhf
+  - build-on: amd64
+base: core22
+confinement: strict
+# devmode works for accessing serial ports
+
+parts:
+  fixgateway:
+    plugin: python
+    source: .
+
+apps:
+  server:
+    command: bin/fixgw
+    plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
+
+  client:
+    command: bin/fixgwc
+    plugs: [network]
+
+

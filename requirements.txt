@@ -3,5 +3,8 @@ python-canfix
 lockfile
 daemon
 pyyaml
+pyserial
 pymavlink
 pynmea2
+numpy
+tables

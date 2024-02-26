@@ -22,6 +22,8 @@
 
 import fixgw.database as database
 import logging
+import fixgw.quorum as quorum
+
 try:
     import queue
 except:
@@ -44,6 +46,7 @@ class PluginBase(object):
         self.log.debug("Config: " + str(self.config))
 
         self.running = False
+        self.quorum = quorum
 
     def start(self):
         self.log.info("Starting")

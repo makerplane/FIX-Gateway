@@ -1,0 +1,86 @@
+# This is the main configuration file for the FIX-Gateway Server
+
+# For use in this configuration, {CONFIG} will be replaced with the
+# directory where this file is found.
+
+# File that defines the database.
+database file: "{CONFIG}/database.yaml"
+
+# Set initial values after the database is initialized.
+# If there are duplicate assignments in these files, the last
+# file listed will overwrite data in previous files
+# Plugins may overwrite this data as well.
+initialization files:
+   - "{CONFIG}/default.ini"
+  # - "{CONFIG}/c170b.ini"
+  # - "{CONFIG}/fg_172.ini"
+  #- "{CONFIG}/rotax582.ini"
+
+# Connections:
+# if 'load' is 'yes' the connection plugin will be loaded at program start
+# if 'module' should be set to the location of the Python module that
+# represents the connection plugin.
+# All other configuration options will be passed to the connection plugin
+# itself. See the FIX-Gateway documentation for specific connection plugin
+# configuration options.
+connections:
+
+  # Flight Data Recorder
+  data_playback:
+    load: yes
+    module: fixgw.plugins.data_playback
+    # How often in ms should data be recorded
+    frequency: 500 #ms
+    files: 
+      - "{CONFIG}/../fdr/2024/02/08/2024-02-08.19.json"
+
+  netfix:
+    load: yes
+    module: fixgw.plugins.netfix
+    type: server #client or both
+    host: 0.0.0.0
+    port: 3490
+    buffer_size: 1024
+    timeout: 1.0
+
+
+# Logging configuration - See Python logging.config module documenation
+logging:
+  version: 1
+  disable_existing_loggers: False
+  loggers:
+    '':
+      # messages with levels below the one given will not be logged
+      #level: DEBUG
+      #level: INFO
+      level: WARNING
+      #level: ERROR
+      #level: CRITICAL
+
+      handlers: [stderr, syslog]
+      propagate: True
+
+  formatters:
+    standard:
+      format: "%(levelname)s:%(asctime)s:%(name)s - %(message)s"
+      datefmt: "%Y%m%d-%H:%M:%S"
+      class: logging.Formatter
+
+  handlers:
+    stderr:
+      class: logging.StreamHandler
+      formatter: standard
+      stream: ext://sys.stderr
+
+    file:
+      class: logging.FileHandler
+      formatter: standard
+      filename: fixgw.log
+      mode: w
+      #mode: a
+
+    syslog:
+      class: logging.handlers.SysLogHandler
+      address: /dev/log
+      facility: local6
+      formatter: standard
