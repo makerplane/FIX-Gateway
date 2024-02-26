@@ -24,14 +24,196 @@
 from collections import OrderedDict
 import fixgw.plugin as plugin
 from fixgw.database import read
+import fixgw.quorum as quorum
+
+# Determine pressure altitude
+# inputs: BARO, ALTMSL
+# Pressure Altitude = Elevation  in FT + (145442.2 * ( 1 - ( altimeter setting in inhg/29.92126)^.190261))
+
+def altPressure(inputs, output, require_leader):
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+    def func(key, value, parent):
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
+        nonlocal vals
+        # This is to set the aux data in the output to one of the inputs
+        o = parent.db_get_item(output)
+        if type(value) != tuple:
+            x = key.split('.')
+            # we use the first input in the list to set the aux values
+            if x[0] == inputs[0]:
+                if o.get_aux_value(x[1]) != value:
+                    o.set_aux_value(x[1], value)
+            return
+        vals[key] = value
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        flag_secfail = False
+        pa = None
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            if vals[each][2]: flag_old = True
+            if vals[each][3]: flag_bad = True
+            if vals[each][4]: flag_fail = True
+            if vals[each][5]: flag_secfail = True
+
+        baro = list(vals)[0]
+        msl = list(vals)[1]
+        pa = vals[msl][0] + (145442.2 * ( 1 - (vals[baro][0]/29.92126) ** 0.190261))
+        o.value = pa
+        o.fail = flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
+        o.secfail = flag_secfail
+    return func
+
+# Density altitude
+#Standard Temperature = 15 – 1.98 * (A in ft) /1000
+#Density Altitude = Pressure Altitude + (120 * (OAT deg C - Standard Temperature))
+# inputs PALT ALTMSL OAT
+def altDensity(inputs, output, require_leader):
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+    def func(key, value, parent):
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
+        nonlocal vals
+        # This is to set the aux data in the output to one of the inputs
+        o = parent.db_get_item(output)
+        if type(value) != tuple:
+            x = key.split('.')
+            # we use the first input in the list to set the aux values
+            if x[0] == inputs[0]:
+                if o.get_aux_value(x[1]) != value:
+                    o.set_aux_value(x[1], value)
+            return
+        vals[key] = value
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        flag_secfail = False
+        da = None
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            if vals[each][2]: flag_old = True
+            if vals[each][3]: flag_bad = True
+            if vals[each][4]: flag_fail = True
+            if vals[each][5]: flag_secfail = True
+        palt = list(vals)[0]
+        talt = list(vals)[1]
+        oat = list(vals)[2]
+        st = 15 - (1.98 * (vals[talt][0]) /1000)
+        da = vals[palt][0] + (120 * (vals[oat][0] - st))
+        o.value = da
+        o.fail = flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
+        o.secfail = flag_secfail
+    return func
+
+# Determine pressure altitude
+# inputs: BARO, ALTMSL
+# Pressure Altitude = Elevation  in FT + (145442.2 * ( 1 - ( altimeter setting in inhg/29.92126)^.190261))
+
+def altPressure(inputs, output):
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+    def func(key, value, parent):
+        nonlocal vals
+        # This is to set the aux data in the output to one of the inputs
+        o = parent.db_get_item(output)
+        if type(value) != tuple:
+            x = key.split('.')
+            # we use the first input in the list to set the aux values
+            if x[0] == inputs[0]:
+                if o.get_aux_value(x[1]) != value:
+                    o.set_aux_value(x[1], value)
+            return
+        vals[key] = value
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        flag_secfail = False
+        pa = None
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            if vals[each][2]: flag_old = True
+            if vals[each][3]: flag_bad = True
+            if vals[each][4]: flag_fail = True
+            if vals[each][5]: flag_secfail = True
+
+        baro = list(vals)[0]
+        msl = list(vals)[1]
+        pa = vals[msl][0] + (145442.2 * ( 1 - (vals[baro][0]/29.92126) ** 0.190261))
+        o.value = pa
+        o.fail = flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
+        o.secfail = flag_secfail
+    return func
+
+# Density altitude
+#Standard Temperature = 15 – 1.98 * (A in ft) /1000
+#Density Altitude = Pressure Altitude + (120 * (OAT deg C - Standard Temperature))
+# inputs PALT ALTMSL OAT
+def altDensity(inputs, output):
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+    def func(key, value, parent):
+        nonlocal vals
+        # This is to set the aux data in the output to one of the inputs
+        o = parent.db_get_item(output)
+        if type(value) != tuple:
+            x = key.split('.')
+            # we use the first input in the list to set the aux values
+            if x[0] == inputs[0]:
+                if o.get_aux_value(x[1]) != value:
+                    o.set_aux_value(x[1], value)
+            return
+        vals[key] = value
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        flag_secfail = False
+        da = None
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            if vals[each][2]: flag_old = True
+            if vals[each][3]: flag_bad = True
+            if vals[each][4]: flag_fail = True
+            if vals[each][5]: flag_secfail = True
+        palt = list(vals)[0]
+        talt = list(vals)[1]
+        oat = list(vals)[2]
+        st = 15 - (1.98 * (vals[talt][0]) /1000)
+        da = vals[palt][0] + (120 * (vals[oat][0] - st))
+        o.value = da
+        o.fail = flag_fail
+        if o.fail: o.value = 0.0
+        o.bad = flag_bad
+        o.old = flag_old
+        o.secfail = flag_secfail
+    return func
 
 # Determines the average of the inputs and writes that to output
-def averageFunction(inputs, output):
+def averageFunction(inputs, output, require_leader):
     vals = {}
     for each in inputs:
         vals[each] = None
 
     def func(key, value, parent):
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
         nonlocal vals
         o = parent.db_get_item(output)
         # This is to set the aux data in the output to one of the inputs
@@ -65,14 +247,46 @@ def averageFunction(inputs, output):
         o.secfail = flag_secfail
     return func
 
+def encoderFunction(inputs, output, multiplier, require_leader):
+    """Multiplies the input by the multiplier and adds the result to the output"""
+    def func(key, value, parent):
+        if type(value) != tuple: return # This might be a meta data update
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
 
-def sumFunction(inputs, output):
+        nonlocal output
+        nonlocal multiplier
+
+        
+        o = parent.db_get_item(output)
+        try: 
+            total = ( value[0] * multiplier ) + o.value[0]
+        except TypeError:
+            print(f"WTF Encoder output {output}")
+            raise
+        o.value = total
+    return func
+
+def setFunction(inputs, output, val, require_leader):
+    """When fixids in inputs are True, set to output to val"""
+    def func(key,value, parent):
+        if type(value) != tuple: return # This might be a meta data update
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
+        nonlocal output
+        nonlocal val
+        if value[0]:
+            o = parent.db_get_item(output)
+            o.value = val
+    return func
+     
+def sumFunction(inputs, output, require_leader):
     """Determines the sum of the inputs and writes that to output"""
     vals = {}
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
         if type(value) != tuple: return # This might be a meta data update
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
+
         nonlocal vals
         nonlocal output
         vals[key] = value
@@ -104,11 +318,12 @@ def sumFunction(inputs, output):
 
 
 # Determines the max of the inputs and writes that to output
-def maxFunction(inputs, output):
+def maxFunction(inputs, output, require_leader):
     vals = {}
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -146,11 +361,12 @@ def maxFunction(inputs, output):
 
 
 # Determines the min of the inputs and writes that to output
-def minFunction(inputs, output):
+def minFunction(inputs, output, require_leader):
     vals = {}
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
         nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
@@ -188,11 +404,12 @@ def minFunction(inputs, output):
 
 # Determines the span between the highest and lowest of the inputs
 # and writes that to output
-def spanFunction(inputs, output):
+def spanFunction(inputs, output, require_leader):
     vals = {}
     for each in inputs:
         vals[each] = None
     def func(key, value, parent):
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
         nonlocal vals
         if type(value) != tuple: return # This might be a meta data update
         vals[key] = value
@@ -230,7 +447,7 @@ AOA_acc_history=list()
 AOA_vs_history=list()
 AOA_heading_history=list()
 AOA_lift_constant = None
-def AOAFunction(inputs, output):
+def AOAFunction(inputs, output, require_leader):
     vals = {}
     # pitch_root: the pitch of the wing relative to the aircraft at the root
     AOA_pitch_root, AOA_smooth_min_len, AOA_max_mean_vs, AOA_max_vs_dev, \
@@ -240,6 +457,7 @@ def AOAFunction(inputs, output):
     for each in inputs[:5]:
         vals[each] = None
     def func(key, value, parent):
+        if not quorum.leader and require_leader: return # Only the leader can do calculations
         global AOA_pitch_history, AOA_ias_history, AOA_lift_constant, \
                 AOA_acc_history, AOA_vs_history, AOA_heading_history
         nonlocal vals, AOA_pitch_root, AOA_smooth_min_len, \
@@ -432,13 +650,27 @@ class Plugin(plugin.PluginBase):
                                "max":maxFunction,
                                "min":minFunction,
                                "span":spanFunction,
-                               "aoa":AOAFunction
+                               "aoa":AOAFunction,
+                               "altp":altPressure,
+                               "altd":altDensity,
+                               "encoder":encoderFunction,
+                               "set":setFunction
                                }
 
         for function in self.config["functions"]:
+            req_lead = True
+            if 'require_leader' in function:
+                if not function['require_leader']:
+                     req_lead = False
+
             fname = function["function"].lower()
             if fname in aggregate_functions:
-                f = aggregate_functions[fname](function["inputs"], function["output"])
+                if fname == "encoder":
+                    f = aggregate_functions[fname](function["inputs"], function["output"], function["multiplier"], req_lead)
+                elif fname == "set":
+                    f = aggregate_functions[fname](function["inputs"], function["output"], function["value"], req_lead)
+                else:
+                    f = aggregate_functions[fname](function["inputs"], function["output"], req_lead)
                 for each in function["inputs"]:
                     if isinstance(each,str):
                         self.db_callback_add(each, f, self)

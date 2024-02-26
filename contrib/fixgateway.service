@@ -1,0 +1,35 @@
+# Place this in $HOME/.config/systemd/user/
+#
+# Edit the paths on the ExecStart line below to match your environment
+#
+#
+# Enable it:
+#    systemctl --user enable fixgateway.service
+# Start it:
+#    systemctl --user start fixgateway.service
+#
+# Disable it:
+#    systemctl --user disable fixgateway.service
+# Stop it:
+#    systemctl --user stop fixgateway.service
+#
+#
+# If it crashes or exits systemd will restart it
+# systemd will start it when you log in too
+# Simple way to ensure it always stays running
+# Not tested but should work with automatic login too
+#
+[Unit]
+Description=fixgateway
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=exec
+Restart=always
+RestartSec=1s
+ExecStart=/snap/bin/fixgateway.server
+
+[Install]
+WantedBy=graphical-session.target
+

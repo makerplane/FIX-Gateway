@@ -29,20 +29,29 @@ import signal
 import os
 import sys
 import io
+import traceback
+import datetime
 
 import fixgw.database as database
 import fixgw.status as status
 import fixgw.plugin as plugin
+import fixgw.quorum as quorum
+from os import environ
 
 config_filename = "default.yaml"
-user_home = os.path.expanduser("~")
+user_home = environ.get('SNAP_REAL_HOME', os.path.expanduser("~"))
 prefix_path = sys.prefix
-path_options = ['{USER}/.makerplane/fixgw/config',
+path_options = ['{USER}/makerplane/fixgw/config',
                 '{PREFIX}/local/etc/fixgw',
                 '{PREFIX}/etc/fixgw',
                 '/etc/fixgw',
-                'fixgw/config',
                 '.']
+
+# Add fixgw/config when not running as snap
+# Helpful for development
+if not environ.get('SNAP',False):
+    path_options.append('fixgw/config')
+
 config_path = None
 
 # This dictionary holds the modules for each plugin that we load
@@ -86,15 +95,7 @@ def sig_int_handler(signum, frame):
 def main_setup():
     global config_path
     global log
-    # Look for our configuration file in the list of directories
-    for directory in path_options:
-        # store the first match that we find
-        d = directory.format(USER=user_home, PREFIX=prefix_path)
-        if os.path.isfile("{}/{}".format(d, config_filename)):
-            config_path = d
-            break
 
-    config_file = "{}/{}".format(config_path, config_filename)
     parser = argparse.ArgumentParser(description='FIX Gateway')
     parser.add_argument('--debug', '-d', action='store_true',
                         help='Run in debug mode')
@@ -106,8 +107,19 @@ def main_setup():
                         help='Alternate configuration file')
     parser.add_argument('--log-config', type=argparse.FileType('r'),
                         help='Alternate logger configuration file')
-
+    parser.add_argument('--playback-start-time', type=datetime.datetime.fromisoformat, 
+                        help='ISOformat - YYYY-MM-DD:HH:mm:ss') 
     args, unknown_args = parser.parse_known_args()
+
+    # Look for our configuration file in the list of directories
+    for directory in path_options:
+        # store the first match that we find
+        d = directory.format(USER=user_home, PREFIX=prefix_path)
+        if os.path.isfile("{}/{}".format(d, config_filename)):
+            config_path = d
+            break
+
+    config_file = "{}/{}".format(config_path, config_filename)
 
     # if we passed in a configuration file on the command line...
     if args.config_file:
@@ -117,10 +129,10 @@ def main_setup():
         cf = open(config_file)
     else:
         # If all else fails copy the configuration from the package
-        # to ~/.makerplane/fixgw/config
-        create_config_dir("{USER}/.makerplane/fixgw".format(USER=user_home))
+        # to ~/makerplane/fixgw/config
+        create_config_dir("{USER}/makerplane/fixgw".format(USER=user_home))
         # Reset this stuff like we found it
-        config_file = "{USER}/.makerplane/fixgw/config/{FILE}".format(USER=user_home, FILE=config_filename)
+        config_file = "{USER}/makerplane/fixgw/config/{FILE}".format(USER=user_home, FILE=config_filename)
         cf = open(config_file)
 
     config_path = os.path.dirname(cf.name)
@@ -143,6 +155,17 @@ def main_setup():
     log.info("Starting FIX Gateway")
     log.info("Configuration Found at {}".format(config_file))
 
+    # If quorum is enabled, set leader to false
+    # When the database is started default values are set
+    # We do not want to send those values out unless we are indeed the leader
+    # and we do not know who the leader is when we are first starting
+    if 'connections' in config:
+        for con in config["connections"]:
+            if 'module' in config["connections"][con]:
+                if config["connections"][con]['module'].lower() == 'fixgw.plugins.quorum':
+                    if config["connections"][con]['load']:
+                        quorum.leader = False
+                        break
 
     # Open database definition file and send to database initialization
     try:
@@ -178,16 +201,49 @@ def main_setup():
 
     # run through the plugin_list dict and find all the plugins that are
     # configured to be loaded and load them.
+    print(args.playback_start_time)
+    if args.playback_start_time:
+        # We are in playback mode, if logs for the time provided exist we will play them back
+        for each in config['connections']:
+            if config['connections'][each]["module"] == 'fixgw.plugins.data_recorder':
+                # Find the data recorder config
+                path = os.path.join( config['connections'][each]['filepath'].format(CONFIG=config_path), args.playback_start_time.strftime("%Y"), args.playback_start_time.strftime("%m"), args.playback_start_time.strftime("%d") )
+                filepath = os.path.join( path, args.playback_start_time.strftime("%Y-%m-%d.%H.json") )
+                print(filepath)
+                file_list = [filepath] 
+                if not os.path.isfile(filepath): raise Exception("No logs found for the date and time provided")
+                # TODO Check the next hour, if file exists add it to the array.
+                # Build the array until you have found 24 hours OR a hour file is missing
+                more_files = True
+                next_hour = args.playback_start_time + datetime.timedelta(hours=1)
+                while more_files:
+                    more_path = os.path.join( config['connections'][each]['filepath'].format(CONFIG=config_path), next_hour.strftime("%Y"), next_hour.strftime("%m"), next_hour.strftime("%d") )
+                    more_file = os.path.join( more_path, next_hour.strftime("%Y-%m-%d.%H.json") )
+                    if os.path.isfile(more_file):
+                        file_list.append(more_file)
+                        next_hour += datetime.timedelta(hours=1)
+                    else:
+                        more_files = False
+                module = 'fixgw.plugins.data_playback'
+                try:
+                    load_plugin('netfix', 'fixgw.plugins.netfix', {'module': 'fixgw.plugins.netfix', 'load': True, 'type': 'server', 'host': '0.0.0.0', 'port': '3490', 'buffer_size': 1024})
+                    load_plugin('data_playback', module,{'module': module, 'load': True, 'files': file_list, 'start_time': args.playback_start_time})
 
-    for each in config['connections']:
-        if config['connections'][each]['load']:
-            module = config['connections'][each]["module"]
-            try:
-                load_plugin(each, module, config['connections'][each])
-            except Exception as e:
-                logging.critical("Unable to load module - " + module + ": " + str(e))
-                if args.debug:
-                    raise
+                except Exception as e:
+                    logging.critical("Unable to load module - " + module + ": " + str(e))
+                    if args.debug:
+                        raise
+
+    else:
+        for each in config['connections']:
+            if config['connections'][each]['load']:
+                module = config['connections'][each]["module"]
+                try:
+                    load_plugin(each, module, config['connections'][each])
+                except Exception as e:
+                    logging.critical("Unable to load module - " + module + ": " + str(e))
+                    if args.debug:
+                        raise
 
     ss = {"Configuration File": config_file,
           "Configuration Path": config_path}
@@ -198,7 +254,37 @@ def main_setup():
         signal.signal(signal.SIGTERM, sig_int_handler)
     return args
 
-def main(args):
+def main():
+    args = main_setup()
+    log = logging.getLogger("fixgw")
+    if args.daemonize:
+        try:
+            import daemon
+            import lockfile
+        except ModuleNotFoundError:
+            log.error("Unable to load daemon module.")
+            raise
+        log.debug("Sending to Background")
+        context = daemon.DaemonContext(
+            #working_directory = '/',
+            umask=0o002,
+            #pidfile=lockfile.FileLock('/var/run/fixgw.pid'),
+        )
+        context.signal_map = {
+            signal.SIGTERM: server.sig_int_handler,
+            signal.SIGINT: server.sig_int_handler,
+            signal.SIGHUP: 'terminate',
+        }
+        with context:
+            try:
+                run(args)
+            except Exception as e:
+                log.error(str(e))
+    else:
+        run(args)
+
+
+def run(args):
     for each in plugins:
         log.debug("Attempting to start plugin {0}".format(each))
         try:
@@ -206,7 +292,11 @@ def main(args):
         except Exception as e:
             log.error("Problem Starting Plugin: {} - {}".format(each,e))
             if args.debug:
-                raise e  # If we have debuggin set we'll raise this exception
+                log.debug(traceback.format_exc())
+                plugin.jobQueue.put("QUIT")
+                break
+                # We cannot raise exception here, it will lock up
+                # instead we exit
 
     iteration = 0
     while True:

@@ -3,10 +3,25 @@ variables:
   c: 6  # Cylinders
   a: 8  # Generic Analogs
   b: 16 # Generic Buttons
+  g: 4  # Egt Buttons
   r: 4  # Encoders
-  t: 2  # Fuel Tanks
+  t: 3  # Fuel Tanks
+  n: 5  # Nodes
 
 entries:
+- key: QVOTEn
+  description: Quorum vote for node %n
+  type: int
+  tol: 1000
+  initial: 0
+  min: 0
+  max: 9
+
+- key: LEADER
+  description: "The quorum plugin will set this false if those is not the leader, use it when making decisions to take actions"
+  type: bool
+  initial: true
+
 - key: ANLGa
   description: Generic Analog %a
   type: float
@@ -18,6 +33,11 @@ entries:
 
 - key: BTNb
   description: Generic Button %b
+  type: bool
+  tol: 0
+
+- key: EGTBTNg
+  description: EGT Button %b
   type: bool
   tol: 0
 
@@ -85,6 +105,15 @@ entries:
   initial: 0.0
   tol: 2000
 
+- key: PALT
+  description: Pressure Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
 - key: TALT
   description: True Altitude
   type: float
@@ -123,6 +152,15 @@ entries:
 
 - key: AIRPRESS
   description: Air Pressure
+  type: float
+  min: 0.0
+  max: 200000.0
+  units: Pa
+  initial: 101325.0
+  tol: 2000
+
+- key: DIFFAIRPRESS
+  description: Differential Air Pressure
   type: float
   min: 0.0
   max: 200000.0
@@ -246,7 +284,7 @@ entries:
   max: 180.0
   units: deg
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: PITCH
   description: Pitch Angle
@@ -255,7 +293,7 @@ entries:
   max: 90.0
   units: deg
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: ORISYSW
   description: Orientation System Warning
@@ -548,6 +586,15 @@ entries:
   tol: 0
   aux: [Min,Max]
 
+- key: EGTMAXe
+  description: Maximum Exhaust Gas Temp Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
 - key: CHTec
   description: Cylinder Head Temp Engine %e, Cylinder %c
   type: float
@@ -692,3 +739,125 @@ entries:
   description: Aircraft Identification
   type: str
   tol: 0
+
+# Used by mavlink plugin:
+- key: TRIMP
+  description: Pitch Trim
+  type: int
+  min: -1000
+  max: 1000
+  initial: 0
+- key: TRIMR
+  description: Roll Trim
+  type: int
+  min: -1000
+  max: 1000
+  initial: 0
+- key: TRIMY
+  description: Yaw Trim
+  type: int
+  min: -1000
+  max: 1000
+  initial: 0
+- key: BTNTRIMUP
+  description: Trim up button
+  type: bool
+  initial: false
+- key: BTNTRIMDN
+  description: Trim down button
+  type: bool
+  initial: false
+- key: BTNTRIMCT
+  description: Trim center button
+  type: bool
+  initial: false
+- key: BTNTRIMYL
+  description: Yaw Left button
+  type: bool
+  initial: false
+- key: BTNTRIMYR
+  description: Yaw Right button
+  type: bool
+  initial: false
+- key: BTNTRIMYC
+  description: Yaw center button
+  type: bool
+  initial: false
+- key: BTNTRIMRL
+  description: Roll Left button
+  type: bool
+  initial: false
+- key: BTNTRIMRR
+  description: Roll Right button
+  type: bool
+  initial: false
+- key: BTNTRIMRC
+  description: Roll center button
+  type: bool
+  initial: false
+
+- key: BTNAP
+  description: AP button state
+  type: bool
+  initial: false
+- key: BTNHH
+  description: AP heading hold button state
+  type: bool
+  initial: false
+- key: BTNFP
+  description: AP flight plan button state
+  type: bool
+  initial: false
+- key: APSTAT
+  description: Status of auto pilot, Avaliable or not
+  type: str
+  tol: 10000
+  initial: INIT
+- key: APMODE
+  description: Mode of auto pilot, Heading Hold (CRUISE), Trim (Manual), AUTO fly to waypoint
+  type: str
+  initial: TRIM
+  tol: 10000
+- key: APMSG
+  description: Auto Pilot Message for pilot
+  type: str
+  initial: ""
+- key: APWPV
+  description: Does AP have a valid waypoint to navigate to
+  type: bool
+  initial: False
+- key: APREQ
+  description: Mode of auto pilot that is requested
+  type: str
+  initial: "INIT"
+- key: APADJ
+  description: Adjust heading/altitude of auto pilot using trim controls
+  type: bool
+  initial: False
+
+# Used by ifly and mavlink
+- key: WPLAT
+  description: Waypoint Latitude
+  type: float
+  initial: 0.0
+  min: -90
+  max: 90
+  tol: 50000
+- key: WPLON
+  description: Waypoint Longitude
+  type: float
+  initial: 0.0
+  min: -90
+  max: 90
+  tol: 50000
+- key: WPNAME
+  description: Waypoint Name
+  type: str
+  tol: 50000
+  initial: ""
+- key: WPHEAD
+  description: Heading to waypoint
+  type: str
+  tol: 50000
+  initial: ""
+

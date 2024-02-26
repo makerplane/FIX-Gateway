@@ -11,10 +11,10 @@ database file: "{CONFIG}/database.yaml"
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-  # - "{CONFIG}/default.ini"
+   - "{CONFIG}/default.ini"
   # - "{CONFIG}/c170b.ini"
   # - "{CONFIG}/fg_172.ini"
-  - "{CONFIG}/rotax582.ini"
+  #- "{CONFIG}/rotax582.ini"
 
 # Connections:
 # if 'load' is 'yes' the connection plugin will be loaded at program start
@@ -24,6 +24,42 @@ initialization files:
 # itself. See the FIX-Gateway documentation for specific connection plugin
 # configuration options.
 connections:
+
+  # Flight Data Recorder
+  data_recorder:
+    # You can playback recorded data using the data_recorder.yaml config, you will need to edit it and specify what files you
+    # want it to playback
+    # OR, you can start fix gateway using the same config used to record with and add the CLI option
+    # --playback-start-time 2024-02-10:19:59:50
+    # Using the cli option, if logs for the time specified exist it will start playing them back and continue onto 
+    # subesquent hour log files. When it reaches a gap in the files or if no logs exist for the time it will exit.
+    load: no
+    module: fixgw.plugins.data_recorder
+    # key_prefixes define the specific dbkeys that you want to record.
+    # If you want to log all keys specify 'key_prefixes: all'
+    # If you only want to log some dbkeys specify and array of prefixes you want to record.
+    # Any key starting with the prefix will be logged. ie CHT would record CHT11, CHT12, CHTMAX1, etc etc
+    #key_prefixes: [ CHT, EGT, GS, IAS, ALT, HEAD, TRACK ,PITCH, ROLL, YAW, ALAT, ALONG, LAT, LONG, TIMEZH, TIMEZM, TIMEZS ]
+    key_prefixes: all
+    # How often in ms should data be recorded
+    # 200-250ms results in smoother playback
+    # higher numbers typically produce smaller files
+    frequency: 500 #ms
+    # Once file is produced for each hour.
+    # Each time the fix gateway is started during that hour it will record the frequency set above
+    # The data_playback plugin will adjust playback according the that setting changes even if
+    # it happens mid-file.
+    # The files are named using the data: YYYY-MM-DD.HH.json
+    # The files are stored into a directory structure to organize them into a useful structure.
+    # The folder paths are YYYY/MM/DD/ 
+    # With the example filepath below a file generated in the 21st hour of 2024-02-08 would be stored as:
+    # {CONFIG}/../fdr/2024/02/08/2024-02-08.21.json2024-02-08.21.json
+    # {CONFIG} is the path to this file, if this file was located at:
+    # ~/.makerplane/fixgw/config/default.yaml
+    # The example fdr file above would be located at:
+    # ~/.makerplane/fixgw/fdr/2024/02/08/2024-02-08.21.json2024-02-08.21.json
+    filepath: "{CONFIG}/../fdr"
+
   # Network FIX Protocol Interface
   netfix:
     load: yes
@@ -132,7 +168,7 @@ connections:
         local_minutes:
         local_hours:
         local_string: TIMEL
-      gmt_format: "%H:%M:%SZ" # Zulu time format string
+      gmt_format: "%H:%M:%S Z" # Zulu time format string
       local_format: "%H:%M:%S %Z" # Local time format string
 
   # Set the annunciation flag bit on configured database items.
@@ -174,6 +210,12 @@ connections:
       - key: CHT12
       - key: CHT13
       - key: CHT14
+
+      - key: EGT11
+      - key: EGT12
+      - key: EGT13
+      - key: EGT14
+
 
       - key: CURRNT
       - key: VOLT
@@ -277,11 +319,20 @@ connections:
         inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
         output: EGTSPAN1
       - function: max
+        inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+        output: EGTMAX1
+      - function: max
         inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
         output: CHTMAX1
       - function: sum
         inputs: ["FUELQ1", "FUELQ2"]
         output: FUELQT
+      - function: altp
+        inputs: ["BARO", "TALT"]
+        output: PALT
+      - function: altd
+        inputs: ["PALT","TALT","OAT"]
+        output: DALT
 
       # - function: min
       #   inputs: []
@@ -306,6 +357,136 @@ connections:
   stratux:
     load: yes
     module: fixgw.plugins.stratux
+
+  mavlink:
+    load: no
+    module: fixgw.plugins.mavlink
+    type: serial
+    baud: 115200
+    port: /dev/ttyACM0
+    options:
+      airspeed: true
+      groundspeed: true
+      gps: true
+      ahrs: true
+      accel: true
+      pressure: true
+      pascal_offset: 2800
+
+  ifly:
+    load: yes
+    module: fixgw.plugins.ifly
+
+  megasquirt:
+    load: no
+    module: fixgw.plugins.megasquirt
+    interface: socketcan
+    channel: vcan0
+    items:
+      rpm: TACH1
+      fuelflow: FUELF1 
+      clt: H2OT1
+      map: MAP1
+      tps: THR1
+      #airtemp: intakeairtemp
+      #afrtgt1: AFR Target for bank 1
+      #AFR1: AFT for cyl1
+      #egocor1: EGO Bank 1 correction
+      #Ignition timing?
+ 
+  mgl:
+    load: no
+    module: fixgw.plugins.mgl
+    # See the python-can documentation for the meaning of these options
+    interface: socketcan
+    channel: vcan0
+    rdac:
+      default_id: 1
+      sendd:
+          EGT12:
+            id: 2
+            key: TC1
+      get:
+        EGT11:
+          key: TC1
+        EGT12:
+          key: TC2
+        EGT13:
+          key: TC3
+        EGT14:
+          key: TC4
+
+        CHT11:
+          key: TC5
+        CHT12:
+          key: TC6
+        CHT13:
+          key: TC7
+        CHT14:
+          key: TC8
+
+        OILT1:
+          key: OILT
+
+        OILP1:
+          key: OILP
+        FUELQ3:
+          key: AUX1
+          calibration: [
+            [0, 500],
+            [1, 1000],
+            [2, 1500],
+            [3, 2000],
+            [4, 2500],
+            [5, 3000],
+            [6, 3500],
+            [7, 4000] ]
+# Maybe this should be for current?
+# Need to check with the RDAC Docs for standard
+        OAT:
+            key: AUX2
+        FUELP1:
+          key: FUELP
+# Maybe use this for battery current?
+ #       H2OT1:
+ #         key: COOL
+
+        
+        FUELQ1:
+          key: FUELLEVEL1
+          calibration: [
+            [0, 500],
+            [1, 1000],
+            [2, 1500],
+            [3, 2000],
+            [4, 2500],
+            [5, 3000],
+            [6, 3500],
+            [7, 4000] ]
+        FUELQ1:
+          key: FUELLEVEL2
+          calibration: [
+            [0, 500],
+            [1, 1000],
+            [2, 1500],
+            [3, 2000],
+            [4, 2500],
+            [5, 3000],
+            [6, 3500],
+            [7, 4000] ]
+
+#        ENGBAYT:
+#          key: RDACTEMP
+        VOLT:
+          key: RDACVOLT
+#        TACH1:
+#          key: RPM1
+# Maybe use MAP input for cabin temp?
+#MAP
+
+  demo:
+    load: yes
+    module: fixgw.plugins.demo
 
 # Logging configuration - See Python logging.config module documenation
 logging:

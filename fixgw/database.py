@@ -19,6 +19,7 @@ import threading
 import time
 import yaml
 import copy
+import fixgw.quorum as quorum
 
 __database = {}
 
@@ -299,7 +300,13 @@ def add_item(entry):
     x = entry.get('units', '')
     newitem.units = x if x != None else ''
     newitem.tol = entry.get('tol', 0)
-    newitem.value = entry.get('initial', None)
+    if entry['key'] == 'LEADER':
+        # Always set the fixid LEADER to True on startup
+        # The quorum plugin will ensure the correct value gets set
+        # and clients who are reconnecting will get the proper value
+        newitem.value = True
+    else:
+        newitem.value = entry.get('initial', None)
     newitem.init_aux(entry.get('aux', []))
     __database[entry['key']] = newitem
     return newitem
