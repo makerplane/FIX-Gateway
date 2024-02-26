@@ -282,6 +282,12 @@ connections:
       - function: sum
         inputs: ["FUELQ1", "FUELQ2"]
         output: FUELQT
+      - function: altp
+        inputs: ["BARO", "TALT"]
+        output: PALT
+      - function: altd
+        inputs: ["PALT","TALT","OAT"]
+        output: DALT
 
       # - function: min
       #   inputs: []
