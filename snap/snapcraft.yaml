@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.4"
+version: "0.5"
 summary: makerplane FIX gateway server
 description: |
     A service that collects and distributes avionics data
