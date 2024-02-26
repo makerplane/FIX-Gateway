@@ -45,8 +45,13 @@ path_options = ['{USER}/makerplane/fixgw/config',
                 '{PREFIX}/local/etc/fixgw',
                 '{PREFIX}/etc/fixgw',
                 '/etc/fixgw',
-                'fixgw/config',
                 '.']
+
+# Add fixgw/config when not running as snap
+# Helpful for development
+if not environ.get('SNAP',False):
+    path_options.append('fixgw/config')
+
 config_path = None
 
 # This dictionary holds the modules for each plugin that we load
@@ -90,15 +95,7 @@ def sig_int_handler(signum, frame):
 def main_setup():
     global config_path
     global log
-    # Look for our configuration file in the list of directories
-    for directory in path_options:
-        # store the first match that we find
-        d = directory.format(USER=user_home, PREFIX=prefix_path)
-        if os.path.isfile("{}/{}".format(d, config_filename)):
-            config_path = d
-            break
 
-    config_file = "{}/{}".format(config_path, config_filename)
     parser = argparse.ArgumentParser(description='FIX Gateway')
     parser.add_argument('--debug', '-d', action='store_true',
                         help='Run in debug mode')
@@ -113,6 +110,16 @@ def main_setup():
     parser.add_argument('--playback-start-time', type=datetime.datetime.fromisoformat, 
                         help='ISOformat - YYYY-MM-DD:HH:mm:ss') 
     args, unknown_args = parser.parse_known_args()
+
+    # Look for our configuration file in the list of directories
+    for directory in path_options:
+        # store the first match that we find
+        d = directory.format(USER=user_home, PREFIX=prefix_path)
+        if os.path.isfile("{}/{}".format(d, config_filename)):
+            config_path = d
+            break
+
+    config_file = "{}/{}".format(config_path, config_filename)
 
     # if we passed in a configuration file on the command line...
     if args.config_file:
