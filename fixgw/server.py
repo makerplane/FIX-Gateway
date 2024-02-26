@@ -36,9 +36,10 @@ import fixgw.database as database
 import fixgw.status as status
 import fixgw.plugin as plugin
 import fixgw.quorum as quorum
+from os import environ
 
 config_filename = "default.yaml"
-user_home = os.path.expanduser("~")
+user_home = environ.get('SNAP_REAL_HOME', os.path.expanduser("~"))
 prefix_path = sys.prefix
 path_options = ['{USER}/makerplane/fixgw/config',
                 '{PREFIX}/local/etc/fixgw',
