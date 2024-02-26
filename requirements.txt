@@ -7,3 +7,4 @@ pyserial
 pymavlink
 pynmea2
 numpy
+tables
