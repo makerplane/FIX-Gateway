@@ -1,10 +1,26 @@
 name: fixgateway
-version: "0.7.1"
+version: "0.7.2"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
 description: |
     A service that collects and distributes avionics data.  FiX is short for "Flight information eXchange" and is a CAN-Aerospace derived protocol specific to experimental aviation needs.
+    
+    Release Notes:
+    Many new plugins that need your help testing, these should be considered beta quality:
+    * Flight Data Recoder
+    * Replay FDR data from point in time
+    * Mavlink plugin for AHRS/GPS data
+    * Megasquirt ECU Plugin
+    * iFLY plugin, collects waypoints sent by iFLY EFB
+    * quorum plugin, negotiate a leader when running multiple gateways
+    * improvements to canfix plugin
+    * new functions added to compute plugin
+    * MGL plugin, import data from an RDAC or export data as an emulated RDAC
+
+    Planned enhancements for future release:
+    * Add support for MGL V16 COM radio
+
 
 issues: https://github.com/makerplane/FIX-Gateway/issues
 donation: https://www.paypal.com/donate/?hosted_button_id=VGHHNUG3LRPYL
@@ -38,6 +54,8 @@ parts:
       - python3-distutils
       - python3-pkg-resources
       - python3-numpy
+      - libxml2
+      - libxslt
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.10
 #      - PIP_VERBOSE: 3
