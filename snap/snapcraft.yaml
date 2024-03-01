@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.7"
+version: "0.7.1"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -27,7 +27,7 @@ parts:
       - libarchive13
       - cmake
       - build-essential
-#      - ninja-build
+      - python3-numpy
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.10
 #      - PIP_VERBOSE: 3
