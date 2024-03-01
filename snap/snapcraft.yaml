@@ -1,20 +1,38 @@
 name: fixgateway
-version: "0.5"
+version: "0.7"
+grade: stable
+license: GPL-2.0+
 summary: makerplane FIX gateway server
 description: |
-    A service that collects and distributes avionics data
+    A service that collects and distributes avionics data.  FiX is short for "Flight information eXchange" and is a CAN-Aerospace derived protocol specific to experimental aviation needs.
+
+issues: https://github.com/makerplane/FIX-Gateway/issues
+donation: https://www.paypal.com/donate/?hosted_button_id=VGHHNUG3LRPYL
+source-code: https://github.com/makerplane/FIX-Gateway
+website: https://makerplane.org/
+
 architectures:
   - build-on: arm64
   - build-on: armhf
   - build-on: amd64
+
 base: core22
 confinement: strict
-# devmode works for accessing serial ports
 
 parts:
   fixgateway:
     plugin: python
     source: .
+    stage-packages:
+      - libarchive13
+      - cmake
+      - build-essential
+#      - ninja-build
+    build-environment:
+      - PARTS_PYTHON_INTERPRETER: python3.10
+#      - PIP_VERBOSE: 3
+      - PIP_IGNORE_INSTALLED: ''
+      - PARTS_PYTHON_VENV_ARGS: --system-site-packages
 
 apps:
   server:
