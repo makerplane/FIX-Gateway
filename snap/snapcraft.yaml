@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.7.2"
+version: "0.7.3"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -54,8 +54,7 @@ parts:
       - python3-distutils
       - python3-pkg-resources
       - python3-numpy
-      - libxml2
-      - libxslt
+      - python3-lxml
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.10
 #      - PIP_VERBOSE: 3
