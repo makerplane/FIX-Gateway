@@ -27,6 +27,16 @@ parts:
       - libarchive13
       - cmake
       - build-essential
+      - python3.10-minimal
+      - libpython3.10-minimal
+      - libpython3.10-stdlib
+      - python3-pip
+      - python3-setuptools
+      - python3-wheel
+      - python3-venv
+      - python3-minimal
+      - python3-distutils
+      - python3-pkg-resources
       - python3-numpy
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.10
