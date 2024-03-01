@@ -59,6 +59,7 @@ parts:
       - python3-pkg-resources
       - python3-numpy
       - python3-lxml
+      - python3-psutil
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.10
 #      - PIP_VERBOSE: 3
