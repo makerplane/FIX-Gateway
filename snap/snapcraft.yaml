@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.7.4"
+version: "0.7.5"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -69,9 +69,16 @@ apps:
   server:
     command: bin/fixgw
     plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
+    environment:
+      PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
+      PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+
 
   client:
     command: bin/fixgwc
     plugs: [network]
+    environment:
+      PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
+      PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
 
 
