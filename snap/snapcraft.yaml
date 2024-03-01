@@ -36,6 +36,10 @@ base: core22
 confinement: strict
 
 parts:
+  extras:
+    source: ./extras
+    plugin: dump
+
   fixgateway:
     plugin: python
     source: .

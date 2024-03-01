@@ -1,6 +1,7 @@
 # Place this in $HOME/.config/systemd/user/
 #
-# Edit the paths on the ExecStart line below to match your environment
+# Edit the config file path  on the ExecStart line below to match your environment
+# If you want to use the default.yaml no editing is required
 #
 #
 # Enable it:
@@ -28,7 +29,7 @@ After=graphical-session.target
 Type=exec
 Restart=always
 RestartSec=1s
-ExecStart=/snap/bin/fixgateway.server
+ExecStart=/snap/bin/fixgateway.server --config-file=%h/makerplane/fixgw/config/default.yaml
 
 [Install]
 WantedBy=graphical-session.target
