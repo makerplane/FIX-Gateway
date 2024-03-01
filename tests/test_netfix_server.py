@@ -152,7 +152,7 @@ class TestNetfixServerSimple(unittest.TestCase):
         sf = io.StringIO(db_config)
         database.init(sf)
 
-        nc = yaml.load(netfix_config)
+        nc = yaml.safe_load(netfix_config)
         import fixgw.plugins.netfix
 
         self.pl =  fixgw.plugins.netfix.Plugin("netfix", nc)

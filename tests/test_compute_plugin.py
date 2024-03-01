@@ -214,7 +214,7 @@ class TestComputePlugin(unittest.TestCase):
         sf = io.StringIO(db_config)
         database.init(sf)
 
-        cc = yaml.load(config)
+        cc = yaml.safe_load(config)
         import fixgw.plugins.compute
 
         self.pl =  fixgw.plugins.compute.Plugin("compute", cc)

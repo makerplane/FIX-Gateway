@@ -121,7 +121,7 @@ class TestCanfix(unittest.TestCase):
 
         import fixgw.plugins.canfix
 
-        cc =  yaml.load(config)
+        cc =  yaml.safe_load(config)
         self.pl =  fixgw.plugins.canfix.Plugin("canfix",cc)
         self.pl.start()
         self.interface = cc['interface']
@@ -130,7 +130,7 @@ class TestCanfix(unittest.TestCase):
         self.device = cc['device']
         self.revision = cc['revision']
         self.model = cc['model']
-        self.bus = can.Bus(self.channel, bustype = self.interface)
+        self.bus = can.Bus(self.channel, interface = self.interface)
         time.sleep(0.1) # Give plugin a chance to get started
 
 
