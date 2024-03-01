@@ -64,7 +64,7 @@ class Mapping(object):
             for ea in fixids: 
                 output = {'canid':each['canid'],
                       'index':each['index'],
-                      'owner':each['owner'],
+                      'owner':each.get('owner',False),
                       'require_leader':each.get("require_leader", True),
                       'on_change':each.get("on_change", True),
                       'exclude':False,
