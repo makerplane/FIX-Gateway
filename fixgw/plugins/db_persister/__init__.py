@@ -36,7 +36,7 @@ class MainThread(threading.Thread):
         self.log = parent.log  # simplifies logging
 
         f_path = f"{parent.config['CONFIGPATH']}/{parent.config['db_schema']}"
-        db_desc = yaml.load(open(f_path, 'r'), Loader=yaml.FullLoader)
+        db_desc = yaml.safe_load(open(f_path, 'r'), Loader=yaml.FullLoader)
         self.log.info(f'loaded db schema from {f_path}')
 
         f_path = f"{parent.config['CONFIGPATH']}/{parent.config['h5f_file']}"
