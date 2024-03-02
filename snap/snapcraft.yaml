@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.7.5"
+version: "0.8.0"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -60,6 +60,7 @@ parts:
       - python3-numpy
       - python3-lxml
       - python3-psutil
+      - libblas3
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.10
 #      - PIP_VERBOSE: 3
@@ -70,6 +71,7 @@ apps:
   server:
     command: bin/fixgw
     daemon: simple
+    daemon-scope: user
     # Woud be nice to also support options: https://snapcraft.io/docs/adding-snap-configuration
     restart-condition: always
     plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
