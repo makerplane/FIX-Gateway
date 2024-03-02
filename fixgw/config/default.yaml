@@ -6,6 +6,7 @@
 # File that defines the database.
 database file: "{CONFIG}/database.yaml"
 
+auto start: true
 # Set initial values after the database is initialized.
 # If there are duplicate assignments in these files, the last
 # file listed will overwrite data in previous files
