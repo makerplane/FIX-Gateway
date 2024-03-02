@@ -60,6 +60,7 @@ parts:
       - python3-numpy
       - python3-lxml
       - python3-psutil
+      - libblas3
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.10
 #      - PIP_VERBOSE: 3
