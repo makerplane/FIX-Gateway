@@ -68,7 +68,7 @@ parts:
       - PARTS_PYTHON_VENV_ARGS: --system-site-packages
 
 apps:
-  server:
+  daemon:
     command: bin/fixgw
     daemon: simple
     daemon-scope: user
@@ -79,6 +79,12 @@ apps:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
 
+  server:
+    command: bin/fixgw
+    plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
+    environment:
+      PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
+      PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
 
   client:
     command: bin/fixgwc
