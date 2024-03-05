@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.9.0"
+version: "0.9.1"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -53,6 +53,9 @@ parts:
       - python3.10-minimal
       - libpython3.10-minimal
       - libpython3.10-stdlib
+      - libblas3
+      - liblapack3
+      - libopenblas-pthread-dev
       - python3-pip
       - python3-setuptools
       - python3-wheel
@@ -63,7 +66,6 @@ parts:
       - python3-numpy
       - python3-lxml
       - python3-psutil
-      - libblas3
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.10
 #      - PIP_VERBOSE: 3
@@ -81,14 +83,14 @@ apps:
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
   server:
     command: bin/fixgw
     plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
   client:
     command: bin/fixgwc
     plugs: [network]
