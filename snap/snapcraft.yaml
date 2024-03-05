@@ -6,8 +6,8 @@ summary: makerplane FIX gateway server
 description: |
     A service that collects and distributes avionics data.  FiX is short for "Flight information eXchange" and is a CAN-Aerospace derived protocol specific to experimental aviation needs.
 
-  This snap requires enabling experimental.user-daemons features:
-  sudo snap set system experimental.user-daemons=true
+    This snap requires enabling experimental.user-daemons features:
+    sudo snap set system experimental.user-daemons=true
     
     Release Notes:
     Many new plugins that need your help testing, these should be considered beta quality:
