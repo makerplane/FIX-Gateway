@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.9.1"
+version: "0.9.2"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -55,7 +55,6 @@ parts:
       - libpython3.10-stdlib
       - libblas3
       - liblapack3
-      - libopenblas-pthread-dev
       - python3-pip
       - python3-setuptools
       - python3-wheel
