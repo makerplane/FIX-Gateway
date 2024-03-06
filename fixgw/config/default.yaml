@@ -82,7 +82,7 @@ connections:
 
   # FlightGear Flight Simulator Module
   # To start FlightGear with these paramaters, use the following command...
-  #   >fgfs --generic=socket,out,10,localhost,5500,udp,fix_fgfs --generic=socket,in,1,,5501,udp,fix_sgfs
+  #   >fgfs --generic=socket,out,10,localhost,5500,udp,fix_fgfs --generic=socket,in,1,,5501,udp,fix_fgfs
   # The fix_fgfs.xml file should be in the FG_ROOT/Protocols directory which should be
   # in one of the following locations...
   # LINUX: /usr/share/games/flightgear/
