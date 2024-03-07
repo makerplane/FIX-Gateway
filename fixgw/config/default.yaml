@@ -88,12 +88,18 @@ connections:
   # LINUX: /usr/share/games/flightgear/
   # OSX: /Applications/FlightGear.app/Contents/Resources/data/
   # WINDOWS: c:\Program Files\FlightGear\data\
+  # When running as a snap we do not have access to the flight gear root directory.
+  # In this case we refer to the file in the fixgw config folder.
+  # The default configuration here will work under snap or not.
+  # What is important, if you edit the fix_fgfs.xml file, ENSURE you updated it in the flightgear folder too
   fgfs:
     load: no
     module: fixgw.plugins.fgfs
     # This should be the same as $FG_ROOT on your system.  It is used to help
     # fixgw find the xml configuration files
-    fg_root: /usr/share/games/flightgear/
+    # When running under snap we do not have access to the flightgear folder
+    # So we refer to a copy of the file in the fixgw config folder
+    fg_root: ~/makerplane/fixgw/config/fgfs
     # fg_root: /Applications/FlightGear.app/Contents/Resources/data/
     # fg_root: c:\Program Files\FlightGear\data\
 
@@ -356,7 +362,7 @@ connections:
     model: 2004
 
   stratux:
-    load: yes
+    load: no
     module: fixgw.plugins.stratux
 
   mavlink:
@@ -375,7 +381,7 @@ connections:
       pascal_offset: 2800
 
   ifly:
-    load: yes
+    load: no
     module: fixgw.plugins.ifly
 
   megasquirt:
@@ -486,7 +492,7 @@ connections:
 #MAP
 
   demo:
-    load: yes
+    load: no
     module: fixgw.plugins.demo
 
 # Logging configuration - See Python logging.config module documenation
