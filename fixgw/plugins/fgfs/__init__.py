@@ -102,8 +102,11 @@ class Item(object):
 def parseProtocolFile(fg_root, xml_file):
     # Open the XML Protocol file
     filepath = os.path.join(fg_root, "Protocol/" + xml_file)
-
-    tree = ET.parse(filepath)
+    # Needed to work OK in a snap
+    if not os.path.isfile(filepath):
+        filepath = os.path.join(fg_root, xml_file)
+ 
+    tree = ET.parse(os.path.expanduser(filepath))
     root = tree.getroot()
     if root.tag != "PropertyList":
         raise ValueError("Root Tag is not PropertyList")

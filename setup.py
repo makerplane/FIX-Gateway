@@ -7,8 +7,8 @@ with open("README.rst", "r") as fh:
 
 datafiles = [('fixgw/config', ['config/default.yaml', 'config/default.db', 'config/default.ini','config/fg_172.ini']),
              ('fixgw/config/canfix', ['config/canfix/map.yaml']),
+             ('fixgw/config/fgfs', ['fixgw/config/fgfs/fix_fgfs.xml']),
 #             ('share/fixgw/doc', ['doc/_build/FIXGateway-html.tar.gz', 'doc/_build/latex/FIXGateway.pdf']),
-             ('fixgw/share/fixgw', ['fixgw/plugins/fgfs/fix_fgfs.xml']),
 ]
 
 
