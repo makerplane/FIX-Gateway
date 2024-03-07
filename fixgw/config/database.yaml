@@ -2,11 +2,13 @@ variables:
   e: 1  # Engines
   c: 6  # Cylinders
   a: 8  # Generic Analogs
-  b: 16 # Generic Buttons
+  b: 30 # Generic Buttons
   g: 4  # Egt Buttons
-  r: 4  # Encoders
+  r: 5  # Encoders
   t: 3  # Fuel Tanks
   n: 5  # Nodes
+  s: 20 # Touchscreen buttons
+  d: 4  # MGL V16 Radios
 
 entries:
 - key: QVOTEn
@@ -15,7 +17,7 @@ entries:
   tol: 1000
   initial: 0
   min: 0
-  max: 9
+  max: 500
 
 - key: LEADER
   description: "The quorum plugin will set this false if those is not the leader, use it when making decisions to take actions"
@@ -32,6 +34,11 @@ entries:
   tol: 2000
 
 - key: BTNb
+  description: Generic Button %b
+  type: bool
+  tol: 0
+
+- key: TSBTNns
   description: Generic Button %b
   type: bool
   tol: 0
@@ -247,6 +254,16 @@ entries:
   units: Deg/sec
   initial: 0.0
   tol: 200
+
+- key: RAT
+  description: MGL RDAC Air Temperature
+  type: float
+  min: -100.0
+  max: 100.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn]
 
 - key: OAT
   description: Outside Air Temperature
@@ -661,7 +678,7 @@ entries:
   max: 90.0
   units: deg
   initial: 0.0
-  tol: 2000
+  tol: 20000
 
 - key: LONG
   description: Longitude
@@ -670,7 +687,7 @@ entries:
   max: 180.0
   units: deg
   initial: 0.0
-  tol: 2000
+  tol: 20000
 
 - key: TIMEZ
   description: Zulu Time String
@@ -743,21 +760,21 @@ entries:
 # Used by mavlink plugin:
 - key: TRIMP
   description: Pitch Trim
-  type: int
-  min: -1000
-  max: 1000
+  type: float
+  min: -100
+  max: 100
   initial: 0
 - key: TRIMR
   description: Roll Trim
-  type: int
-  min: -1000
-  max: 1000
+  type: float
+  min: -100
+  max: 100
   initial: 0
 - key: TRIMY
   description: Yaw Trim
-  type: int
-  min: -1000
-  max: 1000
+  type: float
+  min: -100
+  max: 100
   initial: 0
 - key: BTNTRIMUP
   description: Trim up button
@@ -861,3 +878,123 @@ entries:
   tol: 50000
   initial: ""
 
+
+# Radio
+- key: COMACTFREQd
+  description: Radio Active Frequency
+  type: float
+  initial: 121.500
+  min: 100
+  max: 200
+  tol: 200
+
+- key: COMACTNAMEd
+  description: Name of the frequency ( from a saved setting )
+  type: str
+  initial: "Emergency"
+
+- key: COMSTDFREQd
+  description: Radio Standby Frequency
+  type: float
+  initial: 121.500
+  min: 100
+  max: 200
+  tol: 200
+
+- key: COMSTDNAMEd
+  description: Name of the frequency ( from a saved setting )
+  type: str
+  initial: "Emergency"
+
+- key: COMACTTXd
+  description: True when radio is transmitting on active channel
+  type: bool
+  initial: False
+  tol: 300
+
+- key: COMACTRXd
+  description: True when radio is receiving on active channel
+  type: bool
+  initial: False
+  tol: 300
+
+- key: COMSTDRXd
+  description: True when radio is receiving on active channel
+  type: bool
+  initial: False
+  tol: 300
+
+- key: COMSQUELCHd
+  description: RX Squelch
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 10
+
+- key: COMVSWRd
+  description: SWR
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 4
+- key: COMTXPWRd
+  description: Watts of TX Power
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMACTRXLEVELd
+  description: Active Frequency RX Level
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMSTDRXLEVELd
+  description: Standby Frequency RX Level
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMRXVOLd
+  description: RX Volume
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMINTVOLd
+  description: Intercom Volume
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMAUDVOLd
+  description: Audio input volume ( not 100% sure this exists in the v16 )
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMACTFREQSETd
+  description: Sets the frequency of the radio, 0 is ignored
+  type: int
+  initial: 0
+  min: 0
+  max: 300000
+
+- key: COMACTNAMESETd
+  description: Sets the name of the frequency. the plugin will set COMACTNAMEd to this value when COMACTFREQSETd is tuned unless COMACTNAMESETd is empty string
+  type: str
+  initial: ""
