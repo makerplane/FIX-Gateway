@@ -107,6 +107,15 @@ class MainThread(threading.Thread):
             {"APMSG": "IAS/TAS 133",       "IAS": 133, "TAS": 133 },
             {"APMSG": "IAS/TAS 123",       "IAS": 123, "TAS": 123 },
             {"APMSG": "IAS/TAS 113",       "IAS": 113, "TAS": 113 },
+            {"APMSG": "COURSE 281",         "COURSE": 281.8 },
+            {"APMSG": "COURSE 254",         "COURSE": 254 },
+            {"APMSG": "COURSE 234",         "COURSE": 234 },
+            {"APMSG": "COURSE 214",         "COURSE": 214 },
+            {"APMSG": "COURSE 194",         "COURSE": 194 },
+            {"APMSG": "COURSE 214",         "COURSE": 214 },
+            {"APMSG": "COURSE 234",         "COURSE": 234 },
+            {"APMSG": "COURSE 254",         "COURSE": 254 },
+            {"APMSG": "COURSE 281",         "COURSE": 281.8 },
 
 
 
