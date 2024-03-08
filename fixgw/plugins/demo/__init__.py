@@ -151,7 +151,7 @@ class MainThread(threading.Thread):
                         if not isinstance(v, str):
                             if self.script[script_count + 1].get(k,None) != None:
                                 val = ( ( ( self.script[script_count + 1][k] - v ) / 10 ) * script_when ) + v
-                                print(f"{script_when}: next: {self.script[script_count + 1][k]}, cur:{v}, val:{val}")
+                                #print(f"{script_when}: next: {self.script[script_count + 1][k]}, cur:{v}, val:{val}")
                                 self.parent.db_write(k,val)
                 if script_when == 9:
                     script_when = -1
