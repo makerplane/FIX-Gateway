@@ -34,13 +34,13 @@ class MainThread(threading.Thread):
         self.getout = False   # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
-        self.keylist = {"ROLL":0, "PITCH":0, "IAS":113, "ALT":1153,
-                        "TACH1":2450, "MAP1":24.2, "FUELP1":28.5, "OILP1":56.4,
-                        "OILT1":95, "FUELQ1":11.2, "FUELQ2":19.8, "OAT": 32,
-                        "CHT11":201,"CHT12":202,"CHT13":199,"CHT14":200,
-                        "EGT11":710,"EGT12":700,"EGT13":704,"EGT14":702,
+        self.keylist = {"ROLL":0.0, "PITCH":0.0, "IAS":113.0, "ALT":1153.0,
+                        "TACH1":2450.0, "MAP1":24.2, "FUELP1":28.5, "OILP1":56.4,
+                        "OILT1":95.0, "FUELQ1":11.2, "FUELQ2":19.8, "OAT": 32.0,
+                        "CHT11":201.0,"CHT12":202.0,"CHT13":199.0,"CHT14":200.0,
+                        "EGT11":710.0,"EGT12":700.0,"EGT13":704.0,"EGT14":702.0,
                         "FUELF1":8.7,"VOLT":13.7,"CURRNT":45.6,
-                        "TAS":113,"ALAT":0,"HEAD":281.8,"LONG":-82.8550,"LAT":40.000200,
+                        "TAS":113,"ALAT":0.0,"HEAD":281.8,"LONG":-82.8550,"LAT":40.000200,
                         "CDI":0.0,"GSI":0.0,"COURSE":281.8
                         }
         self.script = [
@@ -127,7 +127,6 @@ class MainThread(threading.Thread):
 
 
 
-
         ]
         # Initialize the points
         for each in self.keylist:
@@ -159,10 +158,10 @@ class MainThread(threading.Thread):
                     for k,v in self.script[script_count].items():
                         if not isinstance(v, str):
                             if self.script[script_count + 1].get(k,None) != None:
-                                val = ( ( ( self.script[script_count + 1][k] - v ) / 10 ) * script_when ) + v
+                                val = ( ( ( self.script[script_count + 1][k] - v ) / 20 ) * script_when ) + v
                                 #print(f"{script_when}: next: {self.script[script_count + 1][k]}, cur:{v}, val:{val}")
                                 self.parent.db_write(k,val)
-                if script_when == 9:
+                if script_when == 19:
                     script_when = -1
         self.running = False
 
