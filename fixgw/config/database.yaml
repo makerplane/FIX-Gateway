@@ -919,7 +919,7 @@ entries:
   tol: 300
 
 - key: COMSTDRXd
-  description: True when radio is receiving on active channel
+  description: True when radio is receiving on standby channel
   type: bool
   initial: False
   tol: 300
