@@ -36,12 +36,15 @@ class MainThread(threading.Thread):
         self.log = parent.log  # simplifies logging
         self.keylist = {"ROLL":0.0, "PITCH":0.0, "IAS":113.0, "ALT":1153.0,
                         "TACH1":2450.0, "MAP1":24.2, "FUELP1":28.5, "OILP1":56.4,
-                        "OILT1":95.0, "FUELQ1":11.2, "FUELQ2":19.8, "OAT": 32.0,
+                        "OILT1":95.0, "FUELQ1":11.2, "FUELQ2":19.8, "FUELQ3":10.8,"OAT": 32.0,
                         "CHT11":201.0,"CHT12":202.0,"CHT13":199.0,"CHT14":200.0,
-                        "EGT11":710.0,"EGT12":700.0,"EGT13":704.0,"EGT14":702.0,
+                        "EGT11":510.0,"EGT12":540.0,"EGT13":544.0,"EGT14":522.0,
                         "FUELF1":8.7,"VOLT":13.7,"CURRNT":45.6,
                         "TAS":113,"ALAT":0.0,"HEAD":281.8,"LONG":-82.8550,"LAT":40.000200,
-                        "CDI":0.0,"GSI":0.0,"COURSE":281.8
+                        "CDI":0.0,"GSI":0.0,"COURSE":281.8,
+                        "COMTXPWR1": 0, "COMVSWR1": 0, "COMACTTX1": False, "COMSTDRXLEVEL1": 0,
+                        "COMACTRXLEVEL1": 0, "COMSQUELCH1": 4.5, "COMACTRX1": False, "COMSTDRX1": False,
+                        "COMAUDVOL1": 10, "COMRXVOL1":9, "COMINTVOL1":10
                         }
         self.script = [
             {"APMSG": "Roll/Pitch 0",     "ROLL": 0,   "PITCH": 0 },
@@ -127,7 +130,7 @@ class MainThread(threading.Thread):
             {"APMSG": "CHT 250, EGT 650, FUELQ 10,11,20",    "CHT11":250,"CHT11":250,"CHT12":250,"CHT13":250,"CHT14":200,"EGT11":650,"EGT12":650,"EGT13":650,"EGT14":650,"FUELQ1":10,"FUELQ2": 11, "FUELQ3": 20 },
             {"APMSG": "CHT 200, EGT 600, FUELQ 15,15,30",    "CHT11":200,"CHT11":200,"CHT12":200,"CHT13":200,"CHT14":200,"EGT11":600,"EGT12":600,"EGT13":600,"EGT14":600,"FUELQ1":15,"FUELQ2": 15, "FUELQ3": 30 },
             {"APMSG": "CHT 150, EGT 550, FUELQ 18,17,38",    "CHT11":150,"CHT11":150,"CHT12":150,"CHT13":150,"CHT14":150,"EGT11":550,"EGT12":550,"EGT13":550,"EGT14":550,"FUELQ1":18,"FUELQ2": 17, "FUELQ3": 38 },
-            {"APMSG": "CHT 100, EGT 500, FUELQ 21,21,42",    "CHT11":100,"CHT11":100,"CHT12":100,"CHT13":100,"CHT14":100,"EGT11":500,"EGT12":500,"EGT13":500,"EGT14":500,"FUELQ1":5,"FUELQ2": 11, "FUELQ3": 42 },
+            {"APMSG": "CHT 100, EGT 500, FUELQ 21,21,42",    "CHT11":100,"CHT11":95,"CHT12":90,"CHT13":120,"CHT14":101,"EGT11":490,"EGT12":510,"EGT13":501,"EGT14":500,"FUELQ1":5,"FUELQ2": 11, "FUELQ3": 42 },
             {"APMSG": "TACH 3200, OILP: 0,  OILT 0,  MAP, 0",   "TACH1":3200,"OILP1":0,  "OILT1":0,  "MAP1":0 },
             {"APMSG": "TACH 2800, OILP: 20, OILT 24, MAP, 5",   "TACH1":2800,"OILP1":20, "OILT1":24, "MAP1":5 },
             {"APMSG": "TACH 2000, OILP: 40, OILT 44, MAP, 15",  "TACH1":2000,"OILP1":40, "OILT1":44, "MAP1":15 },
@@ -143,12 +146,17 @@ class MainThread(threading.Thread):
             {"APMSG": "TACH 2800, OILP: 20, OILT 24, MAP, 5",   "TACH1":2800,"OILP1":20, "OILT1":24, "MAP1":5 },
             {"APMSG": "TACH 3200, OILP: 0,  OILT 0,  MAP, 0",   "TACH1":3200,"OILP1":0,  "OILT1":0,  "MAP1":0 },
             {"APMSG": "TACH 2450, OILP: 60,  OILT 80,  MAP, 10",   "TACH1":2450,"OILP1":60,  "OILT1":80,  "MAP1":10 },
-
-
-
-
-
-
+            {"APMSG": "RADIO vol",        "COMTXPWR1": 10, "COMVSWR1": 1.5, "COMACTTX1": True },
+            {"APMSG": "RADIO vol",        "COMTXPWR1": 10, "COMVSWR1": 1.5, "COMACTTX1": True },
+            {"APMSG": "RADIO tx" ,       "COMTXPWR1": 10, "COMVSWR1": 1.5, "COMACTTX1": True },
+            {"APMSG": "RADIO tx" ,       "COMTXPWR1": 10, "COMVSWR1": 1.5, "COMACTTX1": True },
+            {"APMSG": "RADIO idle",        "COMTXPWR1": 0, "COMVSWR1": 0, "COMACTTX1": False },
+            {"APMSG": "RADIO rx"  ,      "COMACTRXLEVEL1": 10, "COMSQUELCH1": 4.5, "COMACTRX1": True },
+            {"APMSG": "RADIO rx"  ,      "COMACTRXLEVEL1": 10, "COMSQUELCH1": 4.5, "COMACTRX1": True },
+            {"APMSG": "RADIO rx"  ,      "COMACTRXLEVEL1": 0,  "COMSQUELCH1": 4.5, "COMACTRX1": False },
+            {"APMSG": "RADIO standby rx"  ,      "COMSTDRXLEVEL1": 10, "COMSQUELCH1": 4.5, "COMSTDRX1": True },
+            {"APMSG": "RADIO standby rx"  ,      "COMSTDRXLEVEL1": 10, "COMSQUELCH1": 4.5, "COMSTDRX1": True },
+            {"APMSG": "RADIO standby rx"  ,      "COMSTDRXLEVEL1": 0, "COMSQUELCH1": 4.5, "COMSTDRX1": False },
 
 
 
@@ -169,7 +177,15 @@ class MainThread(threading.Thread):
             # We just read the point and write it back in to reset the TOL timer
             for each in self.keylist:
                 x = self.parent.db_read(each)
-                self.parent.db_write(each, x)
+                if each in ['LAT','LONG']:
+                    y = x[0]
+                    if (count % 2) == 0:
+                        y += 0.0000001
+                    else:
+                        y -= 0.0000001
+                    self.parent.db_write(each, y)
+                else:
+                    self.parent.db_write(each, x)
             #continue
             #print(f"script_when:{script_when}, script_count:{script_count}")
             if script_when == 0:
