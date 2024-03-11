@@ -332,7 +332,7 @@ connections:
         inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
         output: CHTMAX1
       - function: sum
-        inputs: ["FUELQ1", "FUELQ2"]
+        inputs: ["FUELQ1", "FUELQ2", "FUELQ3"]
         output: FUELQT
       - function: altp
         inputs: ["BARO", "TALT"]
