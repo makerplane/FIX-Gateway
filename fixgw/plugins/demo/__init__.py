@@ -157,7 +157,7 @@ class MainThread(threading.Thread):
             {"APMSG": "RADIO standby rx"  ,      "COMSTDRXLEVEL1": 10, "COMSQUELCH1": 4.5, "COMSTDRX1": True },
             {"APMSG": "RADIO standby rx"  ,      "COMSTDRXLEVEL1": 10, "COMSQUELCH1": 4.5, "COMSTDRX1": True },
             {"APMSG": "RADIO standby rx"  ,      "COMSTDRXLEVEL1": 0, "COMSQUELCH1": 4.5, "COMSTDRX1": False },
-
+            {"APMSG": "NO DATA"},
 
 
 
@@ -188,6 +188,9 @@ class MainThread(threading.Thread):
                     self.parent.db_write(each, x)
             #continue
             #print(f"script_when:{script_when}, script_count:{script_count}")
+            if "NO DATA" == self.script[script_count]['APMSG']:
+                self.parent.db_write("APMSG", "NO DATA")
+                time.sleep(0.6)
             if script_when == 0:
                 script_count += 1
                 for k,v in self.script[script_count].items():
