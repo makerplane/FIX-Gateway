@@ -44,7 +44,8 @@ class MainThread(threading.Thread):
                         "CDI":0.0,"GSI":0.0,"COURSE":281.8,
                         "COMTXPWR1": 0, "COMVSWR1": 0, "COMACTTX1": False, "COMSTDRXLEVEL1": 0,
                         "COMACTRXLEVEL1": 0, "COMSQUELCH1": 4.5, "COMACTRX1": False, "COMSTDRX1": False,
-                        "COMAUDVOL1": 10, "COMRXVOL1":9, "COMINTVOL1":10
+                        "COMAUDVOL1": 10, "COMRXVOL1":9, "COMINTVOL1":10,
+                        "COMACTFREQ1": 121.500, "COMSTDFREQ1": 121.500
                         }
         self.script = [
             {"APMSG": "Roll/Pitch 0",     "ROLL": 0,   "PITCH": 0 },
