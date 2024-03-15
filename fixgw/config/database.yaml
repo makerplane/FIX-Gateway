@@ -106,7 +106,7 @@ entries:
 - key: ALT
   description: Indicated Altitude
   type: float
-  min: -1000.0
+  min: -2000.0
   max: 60000.0
   units: ft
   initial: 0.0
