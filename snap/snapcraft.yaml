@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.10.2"
+version: "0.12.0"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
