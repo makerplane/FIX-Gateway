@@ -48,6 +48,7 @@ class MainThread(threading.Thread):
                         "COMACTFREQ1": 121.500, "COMSTDFREQ1": 121.500
                         }
         self.script = [
+
             {"APMSG": "Roll/Pitch 0",     "ROLL": 0,   "PITCH": 0 },
             {"APMSG": "Roll/Pitch 10",    "ROLL": 10,  "PITCH": 10 },
             {"APMSG": "Roll/Pitch 20",    "ROLL": 20,  "PITCH": 20 },
@@ -104,6 +105,45 @@ class MainThread(threading.Thread):
             {"APMSG": "Reverse Landing",   "HEAD":281.8, "LONG": -82.8750, "LAT":40.001350, "ALT": 880, "VS": 300},
             {"APMSG": "Reverse Landing",   "HEAD":281.8, "LONG": -82.8650, "LAT":40.000750, "ALT": 1020, "VS": 300},
             {"APMSG": "Reverse Landing",   "HEAD":281.8, "LONG": -82.8550, "LAT":40.000200, "ALT": 1153, "VS": 300},
+
+
+            {"APMSG": "Encoder left 1",     "ENC3": "-1"},
+            {"APMSG": "Encoder right 1",     "ENC3": "1"},
+            {"APMSG": "Encoder right 2",     "ENC3": "1"},
+            {"APMSG": "Encoder right 3",     "ENC3": "1", "BTN3": "False"},
+            {"APMSG": "Encoder Button press",     "BTN3": "True"},
+            {"APMSG": "Encoder left 1",     "ENC3": "-1"},
+            {"APMSG": "Encoder left 2",     "ENC3": "-1", "BTN3": "False"},
+            {"APMSG": "Encoder Button press 1",     "BTN3": "True"},
+            {"APMSG": "Encoder Button press 1", "BTN3": "False"},
+            {"APMSG": "Encoder Button press 2",     "BTN3": "True"},
+            {"APMSG": "Encoder right 1",     "ENC3": "1"},
+            {"APMSG": "Encoder right 2",     "ENC3": "1", "BTN3": "False"},
+            {"APMSG": "Encoder Button press",     "BTN3": "True"},
+            {"APMSG": "Wait for encoder timeout 1"},
+            {"APMSG": "Wait for encoder timeout 2"},
+            {"APMSG": "Wait for encoder timeout 3"},
+            {"APMSG": "Wait for encoder timeout 4"},
+            {"APMSG": "Wait for encoder timeout 5"},
+            {"APMSG": "Wait for encoder timeout 6"},
+            {"APMSG": "Wait for encoder timeout 7"},
+            {"APMSG": "Wait for encoder timeout 8"},
+            {"APMSG": "Wait for encoder timeout 9"},
+
+            {"APMSG": "Encoder right 1",     "ENC3": "1"},
+            {"APMSG": "Encoder right 2",     "ENC3": "1", "BTN3": "False"},
+            {"APMSG": "Encoder right 3",     "ENC3": "1"},
+            {"APMSG": "Encoder right 4",     "ENC3": "1"},
+            {"APMSG": "Encoder right 5",     "ENC3": "1"},
+            {"APMSG": "Encoder Button press 1",     "BTN3": "True"},
+            {"APMSG": "Encoder left 1",     "ENC3": "-1"},
+            {"APMSG": "Encoder left 2",     "ENC3": "-1"},
+            {"APMSG": "Encoder left 3",     "ENC3": "-1"},
+            {"APMSG": "Encoder left 4",     "ENC3": "-1"},
+
+
+
+
             {"APMSG": "IAS/TAS 113",       "IAS": 113, "TAS": 113, "VS": 0 },
             {"APMSG": "IAS/TAS 123",       "IAS": 123, "TAS": 123 },
             {"APMSG": "IAS/TAS 133",       "IAS": 133, "TAS": 133 },
