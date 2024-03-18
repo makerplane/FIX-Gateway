@@ -998,3 +998,10 @@ entries:
   description: Sets the name of the frequency. the plugin will set COMACTNAMEd to this value when COMACTFREQSETd is tuned unless COMACTNAMESETd is empty string
   type: str
   initial: ""
+
+
+- key: ZZLOADER
+  description: Read by client applications to ensure all db items have been init before proceeding
+  type: str
+  initial: "Loaded"
+
