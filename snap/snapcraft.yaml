@@ -49,7 +49,7 @@ parts:
     plugin: python
     source: .
     stage-packages:
-      - libarchive13
+      - libarchive13t64
       - cmake
       - build-essential
       - python3.12-minimal
