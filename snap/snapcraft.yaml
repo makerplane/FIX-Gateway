@@ -1,5 +1,5 @@
 name: fixgateway
-version: "0.14.0"
+version: "2.0.0"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -10,6 +10,8 @@ description: |
     sudo snap set system experimental.user-daemons=true
     
     Release Notes:
+    * Updated to core24 and python 3.12
+
     Many new plugins that need your help testing, these should be considered beta quality:
     * Flight Data Recoder
     * Replay FDR data from point in time
@@ -30,12 +32,12 @@ donation: https://www.paypal.com/donate/?hosted_button_id=VGHHNUG3LRPYL
 source-code: https://github.com/makerplane/FIX-Gateway
 website: https://makerplane.org/
 
-architectures:
-  - build-on: arm64
-  - build-on: armhf
-  - build-on: amd64
+platforms:
+  arm64:
+  armhf:
+  amd64:
 
-base: core22
+base: core24
 confinement: strict
 
 parts:
@@ -50,23 +52,18 @@ parts:
       - libarchive13
       - cmake
       - build-essential
-      - python3.10-minimal
-      - libpython3.10-minimal
-      - libpython3.10-stdlib
-      - libblas3
-      - liblapack3
-      - python3-pip
-      - python3-setuptools
-      - python3-wheel
+      - python3.12-minimal
+      - libpython3.12-minimal
+      - libpython3.12-stdlib
       - python3-venv
       - python3-minimal
-      - python3-distutils
       - python3-pkg-resources
       - python3-numpy
       - python3-lxml
       - python3-psutil
+      - libblas3
     build-environment:
-      - PARTS_PYTHON_INTERPRETER: python3.10
+      - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3
       - PIP_IGNORE_INSTALLED: ''
       - PARTS_PYTHON_VENV_ARGS: --system-site-packages
@@ -81,20 +78,20 @@ apps:
     plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
-      PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
+      PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+
   server:
     command: bin/fixgw
     plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
-      PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
+      PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+
   client:
     command: bin/fixgwc
     plugs: [network]
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
-      PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+      PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
 
 
