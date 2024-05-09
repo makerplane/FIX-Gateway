@@ -1,5 +1,5 @@
 name: fixgateway
-version: "2.0.0"
+version: "2.0.1"
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -79,6 +79,7 @@ apps:
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/lapack;$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas
 
   server:
     command: bin/fixgw
@@ -86,6 +87,7 @@ apps:
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/lapack;$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas
 
   client:
     command: bin/fixgwc
