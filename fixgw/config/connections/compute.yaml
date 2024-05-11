@@ -1,0 +1,34 @@
+# Data Computation
+compute:
+  load: yes
+  module: fixgw.plugins.compute
+  functions:
+    - function: average
+      inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+      output: EGTAVG1
+    - function: span
+      inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+      output: EGTSPAN1
+    - function: max
+      inputs: ["EGT11", "EGT12", "EGT13", "EGT14"]
+      output: EGTMAX1
+    - function: max
+      inputs: ["CHT11", "CHT12", "CHT13", "CHT14"]
+      output: CHTMAX1
+    - function: sum
+      inputs: ["FUELQ1", "FUELQ2", "FUELQ3"]
+      output: FUELQT
+    - function: altp
+      inputs: ["BARO", "TALT"]
+      output: PALT
+    - function: altd
+      inputs: ["PALT","TALT","OAT"]
+      output: DALT
+    #   inputs: []
+    #   output: x
+    # - function: span
+    #   inputs: []
+    #   output: x
+    # - function: TAS
+    # - function: DALT
+

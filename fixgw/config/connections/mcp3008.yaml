@@ -1,0 +1,16 @@
+mcp3008:
+  load: yes
+  module: fixgw.plugins.rpi_mcp3008
+  vkey1: VOLT
+  vkey2: ANLG2
+  vkey3: ANLG3
+  vkey4: ANLG4
+  vkey5: ANLG5
+  vkey6: ANLG6
+  vkey7: ANLG7
+  vkey8: ANLG8
+  clk: 18
+  miso: 23
+  mosi: 24
+  cs: 25
+

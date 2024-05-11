@@ -1,0 +1,8 @@
+# RAIS Protocol Interface
+rais:
+  load: yes
+  module: fixgw.plugins.rais
+  rais_directory: /home/me/openEFIS
+  rais_server_module: RAIS
+  rais_config_path: /home/me/openEFIS/sensors_pubsub.yml
+

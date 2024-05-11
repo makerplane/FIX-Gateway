@@ -1,0 +1,6 @@
+dimmer:
+  load: yes
+  module: fixgw.plugins.dimmer
+  DimmerDevice: /sys/class/backlight/intel_backlight/brightness
+  Multiplier: 1.0
+

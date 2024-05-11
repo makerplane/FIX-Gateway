@@ -1,0 +1,3 @@
+stratux:
+  load: yes
+  module: fixgw.plugins.stratux

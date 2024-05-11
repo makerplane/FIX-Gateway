@@ -1,0 +1,6 @@
+bmp085:
+  load: yes
+  module: fixgw.plugins.rpi_bmp085
+  tkey: CAT
+  pkey: AIRPRESS
+

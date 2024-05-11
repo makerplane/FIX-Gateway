@@ -1,0 +1,38 @@
+# FlightGear Flight Simulator Module
+# To start FlightGear with these paramaters, use the following command...
+#   >fgfs --generic=socket,out,10,localhost,5500,udp,fix_fgfs --generic=socket,in,1,,5501,udp,fix_fgfs
+# The fix_fgfs.xml file should be in the FG_ROOT/Protocols directory which should be
+# in one of the following locations...
+# LINUX: /usr/share/games/flightgear/
+# OSX: /Applications/FlightGear.app/Contents/Resources/data/
+# WINDOWS: c:\Program Files\FlightGear\data\
+# When running as a snap we do not have access to the flight gear root directory.
+# In this case we refer to the file in the fixgw config folder.
+# The default configuration here will work under snap or not.
+# What is important, if you edit the fix_fgfs.xml file, ENSURE you updated it in the flightgear folder too
+fgfs:
+  load: yes
+  module: fixgw.plugins.fgfs
+  # This should be the same as $FG_ROOT on your system.  It is used to help
+  # fixgw find the xml configuration files
+  # When running under snap we do not have access to the flightgear folder
+  # So we refer to a copy of the file in the fixgw config folder
+  fg_root: ~/makerplane/fixgw/config/fgfs
+  # fg_root: /Applications/FlightGear.app/Contents/Resources/data/
+  # fg_root: c:\Program Files\FlightGear\data\
+  # This is the name of the protocol config file that fixgw and fgfs will use to
+  # define the protocol. It is very important that both programs are looking at
+  # the same file.
+  xml_file: fix_fgfs.xml
+  # UDP Address and Ports used for communication to FlightGear.
+  # Host address to listen on
+  recv_host: localhost
+  # port used for the -out argument to FlightGear
+  recv_port: 5500
+  # host address where FlightGear is running
+  send_host: localhost
+  # port used for the -in argument to FlightGear
+  send_port: 5501
+  # Update rate for sending data to FlightGear
+  rate: 10  # updates / second
+
