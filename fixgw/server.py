@@ -37,6 +37,7 @@ import fixgw.status as status
 import fixgw.plugin as plugin
 import fixgw.quorum as quorum
 from os import environ
+from fixgw import cfg
 
 config_filename = "default.yaml"
 user_home = environ.get('SNAP_REAL_HOME', os.path.expanduser("~"))
@@ -129,18 +130,16 @@ def main_setup():
         cf = args.config_file
         config_file = cf.name
     elif config_path is not None: # otherwise use the default
-        cf = open(config_file)
+        pass
     else:
         # If all else fails copy the configuration from the package
         # to ~/makerplane/fixgw/config
         create_config_dir("{USER}/makerplane/fixgw".format(USER=user_home))
         # Reset this stuff like we found it
         config_file = "{USER}/makerplane/fixgw/config/{FILE}".format(USER=user_home, FILE=config_filename)
-        cf = open(config_file)
 
-    config_path = os.path.dirname(cf.name)
-    config = yaml.safe_load(cf)
-
+    config_path = os.path.dirname(config_file)
+    config = cfg.from_yaml(config_file)
     # If running under systemd
     if environ.get('INVOCATION_ID', False):
         # and autostart is not true, exit
