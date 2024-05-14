@@ -66,13 +66,22 @@ class MainThread(threading.Thread):
             time.sleep(0.3)
             self.parent.db_write(self.vote_key,self.vote_value)
             highest_vote = 0
+            nodes_seen = 0
             for nodeid in range(1, self.config['total_nodes'] + 1):
                 data = self.parent.db_read(f"QVOTE{nodeid}")
                 # Only accept a vote if no old,bad,etc
-                if True not in data[1:] and highest_vote < data[0]:
-                    highest_vote = data[0]
-            self.parent.quorum.leader = (self.vote_value == highest_vote)
-            self.parent.db_write("LEADER", self.vote_value == highest_vote )
+                if True not in data[1:]: 
+                    nodes_seen += 1
+                    if highest_vote < data[0]:
+                        highest_vote = data[0]
+            if self.config['total_nodes'] > 2 and (( nodes_seen / self.config['total_nodes']) <= 0.50):
+                # When more than two nodes we require real quorum
+                # If 50% or less of the total nodes are seen, we do not have quorum and no one is a leader
+                self.parent.quorum.leader = False
+                self.parent.db_write("LEADER", False)
+            else:
+                self.parent.quorum.leader = (self.vote_value == highest_vote)
+                self.parent.db_write("LEADER", self.vote_value == highest_vote )
 
 
     def stop(self):
