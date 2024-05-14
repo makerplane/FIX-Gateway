@@ -1,0 +1,14 @@
+rotary_encoder:
+  load: yes
+  module: fixgw.plugins.rpi_rotary_encoder
+  btn: True
+  btnkey: BARO
+  btnstcounter: 29.92
+  btnincr: 0.01
+  btnpin: 4
+  pina: 26
+  pinb: 19
+  stcount: 0
+  rkey: PITCHSET
+  incr: 1
+

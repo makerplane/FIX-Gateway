@@ -1,0 +1,19 @@
+# CAN-FIX
+canfix:
+  load: no
+  module: fixgw.plugins.canfix
+  # See the python-can documentation for the meaning of these options
+  interface: socketcan
+  channel: vcan0
+  #interface: serial
+  #channel: /dev/ttyUSB0
+
+  # This file controls the
+  mapfile: "{CONFIG}/canfix/map.yaml"
+  # The following is our Node Identification Information
+  # See the CAN-FIX Protocol Specification for more information
+  node: 145     # CAN-FIX Node ID
+  device: 145   # CAN-FIX Device Type
+  revision: 0   # Software Revision Number
+  model: 0      # Model Number
+

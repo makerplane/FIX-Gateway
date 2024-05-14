@@ -1,0 +1,8 @@
+# if you want several buttons, copy this configuration with different settings like this [conn_button2]
+button1:
+  load: yes
+  module: fixgw.plugins.rpi_button
+  btnkey: BTN1
+  btnpin: 4
+  rdelay: 0 # 0 for debouncing or time in seconde to determine the repeat delay
+

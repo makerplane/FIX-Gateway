@@ -1,3 +1,8 @@
+|Website snapcraft.io|
+
+.. |Website snapcraft.io| image:: https://snapcraft.io/fixgateway/badge.svg
+   :target: https://snapcraft.io/fixgateway
+
 ============
 FIX Gateway
 ============

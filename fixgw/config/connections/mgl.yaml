@@ -1,0 +1,78 @@
+mgl:
+  load: yes
+  module: fixgw.plugins.mgl
+  # See the python-can documentation for the meaning of these options
+  interface: socketcan
+  channel: vcan0
+  rdac:
+    default_id: 1
+    #send:
+    #    EGT12:
+    #      id: 2
+    #      key: TC1
+    get:
+        key: TC1
+      EGT12:
+        key: TC2
+      EGT13:
+        key: TC3
+      EGT14:
+        key: TC4
+      CHT11:
+        key: TC5
+      CHT12:
+        key: TC6
+      CHT13:
+        key: TC7
+      CHT14:
+        key: TC8
+      OILT1:
+        key: OILT
+
+      OILP1:
+        key: OILP
+      FUELQ3:
+        key: AUX1
+        calibration: [
+          [0, 500],
+          [1, 1000],
+          [2, 1500],
+          [3, 2000],
+          [4, 2500],
+          [5, 3000],
+          [6, 3500],
+          [7, 4000] ]
+
+      OAT:
+          key: AUX2
+      FUELP1:
+        key: FUELP
+      FUELQ1:
+        key: FUELLEVEL1
+        calibration: [
+          [0, 500],
+          [1, 1000],
+          [2, 1500],
+          [3, 2000],
+          [4, 2500],
+          [5, 3000],
+          [6, 3500],
+          [7, 4000] ]
+      FUELQ2:
+        key: FUELLEVEL2
+        calibration: [
+          [0, 500],
+          [1, 1000],
+          [2, 1500],
+          [3, 2000],
+          [4, 2500],
+          [5, 3000],
+          [6, 3500],
+          [7, 4000] ]
+#      ENGBAYT:
+#        key: RDACTEMP
+      VOLT:
+        key: RDACVOLT
+#      TACH1:
+#        key: RPM1
+
