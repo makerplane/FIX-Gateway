@@ -1,0 +1,122 @@
+items:
+# Radio
+- key: COMACTFREQd
+  description: Radio Active Frequency
+  type: float
+  initial: 121.500
+  min: 100
+  max: 200
+  tol: 200
+
+- key: COMACTNAMEd
+  description: Name of the frequency ( from a saved setting )
+  type: str
+  initial: "Emergency"
+
+- key: COMSTDFREQd
+  description: Radio Standby Frequency
+  type: float
+  initial: 121.500
+  min: 100
+  max: 200
+  tol: 200
+
+- key: COMSTDNAMEd
+  description: Name of the frequency ( from a saved setting )
+  type: str
+  initial: "Emergency"
+
+- key: COMACTTXd
+  description: True when radio is transmitting on active channel
+  type: bool
+  initial: False
+  tol: 300
+
+- key: COMACTRXd
+  description: True when radio is receiving on active channel
+  type: bool
+  initial: False
+  tol: 300
+
+- key: COMSTDRXd
+  description: True when radio is receiving on standby channel
+  type: bool
+  initial: False
+  tol: 300
+
+- key: COMSQUELCHd
+  description: RX Squelch
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 10
+
+- key: COMVSWRd
+  description: SWR
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 4
+- key: COMTXPWRd
+  description: Watts of TX Power
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMACTRXLEVELd
+  description: Active Frequency RX Level
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMSTDRXLEVELd
+  description: Standby Frequency RX Level
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMRXVOLd
+  description: RX Volume
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMINTVOLd
+  description: Intercom Volume
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMAUDVOLd
+  description: Audio input volume ( not 100% sure this exists in the v16 )
+  type: float
+  initial: 0.0
+  tol: 300
+  min: 0
+  max: 12
+
+- key: COMACTFREQSETd
+  description: Sets the frequency of the radio, 0 is ignored
+  type: int
+  initial: 0
+  min: 0
+  max: 300000
+
+- key: COMACTNAMESETd
+  description: Sets the name of the frequency. the plugin will set COMACTNAMEd to this value when COMACTFREQSETd is tuned unless COMACTNAMESETd is empty string
+  type: str
+  initial: ""
+
+

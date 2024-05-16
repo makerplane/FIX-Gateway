@@ -1,0 +1,29 @@
+items:
+- key: ANLGa
+  description: Generic Analog %a
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 2000
+
+- key: BTNb
+  description: Generic Button %b
+  type: bool
+  tol: 0
+
+- key: TSBTNns
+  description: Generic Button %b
+  type: bool
+  tol: 0
+
+- key: ENCr
+  description: Generic Encoder %r
+  type: int
+  min: -32768
+  max: 32767
+  units: Pulses
+  initial: 0
+  tol: 0
+

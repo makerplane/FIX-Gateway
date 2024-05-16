@@ -1,66 +1,11 @@
-variables:
-  e: 1  # Engines
-  c: 6  # Cylinders
-  a: 8  # Generic Analogs
-  b: 30 # Generic Buttons
-  g: 4  # Egt Buttons
-  r: 5  # Encoders
-  t: 3  # Fuel Tanks
-  n: 5  # Nodes
-  s: 20 # Touchscreen buttons
-  d: 4  # MGL V16 Radios
+include: 
+- database/variables.yaml
 
 entries:
-- key: MENUHIDE
-  type: bool
-  initial: false
-  description: "When true some buttons will be hidden, if they are configured to do so"
-
-entries:
-- key: QVOTEn
-  description: Quorum vote for node %n
-  type: int
-  tol: 1000
-  initial: 0
-  min: 0
-  max: 500
-
-- key: LEADER
-  description: "The quorum plugin will set this false if those is not the leader, use it when making decisions to take actions"
-  type: bool
-  initial: true
-
-- key: ANLGa
-  description: Generic Analog %a
-  type: float
-  min: 0.0
-  max: 1.0
-  units: '%/100'
-  initial: 0.0
-  tol: 2000
-
-- key: BTNb
-  description: Generic Button %b
-  type: bool
-  tol: 0
-
-- key: TSBTNns
-  description: Generic Button %b
-  type: bool
-  tol: 0
 
 - key: EGTBTNg
   description: EGT Button %b
   type: bool
-  tol: 0
-
-- key: ENCr
-  description: Generic Encoder %r
-  type: int
-  min: -32768
-  max: 32767
-  units: Pulses
-  initial: 0
   tol: 0
 
 - key: IAS
@@ -191,76 +136,6 @@ entries:
   tol: 2000
   aux: [Min,Max]
 
-- key: HEAD
-  description: Current Aircraft Magnetic Heading
-  type: float
-  min: 0.0
-  max: 359.9
-  units: deg
-  initial: 0.0
-  tol: 2000
-
-- key: TRACK
-  description: Current Aircraft Bearing
-  type: float
-  min: 0.0
-  max: 359.9
-  units: deg
-  initial: 0.0
-  tol: 2000
-
-- key: TRACKM
-  description: Current Aircraft Magnetic Bearing
-  type: float
-  min: 0.0
-  max: 359.9
-  units: deg
-  initial: 0.0
-  tol: 2000
-
-- key: COURSE
-  description: Selected Course
-  type: float
-  min: 0.0
-  max: 359.9
-  units: deg
-  initial: 0.0
-  tol: 2000
-
-- key: CDI
-  description: Course Deviation Indicator
-  type: float
-  min: -1.0
-  max: 1.0
-  initial: 0.0
-  tol: 2000
-
-- key: GSI
-  description: Glideslope Indicator
-  type: float
-  min: -1.0
-  max: 1.0
-  initial: 0.0
-  tol: 2000
-
-- key: XTRACK
-  description: Cross Track Error
-  type: float
-  min: 0.0
-  max: 100.0
-  units: nM
-  initial: 0.0
-  tol: 2000
-
-- key: ROT
-  description: Rate of Turn
-  type: float
-  min: -3000
-  max: 3000
-  units: Deg/sec
-  initial: 0.0
-  tol: 200
-
 - key: RAT
   description: MGL RDAC Air Temperature
   type: float
@@ -290,97 +165,6 @@ entries:
   initial: 0.0
   tol: 2000
   aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: OATW
-  description: Outside Air Temperature Warning
-  type: int
-  min: 0
-  max: 5
-  units: warninglevel
-  initial: 0
-  tol: 2000
-
-- key: ROLL
-  description: Roll Angle
-  type: float
-  min: -180.0
-  max: 180.0
-  units: deg
-  initial: 0.0
-  tol: 300
-
-- key: PITCH
-  description: Pitch Angle
-  type: float
-  min: -90.0
-  max: 90.0
-  units: deg
-  initial: 0.0
-  tol: 300
-
-- key: ORISYSW
-  description: Orientation System Warning
-  type: int
-  min: 0
-  max: 5
-  units: warninglevel
-  initial: 0
-  tol: 2000
-
-- key: GYROW
-  description: Gyroscope sensor Warning
-  type: int
-  min: 0
-  max: 5
-  units: warninglevel
-  initial: 0
-  tol: 2000
-
-- key: ACCELW
-  description: Acceleration sensor Warning
-  type: int
-  min: 0
-  max: 5
-  units: warninglevel
-  initial: 0
-  tol: 2000
-
-- key: MAGW
-  description: Magnetic sensor Warning
-  type: int
-  min: 0
-  max: 5
-  units: warninglevel
-  initial: 0
-  tol: 2000
-
-- key: PITCHSET
-  description: Pitch angle setting
-  type: float
-  min: -180.0
-  max: 180.0
-  units: deg
-  initial: 0.0
-  tol: 200
-
-- key: YAW
-  description: Yaw Angle
-  type: float
-  min: -180.0
-  max: 180.0
-  units: deg
-  initial: 0.0
-  tol: 200
-
-- key: AOA
-  description: Angle of attack
-  type: float
-  min: -180.0
-  max: 180.0
-  units: deg
-  initial: 0.0
-  tol: 200
-  aux: [Min, Max, 0g, Warn, Stall]
 
 - key: CTLPTCH
   description: Pitch Control
@@ -426,6 +210,15 @@ entries:
   units: '%/100'
   initial: 0.0
   tol: 200
+
+- key: OATW
+  description: Outside Air Temperature Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
 
 - key: CTLFLAP
   description: Flap Control
@@ -481,162 +274,6 @@ entries:
   initial: 0.0
   tol: 200
 
-- key: THRe
-  description: Throttle Control Engine %e
-  type: float
-  min: 0.0
-  max: 1.0
-  units: '%/100'
-  initial: 0.0
-  tol: 1000
-
-- key: MIXe
-  description: Mixture Control Engine %e
-  type: float
-  min: 0.0
-  max: 1.0
-  units: '%/100'
-  initial: 0.0
-  tol: 1000
-
-- key: OILPe
-  description: Oil Pressure Engine %e
-  type: float
-  min: 0.0
-  max: 200.0
-  units: psi
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: OILTe
-  description: Oil Temperature Engine %e
-  type: float
-  min: 0.0
-  max: 150.0
-  units: degC
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: H2OTe
-  description: Coolant Temperature Engine %e
-  type: float
-  min: 0.0
-  max: 200.0
-  units: degC
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: FUELPe
-  description: Fuel Pressure Engine %e
-  type: float
-  min: 0.0
-  max: 200.0
-  units: psi
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: FUELFe
-  description: Fuel Flow Engine %e
-  type: float
-  min: 0.0
-  max: 100.0
-  units: gal/hr
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max]
-
-- key: MAPe
-  description: Manifold Pressure Engine %e
-  type: float
-  min: 0.0
-  max: 60.0
-  units: inHg
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,highWarn,highAlarm]
-
-- key: VOLT
-  description: System Voltage
-  type: float
-  min: 0.0
-  max: 18.0
-  units: volt
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: CURRNT
-  description: Bus Current
-  type: float
-  min: 0.0
-  max: 60.0
-  units: amps
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: EGTec
-  description: Exhaust Gas Temp Engine %e, Cylinder %c
-  type: float
-  min: 0.0
-  max: 1000.0
-  units: degC
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: EGTAVGe
-  description: Average Exhaust Gas Temp Engine %e
-  type: float
-  min: 0.0
-  max: 1000.0
-  units: degC
-  initial: 0.0
-  tol: 0
-  aux: [Min,Max]
-
-- key: EGTSPANe
-  description: Exhaust Gas Temp Span Engine %e
-  type: float
-  min: 0.0
-  max: 1000.0
-  units: degC
-  initial: 0.0
-  tol: 0
-  aux: [Min,Max]
-
-- key: EGTMAXe
-  description: Maximum Exhaust Gas Temp Engine %e
-  type: float
-  min: 0.0
-  max: 1000.0
-  units: degC
-  initial: 0.0
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: CHTec
-  description: Cylinder Head Temp Engine %e, Cylinder %c
-  type: float
-  min: 0.0
-  max: 1000.0
-  units: degC
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: CHTMAXe
-  description: Maximum Cylinder Head Temp Engine %e
-  type: float
-  min: 0.0
-  max: 1000.0
-  units: degC
-  initial: 0.0
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
 - key: FUELQt
   description: Fuel Quantity Tank %t
   type: float
@@ -657,26 +294,6 @@ entries:
   tol: 2000
   aux: [Min,Max,lowWarn,lowAlarm]
 
-- key: TACHe
-  description: Engine RPM Engine %e
-  type: int
-  min: 0
-  max: 10000
-  units: RPM
-  initial: 0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: PROPe
-  description: Propeller RPM Engine %e
-  type: int
-  min: 0
-  max: 10000
-  units: RPM
-  initial: 0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
 - key: LAT
   description: Latitude
   type: float
@@ -695,46 +312,6 @@ entries:
   initial: 0.0
   tol: 20000
 
-- key: TIMEZ
-  description: Zulu Time String
-  type: str
-  tol: 2000
-
-- key: TIMEZH
-  description: Zulu Time Hour
-  type: int
-  min: 0
-  max: 23
-  initial: 0
-  tol: 2000
-
-- key: TIMEZM
-  description: Zulu Time Minute
-  type: int
-  min: 0
-  max: 59
-  initial: 0
-  tol: 2000
-
-- key: TIMEZS
-  description: Zulu Time Second
-  type: int
-  min: 0
-  max: 59
-  initial: 0
-  tol: 2000
-
-- key: TIMEL
-  description: Local Time String
-  type: str
-  tol: 0
-
-- key: TZONE
-  description: Time Zone
-  type: float
-  min: -12.0
-  max: 12.0
-  initial: 0.0
 
 - key: FTIME
   description: Flight Time
@@ -762,62 +339,6 @@ entries:
   description: Aircraft Identification
   type: str
   tol: 0
-
-# Used by mavlink plugin:
-- key: TRIMP
-  description: Pitch Trim
-  type: float
-  min: -100
-  max: 100
-  initial: 0
-- key: TRIMR
-  description: Roll Trim
-  type: float
-  min: -100
-  max: 100
-  initial: 0
-- key: TRIMY
-  description: Yaw Trim
-  type: float
-  min: -100
-  max: 100
-  initial: 0
-- key: BTNTRIMUP
-  description: Trim up button
-  type: bool
-  initial: false
-- key: BTNTRIMDN
-  description: Trim down button
-  type: bool
-  initial: false
-- key: BTNTRIMCT
-  description: Trim center button
-  type: bool
-  initial: false
-- key: BTNTRIMYL
-  description: Yaw Left button
-  type: bool
-  initial: false
-- key: BTNTRIMYR
-  description: Yaw Right button
-  type: bool
-  initial: false
-- key: BTNTRIMYC
-  description: Yaw center button
-  type: bool
-  initial: false
-- key: BTNTRIMRL
-  description: Roll Left button
-  type: bool
-  initial: false
-- key: BTNTRIMRR
-  description: Roll Right button
-  type: bool
-  initial: false
-- key: BTNTRIMRC
-  description: Roll center button
-  type: bool
-  initial: false
 
 - key: BTNAP
   description: AP button state
@@ -885,129 +406,12 @@ entries:
   initial: ""
 
 
-# Radio
-- key: COMACTFREQd
-  description: Radio Active Frequency
-  type: float
-  initial: 121.500
-  min: 100
-  max: 200
-  tol: 200
+- include: database/generic.yaml
+- include: database/ahrs.yaml
+- include: database/com_radio.yaml
+- include: database/engine.yaml
+- include: database/trims.yaml
 
-- key: COMACTNAMEd
-  description: Name of the frequency ( from a saved setting )
-  type: str
-  initial: "Emergency"
-
-- key: COMSTDFREQd
-  description: Radio Standby Frequency
-  type: float
-  initial: 121.500
-  min: 100
-  max: 200
-  tol: 200
-
-- key: COMSTDNAMEd
-  description: Name of the frequency ( from a saved setting )
-  type: str
-  initial: "Emergency"
-
-- key: COMACTTXd
-  description: True when radio is transmitting on active channel
-  type: bool
-  initial: False
-  tol: 300
-
-- key: COMACTRXd
-  description: True when radio is receiving on active channel
-  type: bool
-  initial: False
-  tol: 300
-
-- key: COMSTDRXd
-  description: True when radio is receiving on standby channel
-  type: bool
-  initial: False
-  tol: 300
-
-- key: COMSQUELCHd
-  description: RX Squelch
-  type: float
-  initial: 0.0
-  tol: 300
-  min: 0
-  max: 10
-
-- key: COMVSWRd
-  description: SWR
-  type: float
-  initial: 0.0
-  tol: 300
-  min: 0
-  max: 4
-- key: COMTXPWRd
-  description: Watts of TX Power
-  type: float
-  initial: 0.0
-  tol: 300
-  min: 0
-  max: 12
-
-- key: COMACTRXLEVELd
-  description: Active Frequency RX Level
-  type: float
-  initial: 0.0
-  tol: 300
-  min: 0
-  max: 12
-
-- key: COMSTDRXLEVELd
-  description: Standby Frequency RX Level
-  type: float
-  initial: 0.0
-  tol: 300
-  min: 0
-  max: 12
-
-- key: COMRXVOLd
-  description: RX Volume
-  type: float
-  initial: 0.0
-  tol: 300
-  min: 0
-  max: 12
-
-- key: COMINTVOLd
-  description: Intercom Volume
-  type: float
-  initial: 0.0
-  tol: 300
-  min: 0
-  max: 12
-
-- key: COMAUDVOLd
-  description: Audio input volume ( not 100% sure this exists in the v16 )
-  type: float
-  initial: 0.0
-  tol: 300
-  min: 0
-  max: 12
-
-- key: COMACTFREQSETd
-  description: Sets the frequency of the radio, 0 is ignored
-  type: int
-  initial: 0
-  min: 0
-  max: 300000
-
-- key: COMACTNAMESETd
-  description: Sets the name of the frequency. the plugin will set COMACTNAMEd to this value when COMACTFREQSETd is tuned unless COMACTNAMESETd is empty string
-  type: str
-  initial: ""
-
-
-- key: ZZLOADER
-  description: MUST always be the last key listed here. It is read by client applications to ensure all db items have been init before proceeding to prevent race conditions.
-  type: str
-  initial: "Loaded"
+- include: database/system.yaml
+- include: database/last.yaml
 

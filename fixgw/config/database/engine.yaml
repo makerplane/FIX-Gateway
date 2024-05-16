@@ -1,0 +1,178 @@
+items:
+- key: THRe
+  description: Throttle Control Engine %e
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 1000
+
+- key: MIXe
+  description: Mixture Control Engine %e
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 1000
+
+- key: OILPe
+  description: Oil Pressure Engine %e
+  type: float
+  min: 0.0
+  max: 200.0
+  units: psi
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: OILTe
+  description: Oil Temperature Engine %e
+  type: float
+  min: 0.0
+  max: 150.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: H2OTe
+  description: Coolant Temperature Engine %e
+  type: float
+  min: 0.0
+  max: 200.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: FUELPe
+  description: Fuel Pressure Engine %e
+  type: float
+  min: 0.0
+  max: 200.0
+  units: psi
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: FUELFe
+  description: Fuel Flow Engine %e
+  type: float
+  min: 0.0
+  max: 100.0
+  units: gal/hr
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max]
+
+- key: MAPe
+  description: Manifold Pressure Engine %e
+  type: float
+  min: 0.0
+  max: 60.0
+  units: inHg
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,highWarn,highAlarm]
+
+- key: VOLT
+  description: System Voltage
+  type: float
+  min: 0.0
+  max: 18.0
+  units: volt
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: CURRNT
+  description: Bus Current
+  type: float
+  min: 0.0
+  max: 60.0
+  units: amps
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: EGTec
+  description: Exhaust Gas Temp Engine %e, Cylinder %c
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: EGTAVGe
+  description: Average Exhaust Gas Temp Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 0
+  aux: [Min,Max]
+
+- key: EGTSPANe
+  description: Exhaust Gas Temp Span Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 0
+  aux: [Min,Max]
+
+- key: EGTMAXe
+  description: Maximum Exhaust Gas Temp Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: CHTec
+  description: Cylinder Head Temp Engine %e, Cylinder %c
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: CHTMAXe
+  description: Maximum Cylinder Head Temp Engine %e
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: degC
+  initial: 0.0
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: TACHe
+  description: Engine RPM Engine %e
+  type: int
+  min: 0
+  max: 10000
+  units: RPM
+  initial: 0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: PROPe
+  description: Propeller RPM Engine %e
+  type: int
+  min: 0
+  max: 10000
+  units: RPM
+  initial: 0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+

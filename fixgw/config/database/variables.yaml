@@ -1,0 +1,12 @@
+variables:
+  e: 1  # Engines
+  c: 6  # Cylinders
+  a: 8  # Generic Analogs
+  b: 30 # Generic Buttons
+  g: 4  # Egt Buttons
+  r: 5  # Encoders
+  t: 3  # Fuel Tanks
+  n: 5  # Nodes
+  s: 20 # Touchscreen buttons
+  d: 4  # MGL V16 Radios
+
