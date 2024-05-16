@@ -193,14 +193,9 @@ def main_setup():
                         break
 
     # Open database definition file and send to database initialization
+    dbfile = config["database file"].format(CONFIG=config_path)
     try:
-        ddfile = config["database file"].format(CONFIG=config_path)
-        f = open(ddfile,'r')
-    except:
-        log.critical("Unable to open database definition file - " + ddfile)
-        raise
-    try:
-        database.init(f)
+        database.init(dbfile)
     except Exception as e:
         log.error("Database failure, Exiting:" + str(e))
         raise

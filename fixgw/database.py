@@ -20,6 +20,7 @@ import time
 import yaml
 import copy
 import fixgw.quorum as quorum
+from fixgw import cfg
 
 __database = {}
 
@@ -324,7 +325,7 @@ def init(f):
 
     state = "var"
 
-    db = yaml.safe_load(f)
+    db = cfg.from_yaml(f)
     for key, value in db['variables'].items():
         variables[key] = int(value)
     for entry in db['entries']:
@@ -339,7 +340,6 @@ def init(f):
         else:
             add_item(entry)
 
-    f.close()
     t = UpdateThread(update, 1.0)
     t.daemon = True
     t.start()
