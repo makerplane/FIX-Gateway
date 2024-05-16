@@ -1,5 +1,5 @@
 items:
-- key: MENUHIDE
+- key: HIDEBUTTON
   type: bool
   initial: false
   description: "When true some buttons will be hidden, if they are configured to do so"
