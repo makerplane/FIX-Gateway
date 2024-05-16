@@ -11,6 +11,12 @@ variables:
   d: 4  # MGL V16 Radios
 
 entries:
+- key: MENUHIDE
+  type: bool
+  initial: false
+  description: "When true some buttons will be hidden, if they are configured to do so"
+
+entries:
 - key: QVOTEn
   description: Quorum vote for node %n
   type: int
