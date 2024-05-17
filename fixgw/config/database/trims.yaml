@@ -1,0 +1,65 @@
+# Avoid editing this file
+# Future updates may include changes to this file but once you edit
+# this file it will no longer be auto-updated and you will not
+# benefit from the improvements without manual intervention
+
+# If you want to edit min/max/initial/tol/etc
+# Do that in the file custom.ini
+
+items:
+# Used by mavlink plugin:
+- key: TRIMP
+  description: Pitch Trim
+  type: float
+  min: -100
+  max: 100
+  initial: 0
+- key: TRIMR
+  description: Roll Trim
+  type: float
+  min: -100
+  max: 100
+  initial: 0
+- key: TRIMY
+  description: Yaw Trim
+  type: float
+  min: -100
+  max: 100
+  initial: 0
+- key: BTNTRIMUP
+  description: Trim up button
+  type: bool
+  initial: false
+- key: BTNTRIMDN
+  description: Trim down button
+  type: bool
+  initial: false
+- key: BTNTRIMCT
+  description: Trim center button
+  type: bool
+  initial: false
+- key: BTNTRIMYL
+  description: Yaw Left button
+  type: bool
+  initial: false
+- key: BTNTRIMYR
+  description: Yaw Right button
+  type: bool
+  initial: false
+- key: BTNTRIMYC
+  description: Yaw center button
+  type: bool
+  initial: false
+- key: BTNTRIMRL
+  description: Roll Left button
+  type: bool
+  initial: false
+- key: BTNTRIMRR
+  description: Roll Right button
+  type: bool
+  initial: false
+- key: BTNTRIMRC
+  description: Roll center button
+  type: bool
+  initial: false
+

@@ -1,0 +1,335 @@
+# Avoid editing this file
+# Future updates may include changes to this file but once you edit
+# this file it will no longer be auto-updated and you will not
+# benefit from the improvements without manual intervention
+
+# If you want to edit min/max/initial/tol/etc
+# Do that in the file custom.ini
+
+items:
+- key: LAT
+  description: Latitude
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 20000
+
+- key: LONG
+  description: Longitude
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 20000
+
+- key: IAS
+  description: Indicated Airspeed
+  type: float
+  min: 0.0
+  max: 1000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy]
+
+- key: IASW
+  description: Indicated Airspeed Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: TAS
+  description: True Airspeed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: CAS
+  description: True Airspeed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: GS
+  description: Ground Speed
+  type: float
+  min: 0.0
+  max: 2000.0
+  units: knots
+  initial: 0.0
+  tol: 2000
+
+- key: ALT
+  description: Indicated Altitude
+  type: float
+  min: -2000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: PALT
+  description: Pressure Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: TALT
+  description: True Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: DALT
+  description: Density Altitude
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: AGL
+  description: Radar Altitude (Above Ground Level)
+  type: float
+  min: -1000.0
+  max: 60000.0
+  units: ft
+  initial: 0.0
+  tol: 2000
+
+- key: BARO
+  description: Altimeter Setting
+  type: float
+  min: 0.0
+  max: 35.0
+  units: inHg
+  initial: 29.92
+  tol: 2000
+
+- key: AIRPRESS
+  description: Air Pressure
+  type: float
+  min: 0.0
+  max: 200000.0
+  units: Pa
+  initial: 101325.0
+  tol: 2000
+
+- key: DIFFAIRPRESS
+  description: Differential Air Pressure
+  type: float
+  min: 0.0
+  max: 200000.0
+  units: Pa
+  initial: 101325.0
+  tol: 2000
+
+- key: VS
+  description: Vertical Speed
+  type: float
+  min: -30000.0
+  max: 30000.0
+  units: ft/min
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max]
+
+- key: HEAD
+  description: Current Aircraft Magnetic Heading
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: TRACK
+  description: Current Aircraft Bearing
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: TRACKM
+  description: Current Aircraft Magnetic Bearing
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: COURSE
+  description: Selected Course
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: CDI
+  description: Course Deviation Indicator
+  type: float
+  min: -1.0
+  max: 1.0
+  initial: 0.0
+  tol: 2000
+
+- key: GSI
+  description: Glideslope Indicator
+  type: float
+  min: -1.0
+  max: 1.0
+  initial: 0.0
+  tol: 2000
+
+- key: XTRACK
+  description: Cross Track Error
+  type: float
+  min: 0.0
+  max: 100.0
+  units: nM
+  initial: 0.0
+  tol: 2000
+
+- key: ROT
+  description: Rate of Turn
+  type: float
+  min: -3000
+  max: 3000
+  units: Deg/sec
+  initial: 0.0
+  tol: 200
+
+- key: ROLL
+  description: Roll Angle
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 300
+
+- key: PITCH
+  description: Pitch Angle
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 300
+
+- key: ORISYSW
+  description: Orientation System Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: GYROW
+  description: Gyroscope sensor Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: ACCELW
+  description: Acceleration sensor Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: MAGW
+  description: Magnetic sensor Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: PITCHSET
+  description: Pitch angle setting
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 200
+
+- key: YAW
+  description: Yaw Angle
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 200
+
+- key: AOA
+  description: Angle of attack
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 200
+  aux: [Min, Max, 0g, Warn, Stall]
+
+- key: ANORM
+  description: Normal Acceleration
+  type: float
+  min: -30.0
+  max: 30.0
+  units: g
+  initial: 0.0
+  tol: 200
+
+- key: ALAT
+  description: Lateral Acceleration
+  type: float
+  min: -30.0
+  max: 30.0
+  units: g
+  initial: 0.0
+  tol: 200
+
+- key: ALONG
+  description: Longitudinal Acceleration
+  type: float
+  min: -30.0
+  max: 30.0
+  units: g
+  initial: 0.0
+  tol: 200
+
+

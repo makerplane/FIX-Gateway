@@ -1,0 +1,37 @@
+# Avoid editing this file
+# Future updates may include changes to this file but once you edit
+# this file it will no longer be auto-updated and you will not
+# benefit from the improvements without manual intervention
+
+# If you want to edit min/max/initial/tol/etc
+# Do that in the file custom.ini
+
+items:
+- key: ANLGa
+  description: Generic Analog %a
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 2000
+
+- key: BTNb
+  description: Generic Button %b
+  type: bool
+  tol: 0
+
+- key: TSBTNns
+  description: Generic Button %b
+  type: bool
+  tol: 0
+
+- key: ENCr
+  description: Generic Encoder %r
+  type: int
+  min: -32768
+  max: 32767
+  units: Pulses
+  initial: 0
+  tol: 0
+

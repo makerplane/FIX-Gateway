@@ -6,7 +6,9 @@
 # File that defines the database.
 database file: "{CONFIG}/database.yaml"
 
+# Set to false if you do not want to auto-start
 auto start: true
+
 # Set initial values after the database is initialized.
 # If there are duplicate assignments in these files, the last
 # file listed will overwrite data in previous files
@@ -16,6 +18,11 @@ initialization files:
   # - "{CONFIG}/c170b.ini"
   # - "{CONFIG}/fg_172.ini"
   #- "{CONFIG}/rotax582.ini"
+# Make your edits in this file:
+   - "{CONFIG}/custom.ini"
+# If you create a file for your engine and want to share it
+# please make a pull request on github so we can add it!
+# Other users with the same engine will appreciate that
 
 # Connections:
 # if 'load' is 'yes' the connection plugin will be loaded at program start
@@ -54,6 +61,8 @@ connections:
   - connections/demo.yaml 
 
 # Logging configuration - See Python logging.config module documenation
+# This is logging for system messages, not system data
+# If you want a Flight Data Recorder, see the file connections/data_recorder.yaml
 logging:
   version: 1
   disable_existing_loggers: False

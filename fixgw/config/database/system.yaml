@@ -1,0 +1,76 @@
+# Avoid editing this file
+# Future updates may include changes to this file but once you edit
+# this file it will no longer be auto-updated and you will not
+# benefit from the improvements without manual intervention
+
+# If you want to edit min/max/initial/tol/etc
+# Do that in the file custom.ini
+
+items:
+- key: HIDEBUTTON
+  type: bool
+  initial: false
+  description: "When true some buttons will be hidden, if they are configured to do so"
+
+- key: QVOTEn
+  description: Quorum vote for node %n
+  type: int
+  tol: 1000
+  initial: 0
+  min: 0
+  max: 500
+
+- key: LEADER
+  description: "The quorum plugin will set this false if those is not the leader, use it when making decisions to take actions"
+  type: bool
+  initial: true
+
+
+- key: TIMEZ
+  description: Zulu Time String
+  type: str
+  tol: 2000
+
+- key: TIMEZH
+  description: Zulu Time Hour
+  type: int
+  min: 0
+  max: 23
+  initial: 0
+  tol: 2000
+
+- key: TIMEZM
+  description: Zulu Time Minute
+  type: int
+  min: 0
+  max: 59
+  initial: 0
+  tol: 2000
+
+- key: TIMEZS
+  description: Zulu Time Second
+  type: int
+  min: 0
+  max: 59
+  initial: 0
+  tol: 2000
+
+- key: TIMEL
+  description: Local Time String
+  type: str
+  tol: 0
+
+- key: TZONE
+  description: Time Zone
+  type: float
+  min: -12.0
+  max: 12.0
+  initial: 0.0
+
+
+
+- key: ZZLOADER
+  description: MUST always be the last key listed here. It is read by client applications to ensure all db items have been init before proceeding to prevent race conditions.
+  type: str
+  initial: "Loaded"
+
