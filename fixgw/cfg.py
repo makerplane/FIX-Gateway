@@ -10,9 +10,9 @@ def from_yaml(fname,bpath=None,cfg=None,bc=[]):
     fpath = os.path.dirname(fname)
     if not cfg:
         # cfg only populated to process nested data
-        cf = open(fname)
         if not bpath: bpath = fpath
-        cfg = yaml.safe_load(cf)
+        with open(fname) as cf:
+            cfg = yaml.safe_load(cf)
     new = {}
     if hasattr(cfg,'items'):
         for key, val in cfg.items():
@@ -48,7 +48,8 @@ def from_yaml(fname,bpath=None,cfg=None,bc=[]):
                             if not os.path.exists(ifile):
                                 # Use base path
                                 ifile = bpath + '/' + l['include']
-                            litems = yaml.safe_load(open(ifile))
+                            with open(ifile) as cf:
+                                litems = yaml.safe_load(cf)
                             if 'items' in litems:
                                 for a in litems['items']:
                                     new[key].append(a)
