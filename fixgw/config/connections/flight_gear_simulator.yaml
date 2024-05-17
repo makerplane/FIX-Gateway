@@ -1,7 +1,7 @@
 # FlightGear Flight Simulator Module
 # To start FlightGear with these paramaters, use the following command...
 #   >fgfs --generic=socket,out,10,localhost,5500,udp,fix_fgfs --generic=socket,in,1,,5501,udp,fix_fgfs
-# The fix_fgfs.xml file should be in the FG_ROOT/Protocols directory which should be
+# The config file connection/fix_fgfs.xml file should be in the FG_ROOT/Protocols directory which should be
 # in one of the following locations...
 # LINUX: /usr/share/games/flightgear/
 # OSX: /Applications/FlightGear.app/Contents/Resources/data/
@@ -17,7 +17,7 @@ fgfs:
   # fixgw find the xml configuration files
   # When running under snap we do not have access to the flightgear folder
   # So we refer to a copy of the file in the fixgw config folder
-  fg_root: ~/makerplane/fixgw/config/fgfs
+  fg_root: ~/makerplane/fixgw/config/connections/fgfs
   # fg_root: /Applications/FlightGear.app/Contents/Resources/data/
   # fg_root: c:\Program Files\FlightGear\data\
   # This is the name of the protocol config file that fixgw and fgfs will use to

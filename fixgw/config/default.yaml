@@ -4,6 +4,8 @@
 # directory where this file is found.
 
 # File that defines the database.
+# No need to change this, if you need to add some custom keys do 
+# that inside the file database/custom.yaml
 database file: "{CONFIG}/database.yaml"
 
 # Set to false if you do not want to auto-start
@@ -14,14 +16,15 @@ auto start: true
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-   - "{CONFIG}/default.ini"
-  # - "{CONFIG}/c170b.ini"
-  # - "{CONFIG}/fg_172.ini"
-  #- "{CONFIG}/rotax582.ini"
+   - "{CONFIG}/init_data/default.ini"
+  # - "{CONFIG}/init_data/airplanes/cessna/c170b.ini"
+  # - "{CONFIG}/init_data/flight_gear/cessna_172.ini"
+  # - "{CONFIG}/init_data/engines/aeromomentum/am13.ini"
+  #- "{CONFIG}/init_data/engines/rotax/582.ini"
 # Make your edits in this file:
-   - "{CONFIG}/custom.ini"
-# If you create a file for your engine and want to share it
-# please make a pull request on github so we can add it!
+   - "{CONFIG}/init_data/custom.ini"
+# If you create a file for your engine, airplane or equipment
+# and want to share it please make a pull request on github.
 # Other users with the same engine will appreciate that
 
 # Connections:
