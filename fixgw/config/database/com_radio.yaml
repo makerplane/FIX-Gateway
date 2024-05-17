@@ -1,3 +1,14 @@
+# Avoid editing this file
+# Future updates may include changes to this file but once you edit
+# this file it will no longer be auto-updated and you will not
+# benefit from the improvements without manual intervention
+
+# If you want to edit min/max/initial/tol/etc
+# Do that in the file custom.ini
+
+# These were created to work with the MGL V16 radio
+# The plugin for that radio is currently a work in progress
+
 items:
 # Radio
 - key: COMACTFREQd

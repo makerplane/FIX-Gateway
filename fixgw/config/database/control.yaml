@@ -1,0 +1,82 @@
+# Avoid editing this file
+# Future updates may include changes to this file but once you edit
+# this file it will no longer be auto-updated and you will not
+# benefit from the improvements without manual intervention
+
+# If you want to edit min/max/initial/tol/etc
+# Do that in the file custom.ini
+
+items:
+- key: CTLPTCH
+  description: Pitch Control
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLROLL
+  description: Roll Control
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLYAW
+  description: Yaw Control (Rudder)
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLCOLL
+  description: Collective Control
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLATP
+  description: AntiTorque Pedal Ctrl
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLFLAP
+  description: Flap Control
+  type: float
+  min: -1.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLLBRK
+  description: Left Brake Control
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 200
+
+- key: CTLRBRK
+  description: Right Brake Control
+  type: float
+  min: 0.0
+  max: 1.0
+  units: '%/100'
+  initial: 0.0
+  tol: 1000
+
+

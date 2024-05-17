@@ -1,0 +1,95 @@
+# Avoid editing this file
+# Future updates may include changes to this file but once you edit
+# this file it will no longer be auto-updated and you will not
+# benefit from the improvements without manual intervention
+
+# If you want to edit min/max/initial/tol/etc
+# Do that in the file custom.ini
+
+items:
+- key: RAT
+  description: MGL RDAC Air Temperature
+  type: float
+  min: -100.0
+  max: 100.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn]
+
+- key: OAT
+  description: Outside Air Temperature
+  type: float
+  min: -100.0
+  max: 100.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn]
+
+- key: CAT
+  description: Cabin Air Temperature
+  type: float
+  min: -100.0
+  max: 100.0
+  units: degC
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: OATW
+  description: Outside Air Temperature Warning
+  type: int
+  min: 0
+  max: 5
+  units: warninglevel
+  initial: 0
+  tol: 2000
+
+- key: FUELQt
+  description: Fuel Quantity Tank %t
+  type: float
+  min: 0.0
+  max: 200.0
+  units: gal
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,lowAlarm]
+
+- key: FUELQT
+  description: Total Fuel Quantity
+  type: float
+  min: 0.0
+  max: 200.0
+  units: gal
+  initial: 0.0
+  tol: 2000
+  aux: [Min,Max,lowWarn,lowAlarm]
+
+- key: FTIME
+  description: Flight Time
+  type: float
+  min: 0.0
+  max: 1000.0
+  initial: 0.0
+
+- key: DIM
+  description: Panel Dimmer Level
+  type: int
+  min: 0
+  max: 100
+  initial: 100
+
+- key: HOBBS1
+  description: Total Engine Time %e
+  type: float
+  min: 0.0
+  max: 100000.0
+  units: Hours
+  initial: 0.0
+
+- key: ACID
+  description: Aircraft Identification
+  type: str
+  tol: 0
+

@@ -1,3 +1,5 @@
+# This is where you define how many engines you have and such
+# You could also add additional variables too
 variables:
   e: 1  # Engines
   c: 6  # Cylinders

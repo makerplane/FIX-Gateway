@@ -1,0 +1,18 @@
+items:
+# Use this file to add your custom fix database keys
+# When the software is updated it might include improvements
+# in the other configuration files. By making your customizations
+# here those other files wil be updated when you update the software
+# This file, once you edit it, will not be overwritten when
+# you install updates.
+#
+# If you want to change a parameter of a fix key, such as setting 
+# the max RPM for TACH, do that in the file custom.ini
+#
+# Here is an example to create an EXAMPLE fix key:
+#
+- key: EXAMPLE
+  description: "Just an example"
+  type: str
+  initial: "Example value"
+
