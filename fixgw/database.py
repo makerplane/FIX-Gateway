@@ -21,6 +21,7 @@ import yaml
 import copy
 import fixgw.quorum as quorum
 from fixgw import cfg
+import os
 
 __database = {}
 
@@ -324,10 +325,14 @@ def init(f):
     log.info("Initializing Database")
 
     state = "var"
-
-    db = cfg.from_yaml(f)
-    for key, value in db['variables'].items():
-        variables[key] = int(value)
+    # Can pass in config data or a config file
+    if isinstance(f,str) and os.path.exists(f):
+        db = cfg.from_yaml(f)
+    else:
+        db = yaml.safe_load(f)
+    if 'variables' in db:
+        for key, value in db['variables'].items():
+            variables[key] = int(value)
     for entry in db['entries']:
         ch = check_for_variables(entry)
         if ch:
