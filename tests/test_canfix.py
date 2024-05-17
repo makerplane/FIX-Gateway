@@ -116,8 +116,7 @@ class TestCanfix(unittest.TestCase):
 
     def setUp(self):
         # Use the default database
-        sf = open("fixgw/config/database.yaml")
-        database.init(sf)
+        database.init("fixgw/config/database.yaml")
 
         import fixgw.plugins.canfix
 

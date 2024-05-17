@@ -11,7 +11,7 @@ database file: "{CONFIG}/database.yaml"
 # file listed will overwrite data in previous files
 # Plugins may overwrite this data as well.
 initialization files:
-   - "{CONFIG}/default.ini"
+   - "{CONFIG}/init_data/default.ini"
   # - "{CONFIG}/c170b.ini"
   # - "{CONFIG}/fg_172.ini"
   #- "{CONFIG}/rotax582.ini"

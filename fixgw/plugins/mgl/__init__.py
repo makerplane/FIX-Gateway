@@ -54,7 +54,7 @@ class Plugin(plugin.PluginBase):
         self.wantcount = 0
 
     def run(self):
-        self.bus = can.ThreadSafeBus(self.channel, bustype = self.interface)
+        self.bus = can.ThreadSafeBus(self.channel, interface = self.interface)
         #for each in self.mapping.output_mapping:
             # TODO This will work to collect the data that needs sent
             # But we need another thread where we can send on a timer.

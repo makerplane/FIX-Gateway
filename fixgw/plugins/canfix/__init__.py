@@ -125,7 +125,7 @@ class Plugin(plugin.PluginBase):
         self.errorcount = 0
 
     def run(self):
-        self.bus = can.ThreadSafeBus(self.channel, bustype = self.interface)
+        self.bus = can.ThreadSafeBus(self.channel, interface = self.interface)
         for each in self.mapping.output_mapping:
             self.db_callback_add(each, self.mapping.getOutputFunction(self.bus, each, self.node))
         if self.quorum.enabled:
