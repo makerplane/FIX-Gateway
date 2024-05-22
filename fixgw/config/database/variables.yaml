@@ -9,6 +9,6 @@ variables:
   r: 5  # Encoders
   t: 3  # Fuel Tanks
   n: 5  # Nodes
-  s: 20 # Touchscreen buttons
+  s: 40 # Touchscreen buttons
   d: 4  # MGL V16 Radios
 

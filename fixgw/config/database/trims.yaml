@@ -26,40 +26,4 @@ items:
   min: -100
   max: 100
   initial: 0
-- key: BTNTRIMUP
-  description: Trim up button
-  type: bool
-  initial: false
-- key: BTNTRIMDN
-  description: Trim down button
-  type: bool
-  initial: false
-- key: BTNTRIMCT
-  description: Trim center button
-  type: bool
-  initial: false
-- key: BTNTRIMYL
-  description: Yaw Left button
-  type: bool
-  initial: false
-- key: BTNTRIMYR
-  description: Yaw Right button
-  type: bool
-  initial: false
-- key: BTNTRIMYC
-  description: Yaw center button
-  type: bool
-  initial: false
-- key: BTNTRIMRL
-  description: Roll Left button
-  type: bool
-  initial: false
-- key: BTNTRIMRR
-  description: Roll Right button
-  type: bool
-  initial: false
-- key: BTNTRIMRC
-  description: Roll center button
-  type: bool
-  initial: false
 
