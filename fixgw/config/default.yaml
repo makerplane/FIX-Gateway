@@ -36,6 +36,7 @@ initialization files:
 # configuration options.
 connections:
   include:
+  #- connections/quorum.yaml
   - connections/data_recorder.yaml
   - connections/netfix.yaml
   #- connections/command.yaml

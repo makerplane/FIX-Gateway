@@ -7,18 +7,6 @@
 # Do that in the file custom.ini
 
 items:
-- key: BTNAP
-  description: AP button state
-  type: bool
-  initial: false
-- key: BTNHH
-  description: AP heading hold button state
-  type: bool
-  initial: false
-- key: BTNFP
-  description: AP flight plan button state
-  type: bool
-  initial: false
 - key: APSTAT
   description: Status of auto pilot, Avaliable or not
   type: str
