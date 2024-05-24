@@ -149,10 +149,13 @@ class Mapping(object):
             m = self.output_mapping[dbKey]
             self.log.debug(f"Output {dbKey}: {value[0]}")
             if m["require_leader"] and not quorum.leader:
+            self.log.debug(f"LEADER blocked Output {dbKey}: {value[0]}")
                 return
+
             # If the exclude flag is set we just recieved the value
             # from the bus so we don't turn around and write it back out
             if m['exclude']:
+            self.log.debug(f"Resend protection blocked Output {dbKey}: {value[0]}")
                 m['exclude'] = False
                 return
             if m['switch']:

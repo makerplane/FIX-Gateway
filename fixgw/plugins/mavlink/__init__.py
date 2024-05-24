@@ -62,11 +62,12 @@ class MainThread(threading.Thread):
         def requestCallback(fixkey, value, udata):
             for f in self.req:
                 if f"MAVREQ{f}" == fixkey:
-                    self.req[f] = value[0]
+                    if self.req[f] != value[0]:
+                        self.req[f] = value[0]
                 else:
                     # Only change others to false if
                     # key is getting set to True
-                    if value[0]:
+                    if value[0] and self.req[f]:
                         self.req[f] = False
                         self.parent.db_write(f"MAVREQ{f}", False)
         return requestCallback
