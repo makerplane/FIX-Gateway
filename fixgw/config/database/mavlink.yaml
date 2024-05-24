@@ -8,9 +8,11 @@
 #
 
 items:
+
 - key: MAVREQTRIM
   type: bool
   initial: False
+
 - key: MAVREQGUIDED
   type: bool
   initial: False
@@ -47,6 +49,10 @@ items:
 
 - key: MAVADJ
   description: Adjust heading/altitude of auto pilot using trim controls
+  type: bool
+  initial: False
+
+- key: MAVWPVALID
   type: bool
   initial: False
 
