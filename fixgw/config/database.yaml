@@ -13,7 +13,7 @@ entries:
 - include: database/com_radio.yaml
 - include: database/engine.yaml
 - include: database/trims.yaml
-- include: database/auto_pilot.yaml
+- include: database/mavlink.yaml
 - include: database/system.yaml
 - include: database/control.yaml
 - include: database/misc.yaml

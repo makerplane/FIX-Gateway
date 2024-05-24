@@ -5,32 +5,54 @@
 
 # If you want to edit min/max/initial/tol/etc
 # Do that in the file custom.ini
+#
 
 items:
-- key: APSTAT
+
+- key: MAVREQTRIM
+  type: bool
+  initial: False
+
+- key: MAVREQGUIDED
+  type: bool
+  initial: False
+
+- key: MAVREQCRUISE
+  type: bool
+  initial: False
+
+- key: MAVREQAUTOTUNE
+  type: bool
+  initial: False
+
+- key: MAVSTATE
   description: Status of auto pilot, Avaliable or not
   type: str
   tol: 10000
   initial: INIT
-- key: APMODE
+
+- key: MAVMODE
   description: Mode of auto pilot, Heading Hold (CRUISE), Trim (Manual), AUTO fly to waypoint
   type: str
   initial: TRIM
   tol: 10000
-- key: APMSG
+
+- key: MAVMSG
   description: Auto Pilot Message for pilot
   type: str
   initial: ""
-- key: APWPV
-  description: Does AP have a valid waypoint to navigate to
-  type: bool
-  initial: False
-- key: APREQ
+
+- key: MAVREQ
   description: Mode of auto pilot that is requested
   type: str
   initial: "INIT"
-- key: APADJ
+
+- key: MAVADJ
   description: Adjust heading/altitude of auto pilot using trim controls
+  type: bool
+  initial: False
+
+- key: MAVWPVALID
   type: bool
   initial: False
 

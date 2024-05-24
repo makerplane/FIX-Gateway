@@ -225,7 +225,7 @@ class Mav:
                   logger.debug("MAV_MODE_FLAG_CUSTOM_MODE_ENABLED")
 
               # TODO Maybe we only want to do this if the mode in flight controller is different than what we think it is
-              # Or having this set could be useful from APMODE old           
+              # Or having this set could be useful from MAVMODE old           
               if msg.custom_mode == self._apmodes['TRIM']:
                   # TRIM mode allows manual control of servos
                   self.sendMode("TRIM", "Trim Mode")
@@ -257,7 +257,7 @@ class Mav:
                   self.checkInit('GUIDED')
 
               else:
-                  self.parent.db_write("APMODE", "UNKNOWN")
+                  self.parent.db_write("MAVMODE", "UNKNOWN")
                   self.setStat('ERROR', 'Unknown Condition')
                   # TODO Likely need to do more here
                   # But we should never end up here in the first place
@@ -315,20 +315,18 @@ class Mav:
         if self._apmode == 'INIT':
             self._apmode = mode
             self._apreq = mode
-            self.parent.db_write("APMODE", mode)
-            # set APREQ to match the mode in use at startup
-            self.parent.db_write("APREQ", mode)
+            self.parent.db_write("MAVMODE", mode)
 
     def sendMode(self,mode,msg):
-        self.parent.db_write("APMODE", mode)
-        self.parent.db_write("APMSG", msg)
+        self.parent.db_write("MAVMODE", mode)
+        self.parent.db_write("MAVMSG", msg)
 
 
     def setStat(self,stat,msg=None):
-        self.parent.db_write("APSTAT", stat)
+        self.parent.db_write("MAVSTATE", stat)
         self._apstat = stat
         if msg:
-            self.parent.db_write("APMSG", msg)
+            self.parent.db_write("MAVMSG", msg)
 
 
     def sendTrims(self):
@@ -352,14 +350,14 @@ class Mav:
         # How can we detect that the operator is making changes?
         # Seems like we would need another value to set by operator
         # Maybe a fly by wire button?
-        if not self._apAdjust and self.parent.db_read("APADJ")[0]:
+        if not self._apAdjust and self.parent.db_read("MAVADJ")[0]:
             self._apAdjust = True
             if self.parent.quorum.leader:
                 self.parent.db_write("TRIMR",0)
                 self.parent.db_write("TRIMP",0)
                 self.parent.db_write("TRIMY",0)
 
-        if self._apAdjust and not self.parent.db_read("APADJ")[0]:
+        if self._apAdjust and not self.parent.db_read("MAVADJ")[0]:
             self._apAdjust = False
 
         if self._apmode == 'TRIM' or self._apAdjust:
@@ -389,13 +387,17 @@ class Mav:
             self.parent.db_write("TRIMR",self._outputRoll / 10)
             self.parent.db_write("TRIMY",self._outputYaw / 10) 
 
-    def checkMode(self):
+    def checkMode(self,request):
+        new_mode = 'INIT'
+        for r in request:
+            if request[r]:
+                new_mode = r
+                break
         self.checkWaypoint()
         # Check if a mode change has been requested
-        if self._apreq != self.parent.db_read("APREQ")[0]\
-           and self.parent.db_read("APREQ")[0] != 'INIT':
+        if self._apreq != new_mode:
             # Set the mode
-            self.setMode(self.parent.db_read("APREQ")[0])
+            self.setMode(new_mode)
 
     def checkWaypoint(self):
         # We need to take actions when the waypoint changes or is deleted
@@ -407,13 +409,16 @@ class Mav:
             if self._apreq == 'GUIDED' and self.parent.quorum.leader:
                 # drop to CRUISE mode ( Heading Hold )
                 self.setMode('CRUISE')
-                self.parent.db_write('APMSG', "Drop to Heading Hold")
-                # Invalidate the waypoint
+                self.parent.db_write('MAVMSG', "Drop to Heading Hold")
+                self.parent.db_write('MAVREQCRUISE', True)
+            # Invalidate the waypoint
+            self.parent.db_write('MAVWPVALID', False)
             self._apwpv = False
             return
         else:
             # We do have a valid waypoint
             self._apwpv = True
+            self.parent.db_write('MAVWPVALID', True)
             # Did the waypoint change?
             if self._waypoint != f"{self.parent.db_read('WPLON')[0]}{self.parent.db_read('WPLAT')[0]}{self.parent.db_read('WPNAME')[0]}" and self._apmode == 'GUIDED':
                 if self.parent.quorum.leader:
@@ -426,11 +431,10 @@ class Mav:
                 # Cruise mode requested but we are not armed
                 # or do not have a valid waypoint
                 
-                self.parent.db_write("APMSG", "Invalid Request")
+                self.parent.db_write("MAVMSG", "Invalid Request")
                 # This will disrupt AHRS
                 # TODO Maybe we need a better way to inform the pilot to the change?
                 time.sleep(3)
-                self.parent.db_write("APREQ", self._apmode)
                 return
             if not self.parent.quorum.leader:
                 return
@@ -471,8 +475,7 @@ class Mav:
             self._apreq = mode
 
             # Set APREQ to in case the mode change was made internally
-            self.parent.db_write("APREQ", mode)
-            self.parent.db_write("APMODE", mode)
+            self.parent.db_write("MAVMODE", mode)
             self._apmode = mode
         else:
             # TODO Likely need more logic here
