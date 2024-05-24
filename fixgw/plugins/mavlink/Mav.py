@@ -88,6 +88,7 @@ class Mav:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
 
         if self._gps or self._ahrs:
+            self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS_RAW_INT)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
         if self._accel:
@@ -175,6 +176,9 @@ class Mav:
                 self.parent.db_write("PITCH", round(math.degrees(msg.pitch),2))
                 self.parent.db_write("YAW", round(math.degrees(msg.yaw),2))
             #self.parent.db_write("YAW", math.degrees(msg.yaw))
+        elif msg_type == "GPS_RAW_INT":
+            if self._ahrs:
+                self.parent.db_write("COURSE",round(msg.cog/100,2))
         elif msg_type == "GLOBAL_POSITION_INT":
             if self._ahrs:
                 self.parent.db_write("HEAD", round(msg.hdg/100,2))             # uint16_t cdeg 

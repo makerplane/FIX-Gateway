@@ -68,6 +68,7 @@ class MainThread(threading.Thread):
                     # key is getting set to True
                     if value[0]:
                         self.req[f] = False
+                        self.parent.db_write(f"MAVREQ{f}", False)
         return requestCallback
 
     def run(self):
