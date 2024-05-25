@@ -92,4 +92,4 @@ items:
   description: Aircraft Identification
   type: str
   tol: 0
-
+  initial: N12345
