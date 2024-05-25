@@ -333,11 +333,22 @@ class Mapping(object):
             bit = 0
             byte = 0
             for each in switches:
+                if each.key in self.output_mapping:
+                    output_exclude = True
+                    self.output_mapping[each.key]['exclude'] = True
+                else:
+                    output_exclude = False
+
                 if toggles.get(each.key,False):
                     if x[byte][bit]:
+                        if output_exclude:
+                            self.output_mapping[each.key]['lastValue'] = not each.value[0]
                         # toggle only when we receive True
                         each.value = not each.value[0]
                 else:
+                    if output_exclude:
+                        self.output_mapping[each.key]['lastValue'] = x[byte][bit]
+
                     each.value = x[byte][bit]
                 bit += 1
                 if bit >=8:
