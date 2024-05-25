@@ -449,7 +449,8 @@ class Mav:
         else:
             # We do have a valid waypoint
             self._apwpv = True
-            self.parent.db_write('MAVWPVALID', True)
+            if self.parent.quorum.leader:
+                self.parent.db_write('MAVWPVALID', True)
             # Did the waypoint change?
             if self._waypoint != f"{self.parent.db_read('WPLON')[0]}{self.parent.db_read('WPLAT')[0]}{self.parent.db_read('WPNAME')[0]}" and self._apmode == 'GUIDED':
                 if self.parent.quorum.leader:
