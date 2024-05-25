@@ -441,8 +441,9 @@ class Mav:
                 #self.setMode('CRUISE')
                 self.parent.db_write('MAVMSG', "Drop to Heading Hold")
                 self.parent.db_write('MAVREQCRUISE', True)
-            # Invalidate the waypoint
-            self.parent.db_write('MAVWPVALID', False)
+            if self.parent.quorum.leader:
+                # Invalidate the waypoint
+                self.parent.db_write('MAVWPVALID', False)
             self._apwpv = False
             return
         else:
