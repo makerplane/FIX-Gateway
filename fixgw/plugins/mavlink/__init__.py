@@ -48,38 +48,12 @@ class MainThread(threading.Thread):
         self.yaw = 0
         self.roll = 0
 
-        # The modes we can request:
-        self.req = {
-          'TRIM': False,
-          'CRUISE': False,
-          'AUTOTUNE': False,
-          'GUIDED': False,
-        }
-
-    # Callback to set the requested mode
-    # Only once mode can be set at a time.
-    def getRequestFunction(self,mode):
-        def requestCallback(fixkey, value, udata):
-            for f in self.req:
-                if f"MAVREQ{f}" == fixkey:
-                    self.req[f] = value[0]
-                else:
-                    # Only change others to false if
-                    # key is getting set to True
-                    if value[0]:
-                        self.req[f] = False
-                        self.parent.db_write(f"MAVREQ{f}", False)
-        return requestCallback
-
     def run(self):
         self._type = self.config['type']
         self.baud = int(self.config['baud']) if ( 'baud' in self.config) else 57600
         self.port = self.config['port'] if ( 'port' in self.config) else '/dev/ttyACM0'
         self.options = self.config['options'] if ( "options" in self.config) else {}
         
-        for f in self.req:
-            self.parent.db_callback_add(f"MAVREQ{f}",self.getRequestFunction(f))
-
         while not self.getout:
             time.sleep(0.00001)
             try:
@@ -116,7 +90,7 @@ class MainThread(threading.Thread):
                     # changing auto pilot modes
                     # So we only deal with the AP once every 10 cycles
                     if loopc > 10:
-                        self.conn.checkMode(self.req)
+                        self.conn.checkMode()
                         loopc = 0
                     loopc += 1
                 except Exception as e:

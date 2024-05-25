@@ -17,6 +17,10 @@ items:
   type: bool
   initial: False
 
+- key: MAVREQAUTO
+  type: bool
+  initial: False
+
 - key: MAVREQCRUISE
   type: bool
   initial: False
@@ -42,13 +46,13 @@ items:
   type: str
   initial: ""
 
-- key: MAVREQ
-  description: Mode of auto pilot that is requested
-  type: str
-  initial: "INIT"
+- key: MAVREQADJ
+  description: Request heading or altitude adjustment mode
+  type: bool
+  initial: False
 
 - key: MAVADJ
-  description: Adjust heading/altitude of auto pilot using trim controls
+  description: Identifies if adjustment mode is enabled
   type: bool
   initial: False
 

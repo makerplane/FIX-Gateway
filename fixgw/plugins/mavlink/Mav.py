@@ -354,15 +354,23 @@ class Mav:
         # How can we detect that the operator is making changes?
         # Seems like we would need another value to set by operator
         # Maybe a fly by wire button?
-        if not self._apAdjust and self.parent.db_read("MAVADJ")[0]:
+
+        adj_req = self.parent.db_read("MAVREQADJ")[0]
+
+        if not self._apAdjust and adj_req:
             self._apAdjust = True
+            if not self.parent.db_read("MAVADJ")[0] and self.parent.quorum.leader:
+                self.parent.db_write("MAVADJ", True)
             if self.parent.quorum.leader:
                 self.parent.db_write("TRIMR",0)
                 self.parent.db_write("TRIMP",0)
                 self.parent.db_write("TRIMY",0)
 
-        if self._apAdjust and not self.parent.db_read("MAVADJ")[0]:
+
+        elif self._apAdjust and not adj_req:
             self._apAdjust = False
+            if self.parent.db_read("MAVADJ")[0] and self.parent.quorum.leader:
+                self.parent.db_write("MAVADJ", False)
 
         if self._apmode == 'TRIM' or self._apAdjust:
             if not self._apAdjust and self._trimsSaved:
@@ -391,17 +399,35 @@ class Mav:
             self.parent.db_write("TRIMR",self._outputRoll / 10)
             self.parent.db_write("TRIMY",self._outputYaw / 10) 
 
-    def checkMode(self,request):
-        new_mode = 'INIT'
-        for r in request:
-            if request[r]:
-                new_mode = r
-                break
+    def checkMode(self):
         self.checkWaypoint()
-        # Check if a mode change has been requested
-        if self._apreq != new_mode:
-            # Set the mode
-            self.setMode(new_mode)
+        if not self.parent.quorum.leader: 
+            logger.debug(f"Nothing else to check becaure leader = true")
+            return
+
+        new_mode = 'INIT'
+        logger.debug(f"Current mode is {self._apmode}")
+        for f in self._apmodes:
+            requested = self.parent.db_read(f"MAVREQ{f}")[0]
+            logger.debug(f"Processing {f}: MAVREQ{f}: {requested}")
+            if requested and f != self._apmode:
+                # Requested and not the current active mode
+                # so this is what we want.
+                # If it is the current mode, another one might be requested
+                logger.debug(f"Mode {f} was requested True")
+                new_mode = f
+                break
+
+        if new_mode != 'INIT':
+            for f in self._apmodes:
+                if f != new_mode and self.parent.db_read(f"MAVREQ{f}")[0]:
+                    # Set all other modes to False if set to True
+                    self.parent.db_write(f"MAVREQ{f}", False)
+                    logger.debug(f"MAVREQ{f} set to False")
+            # Check if a mode change has been requested
+            if self._apmode != new_mode and new_mode != 'INIT':
+                # Set the mode
+                self.setMode(new_mode)
 
     def checkWaypoint(self):
         # We need to take actions when the waypoint changes or is deleted
@@ -412,7 +438,7 @@ class Mav:
             # IF we are in GUIDED mode we want to drop to CRUISE mode
             if self._apreq == 'GUIDED' and self.parent.quorum.leader:
                 # drop to CRUISE mode ( Heading Hold )
-                self.setMode('CRUISE')
+                #self.setMode('CRUISE')
                 self.parent.db_write('MAVMSG', "Drop to Heading Hold")
                 self.parent.db_write('MAVREQCRUISE', True)
             # Invalidate the waypoint
@@ -429,6 +455,7 @@ class Mav:
                     self.setMode('GUIDED')
  
     def setMode(self, mode):
+        logger.debug(f"Trying to set mode {mode}")
         # Can we set that mode?
         if self._apstat in ['TRIM','ARMED'] and mode in self._apmodes:
             if mode not in ['TRIM'] and (( mode == 'GUIDED' and not self._apwpv) or (self._apstat != 'ARMED')):
