@@ -438,9 +438,11 @@ class Mav:
             # IF we are in GUIDED mode we want to drop to CRUISE mode
             if self._apreq == 'GUIDED' and self.parent.quorum.leader:
                 # drop to CRUISE mode ( Heading Hold )
+                # order matters:
+                self.parent.db_write('MAVREQGUIDED', False)
+                self.parent.db_write('MAVREQCRUISE', True)
                 self.setMode('CRUISE')
                 self.parent.db_write('MAVMSG', "Drop to Heading Hold")
-                self.parent.db_write('MAVREQCRUISE', True)
             if self.parent.quorum.leader:
                 # Invalidate the waypoint
                 self.parent.db_write('MAVWPVALID', False)
