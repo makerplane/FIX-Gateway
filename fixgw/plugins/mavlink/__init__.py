@@ -55,7 +55,7 @@ class MainThread(threading.Thread):
         self.options = self.config['options'] if ( "options" in self.config) else {}
         
         while not self.getout:
-            time.sleep(0.00001)
+            time.sleep(0.1)
             try:
                 print("Mav init")
                 self.conn = Mav(self.parent, port=self.port, baud=self.baud, options=self.options)
@@ -82,14 +82,17 @@ class MainThread(threading.Thread):
             self.log.debug("processing messages")
             loopc = 1
             while not self.getout:
+                # Anything slower resulted in stuttering AHRS data
                 time.sleep(0.001)
                 try:
                     self.conn.process()
                     self.conn.sendTrims()
                     # Processing AHRS and Trim is more important than
                     # changing auto pilot modes
-                    # So we only deal with the AP once every 10 cycles
-                    if loopc > 10:
+                    # So we only deal with the AP once every 200 cycles
+                    # Close to once every 0.2 seconds, fast enough
+                    # for users asking for a mode change
+                    if loopc > 200:
                         self.conn.checkMode()
                         loopc = 0
                     loopc += 1
