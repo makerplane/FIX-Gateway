@@ -85,11 +85,13 @@ def create_config_dir(basedir):
                     break
                 sha256.update(data)
         return sha256.hexdigest()
-    def copy_file(source,dest):
+
+    def copy_file(source,dest,extension=""):
         print(f"Replacing file: {dest}")
-        shutil.copy(source,dest)
+        shutil.copy(source,dest + extension)
         # Set timestamp
-        os.utime(dest,(350039106.789,350039106.789))
+        os.utime(dest + extension,(350039106.789,350039106.789))
+
     def copy_dir(module,path=None):
         if not path: path = module
         os.makedirs(basedir + "/" + path, exist_ok=True)
@@ -109,10 +111,21 @@ def create_config_dir(basedir):
                     # If the file is not identical to the one in this version, replace it
                     if not sha256sum(filepath) == sha256sum(each.as_posix()):
                         copy_file(each.as_posix(), filepath)
+                else:
+                    # Copy file but with .dist added to the filename.
+                    copy_file(each.as_posix(), filepath, ".dist")
+
     copy_dir('config')
 
 def sig_int_handler(signum, frame):
     plugin.jobQueue.put("QUIT")
+
+def merge_dict(dest,override):
+    for k, v in override.items():
+        if (k in dest and isinstance(dest[k], dict) and isinstance(override[k], dict)):
+            merge_dict(dest[k], override[k])
+        else:
+            dest[k] = override[k]
 
 def main_setup():
     global config_path
