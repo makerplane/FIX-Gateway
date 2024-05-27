@@ -1,4 +1,4 @@
 demo:
-  load: yes
+  load: DEMO
   module: fixgw.plugins.demo
 

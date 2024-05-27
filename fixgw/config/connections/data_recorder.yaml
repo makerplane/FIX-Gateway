@@ -6,7 +6,7 @@ data_recorder:
   # --playback-start-time 2024-02-10:19:59:50
   # Using the cli option, if logs for the time specified exist it will start playing them back and continue onto 
   # subesquent hour log files. When it reaches a gap in the files or if no logs exist for the time it will exit.
-  load: no
+  load: DATA_RECORDER
   module: fixgw.plugins.data_recorder
   # key_prefixes define the specific dbkeys that you want to record.
   # If you want to log all keys specify 'key_prefixes: all'

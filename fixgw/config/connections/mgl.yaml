@@ -1,5 +1,5 @@
 mgl:
-  load: yes
+  load: MGL
   module: fixgw.plugins.mgl
   # See the python-can documentation for the meaning of these options
   interface: socketcan

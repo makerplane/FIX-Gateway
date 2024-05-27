@@ -1,6 +1,6 @@
 # Set the annunciation flag bit on configured database items.
 annunciate:
-  load: yes
+  load: ANNUNCIATE
   module: fixgw.plugins.annunciate
   # These are the defaults for all the items.  These settings can be
   # overridden in each item definition

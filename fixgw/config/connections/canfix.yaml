@@ -1,6 +1,6 @@
 # CAN-FIX
 canfix:
-  load: no
+  load: CANFIX
   module: fixgw.plugins.canfix
   # See the python-can documentation for the meaning of these options
   interface: socketcan

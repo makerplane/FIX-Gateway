@@ -1,5 +1,5 @@
 system:
-  load: yes
+  load: SYSTEM
   module: fixgw.plugins.system
   time:
     enable: yes

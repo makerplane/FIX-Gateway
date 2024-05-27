@@ -1,6 +1,6 @@
 # RAIS Protocol Interface
 rais:
-  load: yes
+  load: RAIS
   module: fixgw.plugins.rais
   rais_directory: /home/me/openEFIS
   rais_server_module: RAIS

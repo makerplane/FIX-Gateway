@@ -1,4 +1,4 @@
 gui:
-  load: yes
+  load: GUI
   module: fixgw.plugins.gui
 

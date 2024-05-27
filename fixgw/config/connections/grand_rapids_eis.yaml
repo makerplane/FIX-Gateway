@@ -1,5 +1,5 @@
 grand_rapids_eis:
-  load: yes
+  load: GRAND_RAPIDS_EIS
   module: fixgw.plugins.grand_rapids_eis
   port: /dev/ttyUSB0
   model: 2004

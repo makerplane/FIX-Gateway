@@ -1,6 +1,6 @@
 # Data Computation
 compute:
-  load: yes
+  load: COMPUTE
   module: fixgw.plugins.compute
   functions:
     - function: average

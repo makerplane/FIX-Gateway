@@ -1,5 +1,5 @@
 mcp3008:
-  load: yes
+  load: MCP3008
   module: fixgw.plugins.rpi_mcp3008
   vkey1: VOLT
   vkey2: ANLG2

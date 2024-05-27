@@ -1,5 +1,5 @@
 xplane:
-  load: yes
+  load: XPLANE
   module: fixgw.plugins.xplane
   # IP address where the X-Plane simulator is running
   ipaddress: 127.0.0.1

@@ -2,7 +2,7 @@
 # When enabled, after fixgateway starts it provides a prompt
 # like the client does so you can read/write/poll/etc data
 command:
-  load: yes
+  load: COMMAND
   module: fixgw.plugins.command
   prompt: "FIX:"
   # If set quiting the command interpreter plugin
