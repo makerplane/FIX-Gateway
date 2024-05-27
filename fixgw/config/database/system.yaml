@@ -67,10 +67,19 @@ items:
   max: 12.0
   initial: 0.0
 
+- key: GATEWAY_VERSION
+  description: Version of the gateway
+  type: str
+  tol: 0
 
+- key: PYEFIS_VERSION
+  description: Version of pyefis
+  type: str
+  tol: 0
 
 - key: ZZLOADER
   description: MUST always be the last key listed here. It is read by client applications to ensure all db items have been init before proceeding to prevent race conditions.
   type: str
   initial: "Loaded"
+
 

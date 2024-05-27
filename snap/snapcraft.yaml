@@ -1,5 +1,5 @@
 name: fixgateway
-version: "2.0.10"
+adopt-info: fixgateway
 grade: stable
 license: GPL-2.0+
 summary: makerplane FIX gateway server
@@ -48,6 +48,9 @@ parts:
   fixgateway:
     plugin: python
     source: .
+    override-build: |
+      craftctl default
+      craftctl set version=$(python3 fixgw/version.py)
     stage-packages:
       - libarchive13t64
       - cmake
