@@ -11,7 +11,7 @@
 # The default configuration here will work under snap or not.
 # What is important, if you edit the fix_fgfs.xml file, ENSURE you updated it in the flightgear folder too
 fgfs:
-  load: yes
+  load: FLIGHT_GEAR
   module: fixgw.plugins.fgfs
   # This should be the same as $FG_ROOT on your system.  It is used to help
   # fixgw find the xml configuration files

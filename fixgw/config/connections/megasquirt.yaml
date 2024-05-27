@@ -1,5 +1,5 @@
 megasquirt:
-  load: yes
+  load: MEGASQUIRT
   module: fixgw.plugins.megasquirt
   interface: socketcan
   channel: vcan0

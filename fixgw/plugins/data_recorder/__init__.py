@@ -18,28 +18,42 @@ class MainThread(threading.Thread):
 
         self.data = dict()
         self.collect = True
-        # callback
-        def persist(key, value, udata=None):
-            # Pause collection while writing and clearing
-            # to ensure data is not lost
-            start = time.monotonic()
-            while not self.collect:
-                time.sleep(0.005)
-                # If writing is stalled, continue on
-                if ( start - time.monotonic() ) > 0.125:
-                    break
-            self.data[key] = [ value[0], int(value[1]), int(value[2]), int(value[3]), int(value[4]), int(value[5]) ] 
+        self.starttime = time.monotonic()
+        self.get_all_data(callbacks=True)
+ 
+    # callback
+    def persist(self, key, value, udata=None):
+        # Pause collection while writing and clearing
+        # to ensure data is not lost
+        start = time.monotonic()
+        while not self.collect:
+            time.sleep(0.005)
+            # If writing is stalled, continue on
+            if ( start - time.monotonic() ) > 0.125:
+                break
+        self.data[key] = [ value[0], int(value[1]), int(value[2]), int(value[3]), int(value[4]), int(value[5]) ] 
 
+    def get_all_data(self,callbacks=False):
         # Create callbacks for defined keys
         for key in database.listkeys():
             if isinstance(self.config['key_prefixes'], str):
-                self.parent.db_callback_add(key, persist)
+                if callbacks: 
+                    self.parent.db_callback_add(key, self.persist)
+                else:
+                    # Get and save data as of now
+                    key_data = self.parent.db_read(key)
+                    self.data[key] = [ key_data[0], int(key_data[1]), int(key_data[2]), int(key_data[3]), int(key_data[4]), int(key_data[5]) ]
             else:
                 for sw in self.config['key_prefixes']:
                     if key.startswith(sw):
-                        self.parent.db_callback_add(key, persist)
+                        if callbacks: 
+                            self.parent.db_callback_add(key, self.persist)
+                        else:
+                            # Get and save data as of now
+                            key_data = self.parent.db_read(key)
+                            self.data[key] = [ key_data[0], int(key_data[1]), int(key_data[2]), int(key_data[3]), int(key_data[4]), int(key_data[5]) ]
                         break
-        self.starttime = time.monotonic()
+        if callbacks: self.starttime = time.monotonic()
 
     def run(self):
         hour = -1
@@ -69,6 +83,8 @@ class MainThread(threading.Thread):
                         self.log.warning(f"Unable to write frequency to the file: {filepath}")
                     # Reset and try to write this on the next loop
                     hour = -1
+                # Get all data for first log entry
+                self.get_all_data(callbacks=False)
             # Lock collection
             self.collect = False
             try:    

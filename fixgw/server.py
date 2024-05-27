@@ -52,7 +52,7 @@ path_options = ['{USER}/makerplane/fixgw/config',
                 '.']
 
 config_path = None
-
+preferences = dict()
 # This dictionary holds the modules for each plugin that we load
 plugin_mods = {}
 # This holds the instantiated object of each plugin that we load
@@ -85,11 +85,13 @@ def create_config_dir(basedir):
                     break
                 sha256.update(data)
         return sha256.hexdigest()
-    def copy_file(source,dest):
+
+    def copy_file(source,dest,extension=""):
         print(f"Replacing file: {dest}")
-        shutil.copy(source,dest)
+        shutil.copy(source,dest + extension)
         # Set timestamp
-        os.utime(dest,(350039106.789,350039106.789))
+        os.utime(dest + extension,(350039106.789,350039106.789))
+
     def copy_dir(module,path=None):
         if not path: path = module
         os.makedirs(basedir + "/" + path, exist_ok=True)
@@ -109,15 +111,26 @@ def create_config_dir(basedir):
                     # If the file is not identical to the one in this version, replace it
                     if not sha256sum(filepath) == sha256sum(each.as_posix()):
                         copy_file(each.as_posix(), filepath)
+                else:
+                    # Copy file but with .dist added to the filename.
+                    copy_file(each.as_posix(), filepath, ".dist")
+
     copy_dir('config')
 
 def sig_int_handler(signum, frame):
     plugin.jobQueue.put("QUIT")
 
+def merge_dict(dest,override):
+    for k, v in override.items():
+        if (k in dest and isinstance(dest[k], dict) and isinstance(override[k], dict)):
+            merge_dict(dest[k], override[k])
+        else:
+            dest[k] = override[k]
+
 def main_setup():
     global config_path
     global log
-
+    global preferences
     parser = argparse.ArgumentParser(description='FIX Gateway')
     parser.add_argument('--debug', '-d', action='store_true',
                         help='Run in debug mode')
@@ -155,7 +168,18 @@ def main_setup():
         config_file = "{USER}/makerplane/fixgw/config/{FILE}".format(USER=user_home, FILE=config_filename)
 
     config_path = os.path.dirname(config_file)
-    config = cfg.from_yaml(config_file)
+    preference_file = f"{config_path}/preferences.yaml"
+    with open(preference_file) as cf:
+       preferences = yaml.safe_load(cf)
+    preference_file = preference_file + ".custom"
+    # override preferecnes with customizations
+    if os.path.exists(preference_file):
+        with open(preference_file) as cf:
+            custom = yaml.safe_load(cf)
+        merge_dict(preferences,custom)
+
+    config = cfg.from_yaml(config_file,preferences=preferences)
+
     # If running under systemd
     if environ.get('INVOCATION_ID', False):
         # and autostart is not true, exit
@@ -255,7 +279,10 @@ def main_setup():
 
     else:
         for each in config['connections']:
-            if config['connections'][each]['load']:
+            load = config['connections'][each]['load']
+            if isinstance(load, str) and 'enabled' in preferences:
+                load = preferences['enabled'].get(load, False)
+            if load:
                 module = config['connections'][each]["module"]
                 try:
                     load_plugin(each, module, config['connections'][each])

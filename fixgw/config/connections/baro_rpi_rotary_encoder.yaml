@@ -1,5 +1,5 @@
 rotary_encoder:
-  load: yes
+  load: RPI_BARO
   module: fixgw.plugins.rpi_rotary_encoder
   btn: True
   btnkey: BARO

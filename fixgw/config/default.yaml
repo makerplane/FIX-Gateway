@@ -36,33 +36,32 @@ initialization files:
 # configuration options.
 connections:
   include:
-  #- connections/quorum.yaml
-  - connections/data_recorder.yaml
-  - connections/netfix.yaml
-  #- connections/command.yaml
-  #- connections/flight_gear_simulator.yaml
-  #- connections/xplane.yaml
-  #- connections/canfix.yaml
-  #- connections/gui.yaml
-  - connections/system.yaml
-  - connections/annunciate.yaml
-  #- connections/test.yaml
-  #- connections/rpi_bno055.yaml
-  #- connections/rpi_bmp085.yaml
-  #- connections/rpi_virtualwire.yaml
-  #- connections/baro_rpi_rotary_encoder.yaml
-  #- connections/mcp3008.yaml
-  #- connections/rpi_buttons.yaml
-  #- connections/rais.yaml
-  - connections/compute.yaml
-  #- connections/dimmer.yaml
-  #- connections/grand_rapids_eis.yaml
-  #- connections/stratux.yaml
-  #- connections/mavlink.yaml
-  #- connections/ifly.yaml
-  #- connections/megasquirt.yaml
-  #- connections/mgl.yaml
-  - connections/demo.yaml 
+  - QUORUM_CONFIG
+  - DATA_RECORDER_CONFIG
+  - NETFIX_CONFIG
+  - COMMAND_CONFIG
+  - FLIGHT_GEAR_CONFIG
+  - XPLANE_CONFIG
+  - CANFIX_CONFIG
+  - GUI_CONFIG
+  - SYSTEM_CONFIG
+  - ANNUNCIATE_CONFIG
+  - RPI_BNO055_CONFIG
+  - RPI_BMP085_CONFIG
+  - RPI_VIRTUALWIRE_CONFIG
+  - RPI_BARO_ENCODER_CONFIG
+  - RPI_BUTTONS_CONFIG
+  - MCP3008_CONFIG
+  - RAIS_CONFIG
+  - COMPUTE_CONFIG
+  - DIMMER_CONFIG
+  - GRAND_RAPIDS_EIS_CONFIG
+  - STRATUX_CONFIG
+  - MAVLINK_CONFIG
+  - IFLY_CONFIG
+  - MEGASQUIRT_CONFIG
+  - MGL_CONFIG
+  - DEMO_CONFIG
 
 # Logging configuration - See Python logging.config module documenation
 # This is logging for system messages, not system data

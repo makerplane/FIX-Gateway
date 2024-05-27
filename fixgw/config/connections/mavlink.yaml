@@ -1,5 +1,5 @@
 mavlink:
-  load: yes
+  load: MAVLINK
   module: fixgw.plugins.mavlink
   type: serial
   baud: 115200

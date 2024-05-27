@@ -1,5 +1,5 @@
 virtualwire:
-  load: yes
+  load: RPI_VIRTUALWIRE
   module: fixgw.plugins.rpi_virtualwire
   rxpin: 23
   bps: 2000
