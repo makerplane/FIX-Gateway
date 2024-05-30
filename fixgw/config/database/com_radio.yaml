@@ -15,8 +15,8 @@ items:
   description: Radio Active Frequency
   type: float
   initial: 121.500
-  min: 100
-  max: 200
+  min: 118.000
+  max: 137.000
   tol: 200
 
 - key: COMACTNAMEd
@@ -28,8 +28,8 @@ items:
   description: Radio Standby Frequency
   type: float
   initial: 121.500
-  min: 100
-  max: 200
+  min: 118.000
+  max: 137.000
   tol: 200
 
 - key: COMSTDNAMEd
