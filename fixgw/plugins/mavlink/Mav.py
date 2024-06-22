@@ -90,6 +90,8 @@ class Mav:
         if self._gps or self._ahrs:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS_RAW_INT)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
+            #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS2_RAW)
+            #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS_STATUS)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
         if self._accel:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
@@ -111,7 +113,7 @@ class Mav:
                 mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL,
                 0,
                 msg_id,  # param1: message ID
-                100,     # param2: interval in microseconds
+                100000,     # param2: interval in microseconds
                 0,       # param3: not used
                 0,       # param4: not used
                 0,       # param5: not used
@@ -120,6 +122,11 @@ class Mav:
             )
             # Send the command
             self.conn.mav.send(message)
+            response = self.conn.recv_match(type='COMMAND_ACK', blocking=True)
+            if response and response.command == mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL and response.result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
+                print(f"{msg_id} accepted")
+            else:
+                print(f"{msg_id} failed")
 
     def close(self):
         self.conn.close()
@@ -134,8 +141,10 @@ class Mav:
           self.no_msg_count += 1
           if self.no_msg_count > 15:
               self.request_ids()
+              self.no_msg_count = 0
           return
         msg_type = msg.get_type()
+        print(msg_type)
         #logger.debug(repr(msg))
         #logger.debug(msg_type)
         if msg_type == 'VFR_HUD':
@@ -176,9 +185,28 @@ class Mav:
                 self.parent.db_write("PITCH", round(math.degrees(msg.pitch),2))
                 self.parent.db_write("YAW", round(math.degrees(msg.yaw),2))
             #self.parent.db_write("YAW", math.degrees(msg.yaw))
+#        elif msg_type == "GPS2_RAW":
+#            if self._gps:
+#                self.parent.db_write("GPS_ACCURACY_SPEED", round(msg.vel_acc,2))#  * 1.9438445,2)) # float m/s to knots
+#                self.parent.db_write("GPS_ACCURACY_HORIZ", round(msg.h_acc,2))# / 3.048,2)) # float m to ft
+#                self.parent.db_write("GPS_ACCURACY_VERTICAL", round(msg.v_acc,2)) # / 3.048,2)) # float m to ft
+#                self.parent.db_write("GPS_SATS_VISIBLE", msg.satellites_visible) # 
+#        elif msg_type == "GPS_STATUS":
+#            if self._gps:
+#                # Count number of 1's in the list of sats
+#                self.parent.db_write("GPS_SATS_TRACKED", msg.satellite_used.count(1))
         elif msg_type == "GPS_RAW_INT":
             if self._ahrs:
                 self.parent.db_write("COURSE",round(msg.cog/100,2))
+            if self._gps:
+                self.parent.db_write("GPS_FIX_TYPE",msg.fix_type)
+                self.parent.db_write("GPS_ELLIPSOID_ALT",round(msg.alt_ellipsoid / 304.8,2)) # int32 mm to ft
+                self.parent.db_write("GPS_SATS_VISIBLE", msg.satellites_visible) #
+                self.parent.db_write("GPS_SATS_TRACKED", msg.satellites_visible) # Not found a way to get tracked
+                self.parent.db_write("GPS_ACCURACY_SPEED", round(msg.vel_acc * 0.0019438445,2)) # int32 mm/s to knots Docs just sa "mm" I assumed/sec
+                self.parent.db_write("GPS_ACCURACY_HORIZ", round(msg.h_acc/3048,2))# / 3.048,2)) # int32 mm to ft
+                self.parent.db_write("GPS_ACCURACY_VERTICAL", round(msg.v_acc/3048,2)) # / 3.048,2)) # int mm to ft
+
         elif msg_type == "GLOBAL_POSITION_INT":
             if self._ahrs:
                 self.parent.db_write("HEAD", round(msg.hdg/100,2))             # uint16_t cdeg 
@@ -212,8 +240,8 @@ class Mav:
                   logger.debug("MAV_MODE_FLAG_SAFETY_ARMED")
                   # This status means we are ARMED and can use more than just TRIM mode
                   self.setStat('ARMED')
-              if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED	 !=0:
-                  logger.debug("MAV_MODE_FLAG_MANUAL_INPUT_ENABLED	")
+              if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED !=0:
+                  logger.debug("MAV_MODE_FLAG_MANUAL_INPUT_ENABLED")
               if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_HIL_ENABLED !=0:
                   logger.debug("MAV_MODE_FLAG_HIL_ENABLED")
               if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_STABILIZE_ENABLED !=0:

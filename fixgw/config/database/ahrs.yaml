@@ -332,4 +332,63 @@ items:
   initial: 0.0
   tol: 200
 
+- key: GPS_SATS_VISIBLE
+  description: Number of GPS satellites visible
+  type: int
+  min: 0
+  max: 200
+  initial: 0
+  tol: 2000
 
+- key: GPS_SATS_TRACKED
+  description: Number of GPS satellites tracked
+  type: int
+  min: 0
+  max: 200
+  initial: 0
+  tol: 2000
+
+- key: GPS_ACCURACY_SPEED
+  description: Accuracy of GPS SPEED 
+  type: float
+  units: knots
+  min: 0
+  max: 200
+  initial: 0
+  tol: 2000
+
+- key: GPS_ACCURACY_HORIZ
+  description: Accuracy of GPS Horizontal
+  type: float
+  units: ft
+  min: 0
+  max: 200
+  initial: 0
+  tol: 2000
+
+- key: GPS_ACCURACY_VERTICAL
+  description: Accuracy of GPS Vertical
+  type: float
+  units: ft
+  min: 0
+  max: 200
+  initial: 0
+  tol: 2000
+
+- key: GPS_FIX_TYPE
+  description: "0-1: no fix, 2: 2D fix, 3: 3D fix. 4: 3D with DGPS. 5: 3D with RTK"
+  type: int
+  min: 0
+  max: 5
+  initial: 0
+  tol: 2000
+
+- key: GPS_ELLIPSOID_ALT
+  description: height above elipsoid
+  type: float
+  units: ft
+  min: -2000
+  max: 60000
+  initial: 0
+  tol: 2000
+ 
