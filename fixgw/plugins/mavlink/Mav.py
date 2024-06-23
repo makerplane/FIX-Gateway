@@ -78,6 +78,7 @@ class Mav:
             self.setStat('ERROR', 'No Communication')
             raise Exception(f"serial port {port} is not found!")
 
+        self._interval = defaultdict(lambda: 200000)
         self._data = defaultdict(list)
         self._max_average = 15
 
@@ -85,6 +86,7 @@ class Mav:
         self.conn = mavutil.mavlink_connection(port, baud=baud)
         self.ids = []
         self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW)
+        self._interval[mavutil.mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW] = 400000
         if self._airspeed:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
 
@@ -114,7 +116,7 @@ class Mav:
                 mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL,
                 0,
                 msg_id,  # param1: message ID
-                100000,     # param2: interval in microseconds
+                self._interval[msg_id],     # param2: interval in microseconds
                 0,       # param3: not used
                 0,       # param4: not used
                 0,       # param5: not used
