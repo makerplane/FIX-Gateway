@@ -92,7 +92,7 @@ class MainThread(threading.Thread):
                     # So we only deal with the AP once every 200 cycles
                     # Close to once every 0.2 seconds, fast enough
                     # for users asking for a mode change
-                    if loopc > 200:
+                    if loopc > 40:
                         self.conn.checkMode()
                         loopc = 0
                     loopc += 1

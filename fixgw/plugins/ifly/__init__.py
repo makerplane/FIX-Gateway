@@ -96,7 +96,7 @@ class MainThread(threading.Thread):
                     self.parent.db_write("WPLAT", lat * nmea_utils.dm_to_sd(data.dest_lat))
                     self.parent.db_write("WPLON", lon * nmea_utils.dm_to_sd(data.dest_lon))
 
-                    self.parent.db_write("WPNAME", data.dest_waypoint_id)
+                    self.parent.db_write("WPNAME", data.dest_waypoint_id.ljust(5)[:5])
 
                 elif data.sentence_type == "APB":
                     head_type = ""

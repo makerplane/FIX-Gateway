@@ -78,6 +78,7 @@ class Mav:
             self.setStat('ERROR', 'No Communication')
             raise Exception(f"serial port {port} is not found!")
 
+        self._interval = defaultdict(lambda: 200000)
         self._data = defaultdict(list)
         self._max_average = 15
 
@@ -85,6 +86,7 @@ class Mav:
         self.conn = mavutil.mavlink_connection(port, baud=baud)
         self.ids = []
         self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW)
+        self._interval[mavutil.mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW] = 400000
         if self._airspeed:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_VFR_HUD)
 
@@ -94,6 +96,7 @@ class Mav:
             #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS2_RAW)
             #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_AOA_SSA)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
+            self._interval[mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE] = 100000
         if self._accel:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
         if self._pressure:
@@ -114,7 +117,7 @@ class Mav:
                 mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL,
                 0,
                 msg_id,  # param1: message ID
-                100000,     # param2: interval in microseconds
+                self._interval[msg_id],     # param2: interval in microseconds
                 0,       # param3: not used
                 0,       # param4: not used
                 0,       # param5: not used
@@ -157,8 +160,8 @@ class Mav:
                 else:
                     self.parent.db_write("IAS",0)
             if self._groundspeed:
-                spd = self.avg('IAS',msg.airspeed * 1.9438445,2)
-                if spd > 1:
+                spd = self.avg('GS',msg.groundspeed * 1.9438445,2)
+                if spd > 3:
                     self.parent.db_write("GS", spd) #m/s to knots
                 else:
                     self.parent.db_write("GS", 0)
@@ -203,10 +206,11 @@ class Mav:
         elif msg_type == "GPS_RAW_INT":
             if self._ahrs:
                 rgs = self.get_avg("GS",2)
-                if rgs > 1: 
+                if rgs > 3: 
                     self.parent.db_write("COURSE",round(msg.cog/100,2))
                 else:
-                    self.parent.db_write("COURSE", 0)
+                    # If not moving set course to heading so maps show direction you are facing
+                    self.parent.db_write("COURSE", self.get_avg("HEAD", 2))
             if self._gps:
                 self.parent.db_write("GPS_FIX_TYPE",msg.fix_type)
                 self.parent.db_write("GPS_ELLIPSOID_ALT",round(msg.alt_ellipsoid / 304.8,2)) # int32 mm to ft
@@ -218,7 +222,8 @@ class Mav:
 
         elif msg_type == "GLOBAL_POSITION_INT":
             if self._ahrs:
-                self.parent.db_write("HEAD", round(msg.hdg/100,2))             # uint16_t cdeg 
+                head = self.avg('HEAD',msg.hdg/100,2)
+                self.parent.db_write("HEAD", head)             # uint16_t cdeg 
                 self.parent.db_write("AGL", round(msg.relative_alt / 304.8,2)) # int32_t mm to ft
                 # Seems like MSD is TALT and ALT should be indicated, not sure hoe to get both:
                 self.parent.db_write("ALT", round(msg.alt / 304.8, 2))          # int32_t mm to ft
