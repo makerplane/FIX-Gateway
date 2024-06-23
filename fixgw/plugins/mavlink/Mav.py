@@ -206,7 +206,8 @@ class Mav:
                 if rgs > 1: 
                     self.parent.db_write("COURSE",round(msg.cog/100,2))
                 else:
-                    self.parent.db_write("COURSE", 0)
+                    # If not moving set course to heading so maps show direction you are facing
+                    self.parent.db_write("COURSE", get_avg("HEAD", 2))
             if self._gps:
                 self.parent.db_write("GPS_FIX_TYPE",msg.fix_type)
                 self.parent.db_write("GPS_ELLIPSOID_ALT",round(msg.alt_ellipsoid / 304.8,2)) # int32 mm to ft
@@ -218,7 +219,8 @@ class Mav:
 
         elif msg_type == "GLOBAL_POSITION_INT":
             if self._ahrs:
-                self.parent.db_write("HEAD", round(msg.hdg/100,2))             # uint16_t cdeg 
+                head = self.avg('HEAD',msg.hdg/100,2)
+                self.parent.db_write("HEAD", head)             # uint16_t cdeg 
                 self.parent.db_write("AGL", round(msg.relative_alt / 304.8,2)) # int32_t mm to ft
                 # Seems like MSD is TALT and ALT should be indicated, not sure hoe to get both:
                 self.parent.db_write("ALT", round(msg.alt / 304.8, 2))          # int32_t mm to ft
