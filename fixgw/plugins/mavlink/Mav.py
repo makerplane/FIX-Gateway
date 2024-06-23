@@ -207,7 +207,7 @@ class Mav:
                     self.parent.db_write("COURSE",round(msg.cog/100,2))
                 else:
                     # If not moving set course to heading so maps show direction you are facing
-                    self.parent.db_write("COURSE", get_avg("HEAD", 2))
+                    self.parent.db_write("COURSE", self.get_avg("HEAD", 2))
             if self._gps:
                 self.parent.db_write("GPS_FIX_TYPE",msg.fix_type)
                 self.parent.db_write("GPS_ELLIPSOID_ALT",round(msg.alt_ellipsoid / 304.8,2)) # int32 mm to ft
