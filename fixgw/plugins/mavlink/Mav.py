@@ -16,6 +16,7 @@
 #  USA.import plugin
 
 from pymavlink import mavutil, mavwp
+from pymavlink.mavextra import rate_of_turn as rot
 
 from os import stat
 import math
@@ -90,6 +91,8 @@ class Mav:
         if self._gps or self._ahrs:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS_RAW_INT)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
+            #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS2_RAW)
+            #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_AOA_SSA)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
         if self._accel:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
@@ -111,7 +114,7 @@ class Mav:
                 mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL,
                 0,
                 msg_id,  # param1: message ID
-                100,     # param2: interval in microseconds
+                100000,     # param2: interval in microseconds
                 0,       # param3: not used
                 0,       # param4: not used
                 0,       # param5: not used
@@ -120,6 +123,11 @@ class Mav:
             )
             # Send the command
             self.conn.mav.send(message)
+            response = self.conn.recv_match(type='COMMAND_ACK', timeout=0.1, blocking=True)
+            if response and response.command == mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL and response.result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
+                logger.debug(f"{msg_id} accepted")
+            else:
+                logger.debug(f"{msg_id} failed")
 
     def close(self):
         self.conn.close()
@@ -134,12 +142,10 @@ class Mav:
           self.no_msg_count += 1
           if self.no_msg_count > 15:
               self.request_ids()
+              self.no_msg_count = 0
           return
         msg_type = msg.get_type()
-        #logger.debug(repr(msg))
-        #logger.debug(msg_type)
         if msg_type == 'VFR_HUD':
-            #logger.debug(msg)
             # We can also get other info like GS, VS, MSL, HEAD from this
             # msg.airspeed is CAS or IAS, at the speeds we fly the different is insignificant
             # I do not think TAS can be obtained from the flight controller
@@ -156,6 +162,7 @@ class Mav:
                 # The AI in pyefis requires TAS
                 # I think we could calculate it but for now we will just use IAS in its place
                 spd = self.avg('TAS',msg.airspeed * 1.9438445,2)
+                tas = self.avg('RTAS',msg.airspeed,2)
                 if self._min_airspeed < spd:
                     self.parent.db_write("TAS", spd) #m/s to knots
                 else:
@@ -173,12 +180,34 @@ class Mav:
         elif msg_type == "ATTITUDE":
             if self._ahrs:
                 self.parent.db_write("ROLL", round(math.degrees(msg.roll), 2))
+                roll = self.avg('ROLL',msg.roll,2)
+                rtas = self.get_avg("RTAS",2)
+                self.parent.db_write("ROT", rot(rtas,roll))
                 self.parent.db_write("PITCH", round(math.degrees(msg.pitch),2))
                 self.parent.db_write("YAW", round(math.degrees(msg.yaw),2))
             #self.parent.db_write("YAW", math.degrees(msg.yaw))
+#        elif msg_type == "GPS2_RAW":
+#            if self._gps:
+#                self.parent.db_write("GPS_ACCURACY_SPEED", round(msg.vel_acc,2))#  * 1.9438445,2)) # float m/s to knots
+#                self.parent.db_write("GPS_ACCURACY_HORIZ", round(msg.h_acc,2))# / 3.048,2)) # float m to ft
+#                self.parent.db_write("GPS_ACCURACY_VERTICAL", round(msg.v_acc,2)) # / 3.048,2)) # float m to ft
+#                self.parent.db_write("GPS_SATS_VISIBLE", msg.satellites_visible) # 
+#        elif msg_type == "GPS_STATUS":
+#            if self._gps:
+#                # Count number of 1's in the list of sats
+#                self.parent.db_write("GPS_SATS_TRACKED", msg.satellite_used.count(1))
         elif msg_type == "GPS_RAW_INT":
             if self._ahrs:
                 self.parent.db_write("COURSE",round(msg.cog/100,2))
+            if self._gps:
+                self.parent.db_write("GPS_FIX_TYPE",msg.fix_type)
+                self.parent.db_write("GPS_ELLIPSOID_ALT",round(msg.alt_ellipsoid / 304.8,2)) # int32 mm to ft
+                self.parent.db_write("GPS_SATS_VISIBLE", msg.satellites_visible) #
+                self.parent.db_write("GPS_SATS_TRACKED", msg.satellites_visible) # Not found a way to get tracked
+                self.parent.db_write("GPS_ACCURACY_SPEED", round(msg.vel_acc * 0.0019438445,2)) # int32 mm/s to knots Docs just sa "mm" I assumed/sec
+                self.parent.db_write("GPS_ACCURACY_HORIZ", round(msg.h_acc/3048,2))# / 3.048,2)) # int32 mm to ft
+                self.parent.db_write("GPS_ACCURACY_VERTICAL", round(msg.v_acc/3048,2)) # / 3.048,2)) # int mm to ft
+
         elif msg_type == "GLOBAL_POSITION_INT":
             if self._ahrs:
                 self.parent.db_write("HEAD", round(msg.hdg/100,2))             # uint16_t cdeg 
@@ -199,7 +228,6 @@ class Mav:
         #if msg_type == "EKF_STATUS_REPORT":
         # This might be useful to get some info about the state of the
         # imus/gyros
-        #    print(msg)
         elif msg_type == "HEARTBEAT":
             # Heartbeat type 27 = ADSB Not sure what to do with this yet so not implemented
             # heartbeat type 1 = fixed wing
@@ -212,8 +240,8 @@ class Mav:
                   logger.debug("MAV_MODE_FLAG_SAFETY_ARMED")
                   # This status means we are ARMED and can use more than just TRIM mode
                   self.setStat('ARMED')
-              if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED	 !=0:
-                  logger.debug("MAV_MODE_FLAG_MANUAL_INPUT_ENABLED	")
+              if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED !=0:
+                  logger.debug("MAV_MODE_FLAG_MANUAL_INPUT_ENABLED")
               if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_HIL_ENABLED !=0:
                   logger.debug("MAV_MODE_FLAG_HIL_ENABLED")
               if msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_STABILIZE_ENABLED !=0:
@@ -523,3 +551,8 @@ class Mav:
             self._data[item].pop(0)
         return round(statistics.mean(self._data[item]),decimals)
 
+    def get_avg(self,item,decimals):
+        if len(self._data[item]) > 0:
+            return round(statistics.mean(self._data[item]),decimals)
+        else:
+            return 0
