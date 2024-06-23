@@ -96,6 +96,7 @@ class Mav:
             #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS2_RAW)
             #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_AOA_SSA)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
+            self._interval[mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE] = 100000
         if self._accel:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
         if self._pressure:
