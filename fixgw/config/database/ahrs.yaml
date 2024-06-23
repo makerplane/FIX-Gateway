@@ -221,7 +221,7 @@ items:
   max: 3000
   units: Deg/sec
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: ROLL
   description: Roll Angle
@@ -284,7 +284,7 @@ items:
   max: 180.0
   units: deg
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: YAW
   description: Yaw Angle
@@ -293,7 +293,7 @@ items:
   max: 180.0
   units: deg
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: AOA
   description: Angle of attack
@@ -302,7 +302,7 @@ items:
   max: 180.0
   units: deg
   initial: 0.0
-  tol: 200
+  tol: 300
   aux: [Min, Max, 0g, Warn, Stall]
 
 - key: ANORM
@@ -312,7 +312,7 @@ items:
   max: 30.0
   units: g
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: ALAT
   description: Lateral Acceleration
@@ -321,7 +321,7 @@ items:
   max: 30.0
   units: g
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: ALONG
   description: Longitudinal Acceleration
@@ -330,7 +330,7 @@ items:
   max: 30.0
   units: g
   initial: 0.0
-  tol: 200
+  tol: 300
 
 - key: GPS_SATS_VISIBLE
   description: Number of GPS satellites visible
