@@ -158,7 +158,7 @@ class Mav:
                     self.parent.db_write("IAS",0)
             if self._groundspeed:
                 spd = self.avg('GS',msg.groundspeed * 1.9438445,2)
-                if spd > 1:
+                if spd > 3:
                     self.parent.db_write("GS", spd) #m/s to knots
                 else:
                     self.parent.db_write("GS", 0)
@@ -203,7 +203,7 @@ class Mav:
         elif msg_type == "GPS_RAW_INT":
             if self._ahrs:
                 rgs = self.get_avg("GS",2)
-                if rgs > 1: 
+                if rgs > 3: 
                     self.parent.db_write("COURSE",round(msg.cog/100,2))
                 else:
                     # If not moving set course to heading so maps show direction you are facing
