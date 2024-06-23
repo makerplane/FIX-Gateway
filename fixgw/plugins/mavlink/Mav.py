@@ -202,8 +202,8 @@ class Mav:
 #                self.parent.db_write("GPS_SATS_TRACKED", msg.satellite_used.count(1))
         elif msg_type == "GPS_RAW_INT":
             if self._ahrs:
-                rtas = self.get_avg("GS",2)
-                if GS > 1: 
+                rgs = self.get_avg("GS",2)
+                if rgs > 1: 
                     self.parent.db_write("COURSE",round(msg.cog/100,2))
                 else:
                     self.parent.db_write("COURSE", 0)
