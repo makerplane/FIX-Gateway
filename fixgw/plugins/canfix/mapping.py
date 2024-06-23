@@ -240,7 +240,10 @@ class Mapping(object):
                 p.parameter=m["canid"]
                 if p.multiplier == None:
                     p.multiplier = 1.0
-                p.value = value[0]
+                if value[0] == "":
+                    p.value = " "
+                else:
+                    p.value = value[0]
                 # End workaround
                 #p = canfix.ParameterSet(parameter=m["canid"], value=value[0])
                 p.sendNode = node
