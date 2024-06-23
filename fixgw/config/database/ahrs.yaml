@@ -123,7 +123,6 @@ items:
   max: 35.0
   units: inHg
   initial: 29.92
-  tol: 20000
 
 - key: AIRPRESS
   description: Air Pressure
