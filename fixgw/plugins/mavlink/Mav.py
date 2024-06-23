@@ -122,7 +122,7 @@ class Mav:
             )
             # Send the command
             self.conn.mav.send(message)
-            response = self.conn.recv_match(type='COMMAND_ACK', blocking=True)
+            response = self.conn.recv_match(type='COMMAND_ACK', timeout=0.1, blocking=True)
             if response and response.command == mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL and response.result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
                 print(f"{msg_id} accepted")
             else:
