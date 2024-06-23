@@ -157,7 +157,11 @@ class Mav:
                 else:
                     self.parent.db_write("IAS",0)
             if self._groundspeed:
-                self.parent.db_write("GS", round(msg.groundspeed * 1.9438445,2)) #m/s to knots
+                spd = self.avg('IAS',msg.airspeed * 1.9438445,2)
+                if spd > 1:
+                    self.parent.db_write("GS", spd) #m/s to knots
+                else:
+                    self.parent.db_write("GS", 0)
             if self._ahrs:
                 # The AI in pyefis requires TAS
                 # I think we could calculate it but for now we will just use IAS in its place
@@ -198,7 +202,11 @@ class Mav:
 #                self.parent.db_write("GPS_SATS_TRACKED", msg.satellite_used.count(1))
         elif msg_type == "GPS_RAW_INT":
             if self._ahrs:
-                self.parent.db_write("COURSE",round(msg.cog/100,2))
+                rtas = self.get_avg("GS",2)
+                if GS > 1: 
+                    self.parent.db_write("COURSE",round(msg.cog/100,2))
+                else:
+                    self.parent.db_write("COURSE", 0)
             if self._gps:
                 self.parent.db_write("GPS_FIX_TYPE",msg.fix_type)
                 self.parent.db_write("GPS_ELLIPSOID_ALT",round(msg.alt_ellipsoid / 304.8,2)) # int32 mm to ft
