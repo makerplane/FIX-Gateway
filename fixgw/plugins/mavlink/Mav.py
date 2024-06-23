@@ -157,7 +157,7 @@ class Mav:
                 else:
                     self.parent.db_write("IAS",0)
             if self._groundspeed:
-                spd = self.avg('IAS',msg.airspeed * 1.9438445,2)
+                spd = self.avg('GS',msg.groundspeed * 1.9438445,2)
                 if spd > 1:
                     self.parent.db_write("GS", spd) #m/s to knots
                 else:
