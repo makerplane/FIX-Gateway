@@ -16,6 +16,7 @@
 #  USA.import plugin
 
 from pymavlink import mavutil, mavwp
+from pymavlink.mavextra import rate_of_turn as rot
 
 from os import stat
 import math
@@ -91,7 +92,7 @@ class Mav:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS_RAW_INT)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
             #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS2_RAW)
-            #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_GPS_STATUS)
+            #self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_AOA_SSA)
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_ATTITUDE)
         if self._accel:
             self.ids.append(mavutil.mavlink.MAVLINK_MSG_ID_SCALED_IMU)
@@ -124,9 +125,9 @@ class Mav:
             self.conn.mav.send(message)
             response = self.conn.recv_match(type='COMMAND_ACK', timeout=0.1, blocking=True)
             if response and response.command == mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL and response.result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
-                print(f"{msg_id} accepted")
+                logger.debug(f"{msg_id} accepted")
             else:
-                print(f"{msg_id} failed")
+                logger.debug(f"{msg_id} failed")
 
     def close(self):
         self.conn.close()
@@ -144,11 +145,7 @@ class Mav:
               self.no_msg_count = 0
           return
         msg_type = msg.get_type()
-        print(msg_type)
-        #logger.debug(repr(msg))
-        #logger.debug(msg_type)
         if msg_type == 'VFR_HUD':
-            #logger.debug(msg)
             # We can also get other info like GS, VS, MSL, HEAD from this
             # msg.airspeed is CAS or IAS, at the speeds we fly the different is insignificant
             # I do not think TAS can be obtained from the flight controller
@@ -165,6 +162,7 @@ class Mav:
                 # The AI in pyefis requires TAS
                 # I think we could calculate it but for now we will just use IAS in its place
                 spd = self.avg('TAS',msg.airspeed * 1.9438445,2)
+                tas = self.avg('RTAS',msg.airspeed,2)
                 if self._min_airspeed < spd:
                     self.parent.db_write("TAS", spd) #m/s to knots
                 else:
@@ -182,6 +180,9 @@ class Mav:
         elif msg_type == "ATTITUDE":
             if self._ahrs:
                 self.parent.db_write("ROLL", round(math.degrees(msg.roll), 2))
+                roll = self.avg('ROLL',msg.roll,2)
+                rtas = self.get_avg("RTAS",2)
+                self.parent.db_write("ROT", rot(rtas,roll))
                 self.parent.db_write("PITCH", round(math.degrees(msg.pitch),2))
                 self.parent.db_write("YAW", round(math.degrees(msg.yaw),2))
             #self.parent.db_write("YAW", math.degrees(msg.yaw))
@@ -227,7 +228,6 @@ class Mav:
         #if msg_type == "EKF_STATUS_REPORT":
         # This might be useful to get some info about the state of the
         # imus/gyros
-        #    print(msg)
         elif msg_type == "HEARTBEAT":
             # Heartbeat type 27 = ADSB Not sure what to do with this yet so not implemented
             # heartbeat type 1 = fixed wing
@@ -551,3 +551,8 @@ class Mav:
             self._data[item].pop(0)
         return round(statistics.mean(self._data[item]),decimals)
 
+    def get_avg(self,item,decimals):
+        if len(self._data[item]) > 0:
+            return round(statistics.mean(self._data[item]),decimals)
+        else:
+            return 0

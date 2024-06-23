@@ -340,7 +340,10 @@ items:
   initial: 0
   tol: 2000
 
-- key: GPS_SATS_TRACKED
+# Currently no way to get this data from Mavlink that I could find
+# So it is not really used
+# Leaving here so it can be used once we have a method to obtain the data
+- key: GPS_SATS_TRACKED 
   description: Number of GPS satellites tracked
   type: int
   min: 0
