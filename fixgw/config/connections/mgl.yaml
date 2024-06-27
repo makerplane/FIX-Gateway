@@ -11,6 +11,7 @@ mgl:
     #      id: 2
     #      key: TC1
     get:
+      EGT11:
         key: TC1
       EGT12:
         key: TC2
