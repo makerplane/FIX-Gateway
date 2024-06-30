@@ -210,7 +210,10 @@ def main_setup():
         for con in config["connections"]:
             if 'module' in config["connections"][con]:
                 if config["connections"][con]['module'].lower() == 'fixgw.plugins.quorum':
-                    if config["connections"][con]['load']:
+                    load = config['connections'][con]['load']
+                    if isinstance(load, str) and 'enabled' in preferences:
+                        load = preferences['enabled'].get(load, False)
+                    if load:
                         quorum.leader = False
                         break
 
