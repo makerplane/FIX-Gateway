@@ -233,7 +233,16 @@ rdac = {
   'type': 'word',
   'min': 0,
   'max': 4095,
+  'freq': 200},
+'CURRNT': {
+  'description': 'CURRENT',
+  'msg_id': 8,
+  'bytes': [6,7],
+  'type': 'word',
+  'min': 0,
+  'max': 4095,
   'freq': 200}
+
 
 
 
