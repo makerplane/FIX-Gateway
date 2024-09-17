@@ -1,0 +1,4 @@
+dynon:
+  load: DYNON
+  module: fixgw.plugins.dynon
+  port: /dev/ttyUSB0
