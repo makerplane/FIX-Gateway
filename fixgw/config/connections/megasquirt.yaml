@@ -2,16 +2,8 @@ megasquirt:
   load: MEGASQUIRT
   module: fixgw.plugins.megasquirt
   interface: socketcan
-  channel: vcan0
+  channel: can11
   items:
-    rpm: TACH1
-    fuelflow: FUELF1
-    clt: H2OT1
-    map: MAP1
-    tps: THR1
-    #airtemp: intakeairtemp
-    #afrtgt1: AFR Target for bank 1
-    #AFR1: AFT for cyl1
-    #egocor1: EGO Bank 1 correction
-    #Ignition timing?
-
+    H2OT1: H2OT1
+    MAP1: MAP1
+    THR1: THR1
