@@ -1,0 +1,4 @@
+strom_pi:
+  load: STROM_PI
+  module: fixgw.plugins.strom_pi
+  port: /dev/serial0
