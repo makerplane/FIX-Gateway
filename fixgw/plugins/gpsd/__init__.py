@@ -44,9 +44,10 @@ class MainThread(threading.Thread):
             p = None
             try:
                 p = gpsd2.get_current()
-            except:
-                self.parent.log.error("gpsd connection error")
-                return
+            except UserWarning as e:
+                self.parent.log.warning(f"gpsd warning: {e}")
+                time.sleep(5)
+                continue
 
             self.parent.db_write("GPS_SATS_VISIBLE", p.sats)
             self.parent.db_write("GPS_FIX_TYPE", p.mode)
