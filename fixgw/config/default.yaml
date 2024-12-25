@@ -61,6 +61,7 @@ connections:
   - IFLY_CONFIG
   - MEGASQUIRT_CONFIG
   - MGL_CONFIG
+  - GPSD_CONFIG
   - DEMO_CONFIG
 
 # Logging configuration - See Python logging.config module documenation

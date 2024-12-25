@@ -1,0 +1,3 @@
+gpsd:
+  load: GPSD
+  module: fixgw.plugins.gpsd
