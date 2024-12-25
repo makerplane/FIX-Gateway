@@ -53,6 +53,9 @@ class MainThread(threading.Thread):
         self.getout = True
 
     def _parse(self, message):
+        if not len(message):
+            return
+        
         message = message.decode('ASCII')
         
         if not message.endswith('\n'):
