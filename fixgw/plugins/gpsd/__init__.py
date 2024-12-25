@@ -16,7 +16,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-#  Checks current power source and battery state from Strom Pi 3 module
+#  This plugin pulls the location information from GPSD
 
 import threading
 from collections import OrderedDict

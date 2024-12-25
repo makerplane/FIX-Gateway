@@ -61,6 +61,6 @@ enabled:
   IFLY: false
   MEGASQUIRT: false
   MGL: false
-  GPSD: true
-  DEMO: false
+  GPSD: false
+  DEMO: true
 
