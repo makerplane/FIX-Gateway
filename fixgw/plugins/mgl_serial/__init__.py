@@ -54,7 +54,7 @@ class MainThread(threading.Thread):
         self.getout = True
 
     def _parse(self, message):
-        if not len(message):
+        if len(message) != 16:
             return
         
         if not message.endswith(b"\x03"):
@@ -68,19 +68,19 @@ class MainThread(threading.Thread):
         else:
             self.parent.log.debug("Beginning of message was not found")
 
-        data = struct.unpack("BBBBBBhhhhBB", message)
+        data = struct.unpack(">BBBBBBhhhhBB", message)
 
         data[0] # start of message
         data[1] #address
         if data[2] != 8: #message type (should be 8 for TP-3)
-            self.parent.log.debug("Unsupported message")
+            self.parent.log.warning("Unsupported message")
+            return
         
         data[3] #message lenght
-        
         channels = [{}, {}, {}, {}]
-        channels[3]["type"] = data[4] & 0b11110000 >> 4  # CH4 type
+        channels[3]["type"] = (data[4] & 0b11110000) >> 4  # CH4 type
         channels[2]["type"] = data[4] & 0b00001111       # CH3 type
-        channels[1]["type"] = data[5] & 0b11110000 >> 4  # CH2 type
+        channels[1]["type"] = (data[5] & 0b11110000) >> 4  # CH2 type
         channels[0]["type"] = data[5] & 0b00001111       # CH1 type
         channels[0]["value"] = data[6]  # ch1 val
         channels[1]["value"] = data[7]  # ch2 val
@@ -95,18 +95,19 @@ class MainThread(threading.Thread):
                 continue
             elif c["type"] == 1:  # pressure
                 db_key = f"OILP{self.engine}"
-                c["value"] /= 0.1
+                c["value"] /= 10
             elif c["type"] == 2:  # temperature
                 db_key = f"OILT{self.engine}"
             elif c["type"] == 3:  # current
                 db_key = f"CURRNT"
-                c["value"] /= 0.1
-            elif c["type"] == 4:  # voltage
-                db_key = f"VOLT"
-                c["value"] /= 0.1
-            elif c["type"] == 5:  # fuel level
+                c["value"] /= 10
+            elif c["type"] == 4:  # fuel level
                 db_key = f"FUELQT"
+            elif c["type"] == 5:  # voltage
+                db_key = f"VOLT"
+                c["value"] /= 10
             
+            print(db_key, c["value"])
             self.parent.db_write(db_key, c["value"])            
 
 
