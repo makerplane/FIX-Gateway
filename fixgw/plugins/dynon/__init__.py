@@ -58,7 +58,7 @@ class MainThread(threading.Thread):
 
     def _parse(self, message):
         if len(message) != 52:
-            self.parent.log.error("Incorrect data length")
+            self.parent.log.warning("Incorrect data length")
             return
 
         status = int(message[41:47], 16) & 1
@@ -71,16 +71,22 @@ class MainThread(threading.Thread):
         
         yaw = int(message[17:20]) 
         self.parent.db_write("YAW", yaw)
+
+        # 1/10 m/s to knots
+        speed = round(int(message[20:24]) * 0.194384)          
+        self.parent.db_write("TAS", speed)
         
+        alt = round(int(message[24:29]) * 3.28084)  # meters to feet
+
         if status == 0:
-            alt = round(int(message[24:29]) * 3.28084)  # meters to feet
-              
             self.parent.db_write("ALT", alt)
             self.parent.db_write("TALT", alt)
             
             turn_rate = int(message[29:33]) / 10
             self.parent.db_write("ROT", turn_rate)
         else:
+            self.parent.db_write("PALT", alt)
+
             vs = int(message[29:33]) / 10 * 60
             
             self._vario_values.append(vs)
@@ -91,9 +97,8 @@ class MainThread(threading.Thread):
                 
             self.parent.db_write("VS", vs)
 
-        # 1/10 m/s to knots
-        speed = round(int(message[20:24]) * 0.194384)          
-        self.parent.db_write("IAS", speed)
+        alat = int(message[33:36]) / 100
+        self.parent.db_write("ALAT", alat)
 
 
 class Plugin(plugin.PluginBase):
