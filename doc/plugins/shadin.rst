@@ -4,22 +4,21 @@ Shadin Plugin
 
 Implements Shadin protocol. Currently only decodes fuel related messages supported by FC-10 fuel computer
 
-If your messages start with letter 'Z', try to change the protocol on your unit to Shadin Generic, or modify the plugin.
 
 Example data
 ------------
-GA---
-GB---
-GC---
-GD ----
-GE ----
-GF --
-GG --
-GH---
-GI---
-GJ --
-GK ---
-GL---
+ZA---
+ZB---
+ZC---
+ZD ----
+ZE ----
+ZF --
+ZG --
+ZH---
+ZI---
+ZJ --
+ZK ---
+ZL---
 GM0000
 GN00000
 GO0000

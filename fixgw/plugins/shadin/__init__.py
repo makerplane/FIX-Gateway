@@ -62,14 +62,14 @@ class MainThread(threading.Thread):
             self.parent.log.debug("Incomplete message received")
             return
         
-        index = message.find('G')
+        index = message.find('Z')
 
         if index != -1:
             message = message[index:]
         else:
             self.parent.log.debug("Beginning of message was not found")
 
-        if message.startswith("GM"):    # Fuel flow right
+        if message.startswith("ZM"):    # Fuel flow right
             if "FUELF2" not in self.parent.db_list():
                 # Second engine not in config
                 return
@@ -80,14 +80,14 @@ class MainThread(threading.Thread):
                 self.parent.log.error(f"Bad data received: {message}")
                 return
             self.parent.db_write("FUELF2", fuel_flow / 0.1)
-        elif message.startswith("GO"):    # Fuel flow left
+        elif message.startswith("ZO"):    # Fuel flow left
             try:
                 fuel_flow = int(message[2:])
             except ValueError:
                 self.parent.log.error(f"Bad data received: {message}")
                 return
             self.parent.db_write("FUELF1", fuel_flow / 0.1)
-        elif message.startswith("GR"):    # Fuel remaining
+        elif message.startswith("ZR"):    # Fuel remaining
             try:
                 fuel_remaining = float(message[2:])
             except ValueError:
