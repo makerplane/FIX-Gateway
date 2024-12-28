@@ -23,6 +23,7 @@ from collections import OrderedDict
 
 import serial
 import time
+import os
 import fixgw.plugin as plugin
 
 
@@ -43,10 +44,11 @@ class MainThread(threading.Thread):
             self.parent.log.error("Serial port error")
             return
         
+        power_fail_timer = None
         while not self.getout:
             try:
                 self._c.reset_input_buffer()
-                self._c.write(str.encode('status-rpi\r'))
+                self._c.write(str.encode('\rstatus-rpi\r'))
                 time.sleep(0.2)
                 sp3_time = self._c.readline()
                 sp3_date = self._c.readline()
@@ -88,8 +90,9 @@ class MainThread(threading.Thread):
                 sp3_firmwareVersion = self._c.readline()
             except serial.SerialException:
                 self.parent.log.error("Serial port error")
-            except ValueError:
+            except ValueError as e:
                 self.parent.log.error("Bad data")
+                return
 
             bat = None
             charging = None
@@ -104,8 +107,21 @@ class MainThread(threading.Thread):
 
             if power_fail == 3: # We are running on battery
                 self.parent.db_write("POWER_FAIL", True)
+                if not power_fail_timer:
+                    power_fail_timer = time.time()
+                    self.parent.log.warning("Power has failed")
+                
+                if power_fail_timer and "shutdown_after" in self.parent.config:
+                    if time.time() > power_fail_timer + (self.parent.config['shutdown_after'] * 60):
+                        self._c.write(str.encode("quit\n"))                        
+                        self._c.write(str.encode("poweroff\n"))
+                        os.system("sudo shutdown -h now")
+
             else:
                 self.parent.db_write("POWER_FAIL", False)
+                if power_fail_timer:
+                    power_fail_timer = None
+                    self.parent.log.warning("Power has been restored")
 
             self.parent.db_write("BAT_CHARGING", charging)
 
