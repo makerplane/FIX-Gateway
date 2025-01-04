@@ -12,7 +12,12 @@ description: |
     Release Notes:
     * Updated to core24 and python 3.12
 
-    Many new plugins that need your help testing, these should be considered beta quality:
+    Many new plugins that need your help testing:
+    * dynon, collects AHRS data from Dynon D10/D100
+    * gpsd, obtains GPS data from gpsd network daemon
+    * mgl_serial RS-232 protocol, currently lacks custom configuration
+    * shadin protocol, only supports fuel related messagse from FC-10 fuel computr
+    * strom_pi UPS monitoring
     * Flight Data Recoder
     * Replay FDR data from point in time
     * Mavlink plugin for AHRS/GPS data
