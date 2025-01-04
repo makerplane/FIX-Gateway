@@ -62,6 +62,10 @@ connections:
   - MEGASQUIRT_CONFIG
   - MGL_CONFIG
   - MGL_SERIAL_CONFIG
+  - SHADIN_CONFIG
+  - GPSD_CONFIG
+  - STROM_PI_CONFIG
+  - DYNON_CONFIG
   - DEMO_CONFIG
 
 # Logging configuration - See Python logging.config module documenation

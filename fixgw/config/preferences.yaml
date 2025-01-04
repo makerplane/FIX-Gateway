@@ -33,6 +33,10 @@ includes:
   MEGASQUIRT_CONFIG: connections/megasquirt.yaml
   MGL_CONFIG: connections/mgl.yaml
   MGL_SERIAL_CONFIG: connections/mgl_serial.yaml
+  SHADIN_CONFIG: connections/shadin.yaml
+  GPSD_CONFIG: connections/gpsd.yaml
+  STROM_PI_CONFIG: connections/strom_pi.yaml
+  DYNON_CONFIG: connections/dynon.yaml
   DEMO_CONFIG: connections/demo.yaml
 # This section is used to turn things on or off
 enabled:
@@ -62,5 +66,9 @@ enabled:
   MEGASQUIRT: false
   MGL: false
   MGL_SERIAL: false
+  SHADIN: false
+  GPSD: false
+  STROM_PI: false
+  DYNON: false
   DEMO: true
 
