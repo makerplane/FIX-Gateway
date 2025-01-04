@@ -8,3 +8,4 @@ pymavlink
 pynmea2
 numpy
 tables
+py-gpsd2
