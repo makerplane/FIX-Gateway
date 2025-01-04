@@ -32,6 +32,7 @@ includes:
   IFLY_CONFIG: connections/ifly.yaml
   MEGASQUIRT_CONFIG: connections/megasquirt.yaml
   MGL_CONFIG: connections/mgl.yaml
+  MGL_SERIAL_CONFIG: connections/mgl_serial.yaml
   SHADIN_CONFIG: connections/shadin.yaml
   GPSD_CONFIG: connections/gpsd.yaml
   STROM_PI_CONFIG: connections/strom_pi.yaml
@@ -64,6 +65,7 @@ enabled:
   IFLY: false
   MEGASQUIRT: false
   MGL: false
+  MGL_SERIAL: false
   SHADIN: false
   GPSD: false
   STROM_PI: false

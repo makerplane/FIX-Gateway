@@ -1,0 +1,7 @@
+mgl_serial:
+  load: MGL_SERIAL
+  module: fixgw.plugins.mgl_serial
+  port: /dev/ttyS0
+  baud: 57600
+  engine_no: 1
+
