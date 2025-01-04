@@ -32,6 +32,7 @@ includes:
   IFLY_CONFIG: connections/ifly.yaml
   MEGASQUIRT_CONFIG: connections/megasquirt.yaml
   MGL_CONFIG: connections/mgl.yaml
+  GPSD_CONFIG: connections/gpsd.yaml
   STROM_PI_CONFIG: connections/strom_pi.yaml
   DYNON_CONFIG: connections/dynon.yaml
   DEMO_CONFIG: connections/demo.yaml
@@ -62,6 +63,7 @@ enabled:
   IFLY: false
   MEGASQUIRT: false
   MGL: false
+  GPSD: false
   STROM_PI: false
   DYNON: false
   DEMO: true
