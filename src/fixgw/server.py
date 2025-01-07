@@ -377,6 +377,7 @@ def main():
     if args.daemonize:
         try:
             import daemon
+
             # import lockfile
         except ModuleNotFoundError:
             log.error("Unable to load daemon module.")

@@ -20,7 +20,10 @@ class Ui_MainWindow(object):
         self.tabWidget = QtWidgets.QTabWidget(parent=self.centralwidget)
         self.tabWidget.setObjectName("tabWidget")
         self.tabStatus = QtWidgets.QWidget()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Preferred,
+            QtWidgets.QSizePolicy.Policy.Preferred,
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tabStatus.sizePolicy().hasHeightForWidth())
@@ -59,7 +62,14 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "FIX-Gateway Client"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabStatus), _translate("MainWindow", "Status"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabData), _translate("MainWindow", "Data"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabSimulate), _translate("MainWindow", "Simulate"))
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tabStatus), _translate("MainWindow", "Status")
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tabData), _translate("MainWindow", "Data")
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tabSimulate),
+            _translate("MainWindow", "Simulate"),
+        )
         self.menu_File.setTitle(_translate("MainWindow", "&File"))
