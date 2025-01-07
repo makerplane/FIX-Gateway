@@ -1,7 +1,12 @@
-|Website snapcraft.io|
+|Website snapcraft.io| |Coverage Badge|
 
 .. |Website snapcraft.io| image:: https://snapcraft.io/fixgateway/badge.svg
    :target: https://snapcraft.io/fixgateway
+
+
+.. |Coverage Badge| image:: https://raw.githubusercontent.com/makerplane/FIX-Gateway/python-coverage-comment-action-data/badge.svg
+   :target: https://htmlpreview.github.io/?https://github.com/makerplane/FIX-Gateway/blob/python-coverage-comment-action-data/htmlcov/index.html
+
 
 ============
 FIX Gateway
