@@ -39,7 +39,7 @@ entries:
 
 minimal_list = []
 for x in range(8):
-    minimal_list.append("ANLG{}".format(x+1))
+    minimal_list.append("ANLG{}".format(x + 1))
 
 variable_config = """
 variables:
@@ -71,9 +71,9 @@ entries:
 variable_list = []
 for e in range(4):
     for c in range(6):
-        variable_list.append("EGT{}{}".format(e+1,c+1))
+        variable_list.append("EGT{}{}".format(e + 1, c + 1))
 for t in range(20):
-    variable_list.append("FUELQ{}".format(t+1))
+    variable_list.append("FUELQ{}".format(t + 1))
 variable_list.sort()
 
 general_config = """
@@ -752,6 +752,7 @@ entries:
   type: str
 """
 
+
 class TestDatabase(unittest.TestCase):
     def setUp(self):
         pass
@@ -760,25 +761,23 @@ class TestDatabase(unittest.TestCase):
         """Test minimal database build"""
         sf = io.StringIO(minimal_config)
         database.init(sf)
-        l = database.listkeys()
-        l.sort()
-        self.assertEqual(l, minimal_list)
-
+        keylist = database.listkeys()
+        keylist.sort()
+        self.assertEqual(keylist, minimal_list)
 
     def test_Variable_Expansion(self):
         """Test database variable expansion"""
         sf = io.StringIO(variable_config)
         database.init(sf)
-        l = database.listkeys()
-        l.sort()
-        self.assertEqual(l, variable_list)
+        keylist = database.listkeys()
+        keylist.sort()
+        self.assertEqual(keylist, variable_list)
         for e in range(4):
             for c in range(6):
-                key = "EGT{}{}".format(e+1,c+1)
+                key = "EGT{}{}".format(e + 1, c + 1)
                 item = database.get_raw_item(key)
-                s = "Exhaust Gas Temp Engine {}, Cylinder {}".format(e+1,c+1)
+                s = "Exhaust Gas Temp Engine {}, Cylinder {}".format(e + 1, c + 1)
                 self.assertEqual(item.description, s)
-
 
     def test_aux_data_creation(self):
         """Test database auxillary data creation"""
@@ -787,66 +786,69 @@ class TestDatabase(unittest.TestCase):
         tests = ["Min", "Max", "0g", "Warn", "Stall"]
         tests.sort()
         i = database.get_raw_item("AOA")
-        l = i.get_aux_list()
-        l.sort()
-        self.assertEqual(l, tests)
-
+        keylist = i.get_aux_list()
+        keylist.sort()
+        self.assertEqual(keylist, tests)
 
     def test_aux_data_read_write(self):
         """Test database auxillary data reading and writing"""
         sf = io.StringIO(general_config)
         database.init(sf)
-        tests = [("Min",  -160.0),
-                 ("Max",  -130.0),
-                 ("0g",    10.0),
-                 ("Warn",  23.4),
-                 ("Stall", 45.6)]
+        tests = [
+            ("Min", -160.0),
+            ("Max", -130.0),
+            ("0g", 10.0),
+            ("Warn", 23.4),
+            ("Stall", 45.6),
+        ]
         for test in tests:
-             x = database.write("AOA." + test[0], test[1])
-             x = database.read("AOA." + test[0])
-             self.assertEqual(x, test[1])
-
+            x = database.write("AOA." + test[0], test[1])
+            x = database.read("AOA." + test[0])
+            self.assertEqual(x, test[1])
 
     def test_database_bounds(self):
         """Test database bounds checking"""
         sf = io.StringIO(general_config)
         database.init(sf)
-        tests = [(0.0,     0.0),
-                 (-180.0, -180.0),
-                 (-180.1, -180.0),
-                 (0.0,     0,0),
-                 (180.0,   180.0),
-                 (180.1,   180.0)]
+        tests = [
+            (0.0, 0.0),
+            (-180.0, -180.0),
+            (-180.1, -180.0),
+            (0.0, 0, 0),
+            (180.0, 180.0),
+            (180.1, 180.0),
+        ]
 
         for test in tests:
             database.write("ROLL", test[0])
             x = database.read("ROLL")
             self.assertEqual(x[0], test[1])
 
-
     def test_database_aux_data_bounds(self):
         """Test database aux data bounds checking"""
         sf = io.StringIO(general_config)
         database.init(sf)
-        tests = [(0.0,     0.0),
-                 (-180.0, -180.0),
-                 (-180.1, -180.0),
-                 (0.0,     0,0),
-                 (180.0,   180.0),
-                 (180.1,   180.0)]
+        tests = [
+            (0.0, 0.0),
+            (-180.0, -180.0),
+            (-180.1, -180.0),
+            (0.0, 0, 0),
+            (180.0, 180.0),
+            (180.1, 180.0),
+        ]
 
         for test in tests:
             database.write("AOA.Warn", test[0])
             x = database.read("AOA.Warn")
             self.assertEqual(x, test[1])
 
-
     def test_database_callbacks(self):
         """Test database callback routines"""
         sf = io.StringIO(general_config)
         database.init(sf)
         rval = None
-        def test_cb(key, val, udata): # Use a closure for our callback
+
+        def test_cb(key, val, udata):  # Use a closure for our callback
             nonlocal rval
             rval = (key, val)
 
@@ -863,9 +865,8 @@ class TestDatabase(unittest.TestCase):
         i.bad = True
         self.assertEqual(rval, ("PITCH", (10.2, True, False, True, True, False)))
         time.sleep(0.250)
-        database.update() # force the update
+        database.update()  # force the update
         self.assertEqual(rval, ("PITCH", (10.2, True, True, True, True, False)))
-
 
     def test_timeout_lifetime(self):
         """Test item timeout lifetime"""
@@ -884,7 +885,6 @@ class TestDatabase(unittest.TestCase):
         x = database.read("PITCH")
         self.assertEqual(x, (-11.4, False, False, False, False, False))
 
-
     def test_description_units(self):
         """Test description and units"""
         sf = io.StringIO(general_config)
@@ -893,15 +893,13 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(i.description, "Roll Angle")
         self.assertEqual(i.units, "deg")
 
-
     def test_missing_description_units(self):
         """Test missing description and units"""
         sf = io.StringIO(general_config)
         database.init(sf)
         i = database.get_raw_item("DUMMY")
-        self.assertEqual(i.description, '')
-        self.assertEqual(i.units, '')
-
+        self.assertEqual(i.description, "")
+        self.assertEqual(i.units, "")
 
     def test_quality_bits(self):
         """Test quality bits"""
@@ -930,7 +928,6 @@ class TestDatabase(unittest.TestCase):
         x = database.read("OILP1")
         self.assertEqual(x, (15.4, False, False, False, False, False))
 
-
     def test_string_datatype(self):
         """test writing a string to an item"""
         sf = io.StringIO(general_config)
@@ -938,7 +935,6 @@ class TestDatabase(unittest.TestCase):
         database.write("DUMMY", "test string")
         x = database.read("DUMMY")
         self.assertEqual(x[0], "test string")
-
 
     def test_wrong_datatype(self):
         """test using wrong datatype for item"""
@@ -950,7 +946,6 @@ class TestDatabase(unittest.TestCase):
         database.write("PITCH", "23.4")
         x = database.read("PITCH")
         self.assertEqual(x[0], 23.4)
-
 
     def test_bool_write(self):
         """test using wrong datatype for item"""
@@ -992,7 +987,7 @@ class TestDatabase(unittest.TestCase):
 
     def test_similar_aux_items(self):
         """it would be easy for a single aux array to be pointed to
-           by different database items."""
+        by different database items."""
         sf = io.StringIO(variable_config)
         database.init(sf)
         database.write("EGT11.Max", 700)
@@ -1001,7 +996,8 @@ class TestDatabase(unittest.TestCase):
         y = database.read("EGT12.Max")
         self.assertNotEqual(y, x)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
 
 

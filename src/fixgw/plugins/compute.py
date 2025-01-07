@@ -21,7 +21,6 @@
 #  minimums or maximums and the like.  Specific calculations for things like
 #  True Airspeed could be done also.
 
-from collections import OrderedDict
 import fixgw.plugin as plugin
 from fixgw.database import read
 import fixgw.quorum as quorum
@@ -396,6 +395,7 @@ def spanFunction(inputs, output, require_leader):
         flag_fail = False
         flag_secfail = False
         vmin = None
+        vmax = None
         for each in vals:
             if vals[each] is None:
                 return  # We don't have one of each yet

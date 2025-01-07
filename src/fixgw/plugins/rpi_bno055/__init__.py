@@ -1,4 +1,3 @@
-# coding: utf8
 #!/usr/bin/env python
 
 #  Copyright (c) 2017 Jean-Manuel Gagnon
@@ -22,8 +21,6 @@
 #  plugin where the main Plugin class creates a thread and starts the thread
 #  when the plugin's run() function is called.
 
-import logging
-import sys
 import threading
 import time
 from Adafruit_BNO055 import BNO055
@@ -82,7 +79,7 @@ class MainThread(threading.Thread):
             self.parent.db_write("HEAD", heading)
             self.parent.db_write("ROLL", roll)
             self.parent.db_write("PITCH", pitch)
-            time.sleep(sleep_time)
+            time.sleep(self.sleep_time)
             x, y, z = self.bno.read_accelerometer()
             x = -x / 60
             y = -y / 60

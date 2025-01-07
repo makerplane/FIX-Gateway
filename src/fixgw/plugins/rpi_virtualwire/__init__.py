@@ -1,4 +1,3 @@
-# coding: utf8
 #!/usr/bin/env python
 
 #  Copyright (c) 2017 Jean-Manuel Gagnon
@@ -22,8 +21,6 @@
 #  plugin where the main Plugin class creates a thread and starts the thread
 #  when the plugin's run() function is called.
 
-import logging
-import sys
 import threading
 import time
 import pigpio

@@ -29,7 +29,6 @@ import argparse
 import signal
 import os
 import sys
-import io
 import traceback
 import datetime
 
@@ -378,7 +377,8 @@ def main():
     if args.daemonize:
         try:
             import daemon
-            import lockfile
+
+            # import lockfile
         except ModuleNotFoundError:
             log.error("Unable to load daemon module.")
             raise
@@ -389,8 +389,8 @@ def main():
             # pidfile=lockfile.FileLock('/var/run/fixgw.pid'),
         )
         context.signal_map = {
-            signal.SIGTERM: server.sig_int_handler,
-            signal.SIGINT: server.sig_int_handler,
+            signal.SIGTERM: sig_int_handler,
+            signal.SIGINT: sig_int_handler,
             signal.SIGHUP: "terminate",
         }
         with context:

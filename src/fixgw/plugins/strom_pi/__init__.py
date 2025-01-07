@@ -52,47 +52,47 @@ class MainThread(threading.Thread):
                 self._c.reset_input_buffer()
                 self._c.write(str.encode("\rstatus-rpi\r"))
                 time.sleep(0.2)
-                sp3_time = self._c.readline()
-                sp3_date = self._c.readline()
-                sp3_weekday = self._c.readline()
-                sp3_modus = self._c.readline()
-                sp3_alarm_enable = self._c.readline()
-                sp3_alarm_mode = self._c.readline()
-                sp3_alarm_hour = self._c.readline()
-                sp3_alarm_min = self._c.readline()
-                sp3_alarm_day = self._c.readline()
-                sp3_alarm_month = self._c.readline()
-                sp3_alarm_weekday = self._c.readline()
-                sp3_alarmPoweroff = self._c.readline()
-                sp3_alarm_hour_off = self._c.readline()
-                sp3_alarm_min_off = self._c.readline()
-                sp3_shutdown_enable = self._c.readline()
-                sp3_shutdown_time = self._c.readline()
-                sp3_warning_enable = self._c.readline()
-                sp3_serialLessMode = self._c.readline()
-                sp3_intervalAlarm = self._c.readline()
-                sp3_intervalAlarmOnTime = self._c.readline()
-                sp3_intervalAlarmOffTime = self._c.readline()
-                sp3_batLevel_shutdown = self._c.readline()
+                sp3_time = self._c.readline()  # noqa: F841
+                sp3_date = self._c.readline()  # noqa: F841
+                sp3_weekday = self._c.readline()  # noqa: F841
+                sp3_modus = self._c.readline()  # noqa: F841
+                sp3_alarm_enable = self._c.readline()  # noqa: F841
+                sp3_alarm_mode = self._c.readline()  # noqa: F841
+                sp3_alarm_hour = self._c.readline()  # noqa: F841
+                sp3_alarm_min = self._c.readline()  # noqa: F841
+                sp3_alarm_day = self._c.readline()  # noqa: F841
+                sp3_alarm_month = self._c.readline()  # noqa: F841
+                sp3_alarm_weekday = self._c.readline()  # noqa: F841
+                sp3_alarmPoweroff = self._c.readline()  # noqa: F841
+                sp3_alarm_hour_off = self._c.readline()  # noqa: F841
+                sp3_alarm_min_off = self._c.readline()  # noqa: F841
+                sp3_shutdown_enable = self._c.readline()  # noqa: F841
+                sp3_shutdown_time = self._c.readline()  # noqa: F841
+                sp3_warning_enable = self._c.readline()  # noqa: F841
+                sp3_serialLessMode = self._c.readline()  # noqa: F841
+                sp3_intervalAlarm = self._c.readline()  # noqa: F841
+                sp3_intervalAlarmOnTime = self._c.readline()  # noqa: F841
+                sp3_intervalAlarmOffTime = self._c.readline()  # noqa: F841
+                sp3_batLevel_shutdown = self._c.readline()  # noqa: F841
                 sp3_batLevel = self._c.readline()
                 sp3_charging = self._c.readline()
-                sp3_powerOnButton_enable = self._c.readline()
-                sp3_powerOnButton_time = self._c.readline()
-                sp3_powersave_enable = self._c.readline()
-                sp3_poweroffMode = self._c.readline()
-                sp3_poweroff_time_enable = self._c.readline()
-                sp3_poweroff_time = self._c.readline()
-                sp3_wakeupweekend_enable = self._c.readline()
-                sp3_ADC_Wide = float(self._c.readline())
-                sp3_ADC_BAT = float(self._c.readline())
-                sp3_ADC_USB = float(self._c.readline())
-                sp3_ADC_OUTPUT = float(self._c.readline())
+                sp3_powerOnButton_enable = self._c.readline()  # noqa: F841
+                sp3_powerOnButton_time = self._c.readline()  # noqa: F841
+                sp3_powersave_enable = self._c.readline()  # noqa: F841
+                sp3_poweroffMode = self._c.readline()  # noqa: F841
+                sp3_poweroff_time_enable = self._c.readline()  # noqa: F841
+                sp3_poweroff_time = self._c.readline()  # noqa: F841
+                sp3_wakeupweekend_enable = self._c.readline()  # noqa: F841
+                sp3_ADC_Wide = float(self._c.readline())  # noqa: F841
+                sp3_ADC_BAT = float(self._c.readline())  # noqa: F841
+                sp3_ADC_USB = float(self._c.readline())  # noqa: F841
+                sp3_ADC_OUTPUT = float(self._c.readline())  # noqa: F841
                 sp3_output_status = self._c.readline()
-                sp3_powerfailure_counter = self._c.readline()
-                sp3_firmwareVersion = self._c.readline()
+                sp3_powerfailure_counter = self._c.readline()  # noqa: F841
+                sp3_firmwareVersion = self._c.readline()  # noqa: F841
             except serial.SerialException:
                 self.parent.log.error("Serial port error")
-            except ValueError as e:
+            except ValueError:
                 self.parent.log.error("Bad data")
                 return
 

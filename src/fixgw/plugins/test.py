@@ -17,9 +17,7 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import threading
-import time
 import random
-import string
 import fixgw.plugin as plugin
 
 random.seed(123456)
@@ -32,7 +30,7 @@ class TestThread(threading.Thread):
         self.getout = False
 
     def run(self):
-        starttime = time.time()
+        # starttime = time.time()
         self.parent.log.debug("Starting Thread")
         while True:
             if self.getout:

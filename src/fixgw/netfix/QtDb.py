@@ -18,14 +18,9 @@
 # friendly for Qt applications.  Mostly it's to make signals and slots act
 # as they would be expected to act.
 
-from datetime import datetime
 import logging
-import threading
-import time
 
-from PyQt6.QtGui import *
-from PyQt6.QtCore import *
-from PyQt6.QtWidgets import *
+from PyQt6.QtCore import QObject, pyqtSignal
 
 import fixgw.netfix
 import fixgw.netfix.db

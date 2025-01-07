@@ -19,7 +19,6 @@ import threading
 import time
 import yaml
 import copy
-import fixgw.quorum as quorum
 from fixgw import cfg
 import os
 

@@ -1,4 +1,3 @@
-# coding: utf8
 #!/usr/bin/env python
 
 # vw.py
@@ -12,7 +11,6 @@ with the Virtual Wire library used on Arduinos.
 It has been tested between a Pi, TI Launchpad, and Arduino Pro Mini.
 """
 
-import time
 import pigpio
 
 MAX_MESSAGE_BYTES = 77
@@ -271,7 +269,7 @@ class rx:
 
                         if crc == 0xF0B8:  # Valid CRC.
                             self.messages.append(
-                                self.message[1 : self.message_length - 2]
+                                self.message[1 : self.message_length - 2]  # noqa: E203
                             )
                         else:
                             self.bad_CRC += 1

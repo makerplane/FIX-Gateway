@@ -1,12 +1,6 @@
 # Get data from RDAC
 import threading
-import struct
-import ctypes
 from . import tables
-import time
-from collections import defaultdict
-import numpy as np
-import can
 
 
 class Get(threading.Thread):
@@ -48,7 +42,7 @@ class Get(threading.Thread):
                             signed = tables.advanced[mkey]["signed"]
                             self.log.debug(f"{msg.data[offset:offset+size]}")
                             value = int.from_bytes(
-                                msg.data[offset : offset + size],
+                                msg.data[offset : offset + size],  # noqa: E203
                                 byteorder="big",
                                 signed=signed,
                             )

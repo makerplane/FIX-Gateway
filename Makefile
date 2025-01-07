@@ -8,6 +8,7 @@ SHELL := /bin/bash
 venv.marker:
 	python3 -m venv venv
 	source venv/bin/activate ; pip install --upgrade pip
+	source venv/bin/activate ; pip install flake8
 	source venv/bin/activate ; pip install black
 	source venv/bin/activate ; pip install pytest
 	source venv/bin/activate ; pip install pytest-qt
@@ -37,6 +38,8 @@ wheel: init-build
 
 
 test: init
+	source venv/bin/activate ; flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
+	source venv/bin/activate ; flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 	source venv/bin/activate ; pytest
 
 .PHONY: test

@@ -20,7 +20,6 @@
 #  Reads data from GRT EIS serial output stream
 
 import threading
-import time
 from collections import OrderedDict
 import fixgw.plugin as plugin
 import serial
@@ -111,36 +110,36 @@ class MainThread(threading.Thread):
                 egt4 = int((int.from_bytes(s[20:22], "big") - 32) * 5.0 / 9)
                 egt5 = int((int.from_bytes(s[22:24], "big") - 32) * 5.0 / 9)
                 egt6 = int((int.from_bytes(s[24:26], "big") - 32) * 5.0 / 9)
-                aux5 = int.from_bytes(s[26:28], "big")
-                aux6 = int.from_bytes(s[28:30], "big")
-                airspeed = int.from_bytes(s[30:32], "big")
+                aux5 = int.from_bytes(s[26:28], "big")  # noqa: F841
+                aux6 = int.from_bytes(s[28:30], "big")  # noqa: F841
+                airspeed = int.from_bytes(s[30:32], "big")  # noqa: F841
                 altitude = int.from_bytes(s[32:34], "big")
                 volts = int.from_bytes(s[34:36], "big") / 10.0
-                fuel_flow = int.from_bytes(s[36:38], "big")
-                internal_temp = (s[38] - 32) * 5.0 / 9
-                carb_temp = s[39]
-                vsi = s[40]
+                fuel_flow = int.from_bytes(s[36:38], "big")  # noqa: F841
+                internal_temp = (s[38] - 32) * 5.0 / 9  # noqa: F841
+                carb_temp = s[39]  # noqa: F841
+                vsi = s[40]  # noqa: F841
                 oat = s[41]
                 if oat > 127:
                     oat -= 256
                 oat = int((oat - 32) * 5.0 / 9)
                 oilt = int((int.from_bytes(s[42:44], "big") - 32) * 5.0 / 9)
                 oilp = s[44]
-                aux1 = int.from_bytes(s[45:47], "big")
-                aux2 = int.from_bytes(s[47:49], "big")
-                aux3 = int.from_bytes(s[49:51], "big")
-                aux4 = int.from_bytes(s[51:53], "big")
+                aux1 = int.from_bytes(s[45:47], "big")  # noqa: F841
+                aux2 = int.from_bytes(s[47:49], "big")  # noqa: F841
+                aux3 = int.from_bytes(s[49:51], "big")  # noqa: F841
+                aux4 = int.from_bytes(s[51:53], "big")  # noqa: F841
                 coolant = int((int.from_bytes(s[53:55], "big") - 32) * 5.0 / 9)
                 engine_time = int.from_bytes(s[55:57], "big") / 10.0
                 fuel_qty = int.from_bytes(s[57:59], "big")
-                hours = s[59]
-                minutes = s[60]
-                seconds = s[61]
-                endurance = int.from_bytes(s[62:64], "big")
+                hours = s[59]  # noqa: F841
+                minutes = s[60]  # noqa: F841
+                seconds = s[61]  # noqa: F841
+                endurance = int.from_bytes(s[62:64], "big")  # noqa: F841
                 baro = int.from_bytes(s[64:66], "big")
-                tach2 = int.from_bytes(s[66:68], "big")
+                tach2 = int.from_bytes(s[66:68], "big")  # noqa: F841
                 # 68 spare
-                checksum = s[69]
+                checksum = s[69]  # noqa: F841
 
                 self.parent.db_write("TACH1", tach1)
                 self.parent.db_write("CHT11", cht1)

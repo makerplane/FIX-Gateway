@@ -1,4 +1,3 @@
-# coding: utf8
 #!/usr/bin/env python
 
 #  Copyright (c) 2017 Jean-Manuel Gagnon
@@ -107,7 +106,7 @@ class MainThread(threading.Thread):
             if ("hardw" in parent.config) and parent.config["hardw"]
             else "False"
         )
-        if HARDW == True:
+        if self.HARDW == True:
             self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
         else:
             self.mcp = Adafruit_MCP3008.MCP3008(

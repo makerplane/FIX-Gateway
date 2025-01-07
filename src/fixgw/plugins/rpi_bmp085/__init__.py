@@ -1,4 +1,3 @@
-# coding: utf8
 #!/usr/bin/env python
 
 #  Copyright (c) 2017 Jean-Manuel Gagnon
@@ -22,8 +21,6 @@
 #  plugin where the main Plugin class creates a thread and starts the thread
 #  when the plugin's run() function is called.
 
-import logging
-import sys
 import fixgw.plugin as plugin
 import threading
 import time
@@ -60,7 +57,7 @@ class MainThread(threading.Thread):
         while True:
             if self.getout:
                 break
-            time.sleep(sleep_time)
+            time.sleep(self.sleep_time)
             self.count += 1
             stdbaro = 29.92
             currentbaro = self.parent.db_read("BARO")
@@ -70,10 +67,10 @@ class MainThread(threading.Thread):
             )
             altitude = ((float(currentbaro[0]) - stdbaro) * 1000) + self.alt
             self.parent.db_write("ALT", altitude)
-            time.sleep(sleep_time)
+            time.sleep(self.sleep_time)
             cat = float(self.sensor.read_temperature())
             self.parent.db_write(self.tkey, cat)
-            time.sleep(sleep_time)
+            time.sleep(self.sleep_time)
             airpress = int(self.sensor.read_pressure())
             self.parent.db_write(self.pkey, airpress)
         self.running = False

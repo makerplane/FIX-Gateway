@@ -15,7 +15,7 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 #  USA.import plugin
 
-from pymavlink import mavutil, mavwp
+from pymavlink import mavutil
 from pymavlink.mavextra import rate_of_turn as rot
 
 from os import stat
@@ -190,7 +190,7 @@ class Mav:
                 # The AI in pyefis requires TAS
                 # I think we could calculate it but for now we will just use IAS in its place
                 spd = self.avg("TAS", msg.airspeed * 1.9438445, 2)
-                tas = self.avg("RTAS", msg.airspeed, 2)
+                tas = self.avg("RTAS", msg.airspeed, 2)  # noqa: F841
                 if self._min_airspeed < spd:
                     self.parent.db_write("TAS", spd)  # m/s to knots
                 else:
@@ -498,7 +498,7 @@ class Mav:
     def checkMode(self):
         self.checkWaypoint()
         if not self.parent.quorum.leader:
-            logger.debug(f"Nothing else to check becaure leader = true")
+            logger.debug("Nothing else to check because leader = true")
             return
 
         new_mode = "INIT"

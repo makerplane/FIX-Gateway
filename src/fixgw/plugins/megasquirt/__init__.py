@@ -17,7 +17,6 @@
 # This is the CAN-FIX plugin. CAN-FIX is a CANBus based protocol for
 # aircraft data.
 
-import threading
 import fixgw.plugin as plugin
 from collections import OrderedDict
 

@@ -4,7 +4,6 @@ import struct
 import ctypes
 from . import tables
 import time
-from collections import defaultdict
 import numpy as np
 import can
 
@@ -85,13 +84,13 @@ class Get(threading.Thread):
                                 data_value = 0
                                 if data_type == "word":
                                     data_value = int.from_bytes(
-                                        msg.data[data_bytes[0] : data_bytes[1] + 1],
+                                        msg.data[data_bytes[0] : data_bytes[1] + 1],  # noqa: E203
                                         byteorder="little",
                                         signed=False,
                                     )
                                 elif data_type == "sint":
                                     data_value = int.from_bytes(
-                                        msg.data[data_bytes[0] : data_bytes[1] + 1],
+                                        msg.data[data_bytes[0] : data_bytes[1] + 1],  # noqa: E203
                                         byteorder="little",
                                         signed=True,
                                     )
