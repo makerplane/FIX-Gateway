@@ -240,10 +240,18 @@ class Client:
     def getList(self):
         with self.lock:
             self.cthread.send("@l{}\n".format(id).encode())
-            res = self.cthread.getResponse('l')
-            # TODO: Deal with partial list responses
-        a = res[1].split(';')
-        return a[2].split(',')
+            total = []
+            # Need to loop over multiple responses
+            done = False
+            while not done:
+                try:
+                    res = self.cthread.getResponse('l')
+                    a = res[1].split(';')
+                    #print(f"###############\n{a[2].split(',')}")
+                    total = total + a[2].split(',')
+                except:
+                    done = True
+        return total
 
     def getReport(self, id):
         with self.lock:
