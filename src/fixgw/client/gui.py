@@ -20,9 +20,9 @@
 
 import sys
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+from PyQt6.QtGui import *
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
 
 from . import connection
 from .ui.main_ui import Ui_MainWindow
@@ -50,5 +50,5 @@ def main(client):
     app.setApplicationName("FIX Gateway Client")
 
     window = MainWindow()
-    x = app.exec_()
+    x = app.exec()
     return x

@@ -15,7 +15,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-from fixgw import version
+from fixgw import __version__
 import yaml
 try:
     import queue
@@ -225,7 +225,7 @@ def main_setup():
         log.error("Database failure, Exiting:" + str(e))
         raise
 
-    database.write('GATEWAY_VERSION', version.VERSION)
+    database.write('GATEWAY_VERSION', __version__)
     if "initialization files" in config and config["initialization files"]:
         ifiles = config["initialization files"]
         for fn in ifiles:

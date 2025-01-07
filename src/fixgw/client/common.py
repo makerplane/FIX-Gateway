@@ -18,9 +18,9 @@
 #  This is the gui client.  It gives us a graphical interface into the
 #  inner workings of the gateway.
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+from PyQt6.QtGui import *
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
 
 
 # This function creates and returns a proper control to use to adjust

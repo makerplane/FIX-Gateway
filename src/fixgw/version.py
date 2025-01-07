@@ -1,2 +1,4 @@
-VERSION="2.1.0"
-print(VERSION)
+import fixgw
+
+print(fixgw.__version__)
+
