@@ -27,28 +27,70 @@ import time
 from RPi import GPIO
 from collections import OrderedDict
 import fixgw.plugin as plugin
+
+
 # TODO create a menu driver between setting, like Garmin gns or gnc serie
 class MainThread(threading.Thread):
     def __init__(self, parent):
         """The calling object should pass itself as the parent.
-           This gives the thread all the plugin goodies that the
-           parent has."""
+        This gives the thread all the plugin goodies that the
+        parent has."""
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
-        self.key = parent.config['rkey'] if ('rkey' in parent.config) and parent.config['rkey'] else "ENC1"
-        self.btn = parent.config['btn'] if ('btn' in parent.config) and parent.config['btn'] else "False"
-        self.btnpin = int(parent.config['btnpin']) if ('btnpin' in parent.config) and parent.config['btnpin'] else 4
-        self.btnkey = parent.config['btnkey'] if ('btnkey' in parent.config) and parent.config['btnkey'] else "BTN1"
-        self.btnstcounter = float(parent.config['btnstcounter']) if ('btnstcounter' in parent.config) and parent.config['btnstcounter'] else 0
-        self.btnincr = float(parent.config['btnincr']) if ('btnincr' in parent.config) and parent.config['btnincr'] else 1
-        self.counter = float(parent.config['stcount']) if ('stcount' in parent.config) and parent.config['stcount'] else 0
-        self.incr = float(parent.config['incr']) if ('incr' in parent.config) and parent.config['incr'] else 1
-        self.clk = int(parent.config['pina']) if ('pina' in parent.config) and parent.config['pina'] else 19
-        self.dt = int(parent.config['pinb']) if ('pinb' in parent.config) and parent.config['pinb'] else 26
+        self.key = (
+            parent.config["rkey"]
+            if ("rkey" in parent.config) and parent.config["rkey"]
+            else "ENC1"
+        )
+        self.btn = (
+            parent.config["btn"]
+            if ("btn" in parent.config) and parent.config["btn"]
+            else "False"
+        )
+        self.btnpin = (
+            int(parent.config["btnpin"])
+            if ("btnpin" in parent.config) and parent.config["btnpin"]
+            else 4
+        )
+        self.btnkey = (
+            parent.config["btnkey"]
+            if ("btnkey" in parent.config) and parent.config["btnkey"]
+            else "BTN1"
+        )
+        self.btnstcounter = (
+            float(parent.config["btnstcounter"])
+            if ("btnstcounter" in parent.config) and parent.config["btnstcounter"]
+            else 0
+        )
+        self.btnincr = (
+            float(parent.config["btnincr"])
+            if ("btnincr" in parent.config) and parent.config["btnincr"]
+            else 1
+        )
+        self.counter = (
+            float(parent.config["stcount"])
+            if ("stcount" in parent.config) and parent.config["stcount"]
+            else 0
+        )
+        self.incr = (
+            float(parent.config["incr"])
+            if ("incr" in parent.config) and parent.config["incr"]
+            else 1
+        )
+        self.clk = (
+            int(parent.config["pina"])
+            if ("pina" in parent.config) and parent.config["pina"]
+            else 19
+        )
+        self.dt = (
+            int(parent.config["pinb"])
+            if ("pinb" in parent.config) and parent.config["pinb"]
+            else 26
+        )
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.btnpin,GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(self.btnpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(self.clk, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.dt, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         self.count = 0
@@ -85,18 +127,19 @@ class MainThread(threading.Thread):
 
 
 class Plugin(plugin.PluginBase):
-    """ All plugins for FIX Gateway should implement at least the class
+    """All plugins for FIX Gateway should implement at least the class
     named 'Plugin.'  They should be derived from the base class in
     the plugin module.
 
     The run and stop methods of the plugin should be overridden but the
     base module functions should be called first."""
+
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
         self.thread = MainThread(self)
 
     def run(self):
-        """ The run method should return immediately.  The main routine will
+        """The run method should return immediately.  The main routine will
         block when calling this function.  If the plugin is simply a collection
         of callback functions, those can be setup here and no thread will be
         necessary"""
@@ -104,7 +147,7 @@ class Plugin(plugin.PluginBase):
         self.thread.start()
 
     def stop(self):
-        """ The stop method should not return until the plugin has completely
+        """The stop method should not return until the plugin has completely
         stopped.  This generally means a .join() on a thread.  It should
         also undo any callbacks that were set up in the run() method"""
         self.thread.stop()
@@ -115,6 +158,6 @@ class Plugin(plugin.PluginBase):
         super(Plugin, self).stop()
 
     def get_status(self):
-        """ The get_status method should return a dict or OrderedDict that
+        """The get_status method should return a dict or OrderedDict that
         is basically a key/value pair of statistics"""
-        return OrderedDict({"Count":self.thread.count})
+        return OrderedDict({"Count": self.thread.count})

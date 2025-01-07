@@ -27,6 +27,7 @@ from . import connection
 
 # TODO get the dictionary and convert to a tree view instead of just text
 
+
 class StatusView(QScrollArea):
     def __init__(self, parent=None):
         super(StatusView, self).__init__(parent)
@@ -56,7 +57,7 @@ class StatusView(QScrollArea):
                 print("statusModel.update()", e)
                 return
             d = json.loads(res, object_pairs_hook=OrderedDict)
-            s = status.dict2string(d, spaces=8) + '\n'
+            s = status.dict2string(d, spaces=8) + "\n"
             # for key in connection.db.get_item_list():
             #     s += "{} = {}\n".format(key, connection.db.get_value(key))
             self.textBox.setText(s)

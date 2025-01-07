@@ -36,13 +36,13 @@ class QtDB_Item(QObject):
     valueChanged = pyqtSignal(object)
     valueWrite = pyqtSignal(object)
     annunciateChanged = pyqtSignal(bool)
-    oldChanged =  pyqtSignal(bool)
-    badChanged =  pyqtSignal(bool)
-    failChanged =  pyqtSignal(bool)
-    secFailChanged =  pyqtSignal(bool)
-    auxChanged =  pyqtSignal(str, object)
-    reportReceived =  pyqtSignal(bool)
-    destroyed =  pyqtSignal()
+    oldChanged = pyqtSignal(bool)
+    badChanged = pyqtSignal(bool)
+    failChanged = pyqtSignal(bool)
+    secFailChanged = pyqtSignal(bool)
+    auxChanged = pyqtSignal(str, object)
+    reportReceived = pyqtSignal(bool)
+    destroyed = pyqtSignal()
 
     def __init__(self, key, item):
         super(QtDB_Item, self).__init__()
@@ -62,7 +62,6 @@ class QtDB_Item(QObject):
         item.auxChanged = self.auxChangedFunc
         item.reportReceived = self.reportReceivedFunc
         item.destroyed = self.destroyedFunc
-
 
     def valueChangedFunc(self, value):
         self.valueChanged.emit(value)
@@ -110,10 +109,12 @@ class QtDB_Item(QObject):
     # return the age of the item in milliseconds
     def getAge(self):
         return self._item.age
+
     age = property(getAge)
 
     def getDescription(self):
         return self._item.description
+
     description = property(getDescription)
 
     def getValue(self):
@@ -121,30 +122,37 @@ class QtDB_Item(QObject):
 
     def setValue(self, x):
         self._item.value = x
+
     value = property(getValue, setValue)
 
     def getDtype(self):
         return self._item.dtype
+
     dtype = property(getDtype)
 
     def getTypestring(self):
         return self._item.typestring
+
     typestring = property(getTypestring)
 
     def getUnits(self):
         return self._item.units
+
     units = property(getUnits)
 
     def getMin(self):
         return self._item.min
+
     min = property(getMin)
 
     def getMax(self):
         return self._item.max
+
     max = property(getMax)
 
     def getTol(self):
         return self._item.tol
+
     tol = property(getTol)
 
     def getAnnunciate(self):
@@ -152,6 +160,7 @@ class QtDB_Item(QObject):
 
     def setAnnunciate(self, x):
         self._item.annunciate = x
+
     annunciate = property(getAnnunciate, setAnnunciate)
 
     def getOld(self):
@@ -159,6 +168,7 @@ class QtDB_Item(QObject):
 
     def setOld(self, x):
         self._item.old = x
+
     old = property(getOld, setOld)
 
     def getBad(self):
@@ -166,6 +176,7 @@ class QtDB_Item(QObject):
 
     def setBad(self, x):
         self._item.bad = x
+
     bad = property(getBad, setBad)
 
     def getFail(self):
@@ -173,6 +184,7 @@ class QtDB_Item(QObject):
 
     def setFail(self, x):
         self._item.fail = x
+
     fail = property(getFail, setFail)
 
     def getSecFail(self):
@@ -180,6 +192,7 @@ class QtDB_Item(QObject):
 
     def setSecFail(self, x):
         self._item.secFail = x
+
     secFail = property(getSecFail, setSecFail)
 
     def get_aux_list(self):
@@ -190,7 +203,6 @@ class QtDB_Item(QObject):
 
     def get_aux_value(self, name):
         return self._item.get_aux_value(name)
-
 
 
 class Database(object):

@@ -22,6 +22,7 @@ import fixgw.netfix.QtDb
 client = None
 db = None
 
+
 def initialize(c):
     global client
     global db

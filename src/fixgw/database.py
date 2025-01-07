@@ -25,6 +25,7 @@ import os
 
 __database = {}
 
+
 class UpdateThread(threading.Thread):
     def __init__(self, func, delay):
         super(UpdateThread, self).__init__()
@@ -38,8 +39,8 @@ class UpdateThread(threading.Thread):
 
 
 class db_item(object):
-    def __init__(self, key, dtype='float'):
-        types = {'float':float, 'int':int, 'bool':bool, 'str':str}
+    def __init__(self, key, dtype="float"):
+        types = {"float": float, "int": int, "bool": bool, "str": str}
         try:
             self.dtype = types[dtype]
             self.typestring = dtype
@@ -57,7 +58,7 @@ class db_item(object):
         self._secfail = False
         self._max = None
         self._min = None
-        self._tol = 100     # Time to live in milliseconds.  Any older and quality is bad
+        self._tol = 100  # Time to live in milliseconds.  Any older and quality is bad
         self.timestamp = time.time()
         self.aux = {}
         self.callbacks = []
@@ -79,8 +80,10 @@ class db_item(object):
             raise KeyError("Aux name {} not found for item {}".format(name, self.key))
         try:
             self.aux[name] = self.dtype(value)
-            if self.aux[name] < self._min: self.aux[name] = self._min
-            if self.aux[name] > self._max: self.aux[name] = self._max
+            if self.aux[name] < self._min:
+                self.aux[name] = self._min
+            if self.aux[name] > self._max:
+                self.aux[name] = self._max
         except ValueError:
             if value == "None":
                 self.aux[name] = None
@@ -103,7 +106,9 @@ class db_item(object):
             try:
                 func[1](self.key, self.value, func[2])
             except Exception as e:
-                log.error(f"Callback name: {func[0]}, udata: {func[1]} function: {func[2]} exception: {e}")
+                log.error(
+                    f"Callback name: {func[0]}, udata: {func[1]} function: {func[2]} exception: {e}"
+                )
 
     # return the age of the item in milliseconds
     @property
@@ -118,7 +123,14 @@ class db_item(object):
                     self._old = True
                 else:
                     self._old = False
-            return (self._value, self._annunciate, self._old, self._bad, self._fail, self._secfail)
+            return (
+                self._value,
+                self._annunciate,
+                self._old,
+                self._bad,
+                self._fail,
+                self._secfail,
+            )
 
     # We can set the value in the item with either a value of a tuple that
     # contains the property flags as well.  (value, annunc, bad, fail)
@@ -135,31 +147,37 @@ class db_item(object):
                     self._secfail = x[4]
                 x = x[0]
             if self.dtype == bool:
-                self._value = (x == True or (isinstance(x,str) and x.lower() in ["yes", "true", "1"])
-                                    or (isinstance(x,int) and x != 0))
+                self._value = (
+                    x == True
+                    or (isinstance(x, str) and x.lower() in ["yes", "true", "1"])
+                    or (isinstance(x, int) and x != 0)
+                )
             else:
                 try:
                     if self.dtype == str and x is None:
-                        self._value = ''
+                        self._value = ""
                     else:
                         self._value = self.dtype(x)
                 except ValueError:
-                    log.error("Bad value '" + str(x) + "' given for " + self.description)
+                    log.error(
+                        "Bad value '" + str(x) + "' given for " + self.description
+                    )
                     raise
                 if self.dtype != str:
                     # bounds check and cap
                     try:
-                        if self._value < self._min: self._value = self._min
+                        if self._value < self._min:
+                            self._value = self._min
                     except:  # Probably only fails if min has not been set
                         pass  # ignore at this point
                     try:
-                        if self._value > self._max: self._value = self._max
+                        if self._value > self._max:
+                            self._value = self._max
                     except:  # Probably only fails if max has not been set
                         pass  # ignore at this point
                     # set the timestamp to right now
             self.timestamp = time.time()
         self.send_callbacks()
-
 
     @property
     def min(self):
@@ -170,7 +188,9 @@ class db_item(object):
         try:
             self._min = self.dtype(x)
         except ValueError:
-            log.error("Bad minimum value '" + str(x) + "' given for " + self.description)
+            log.error(
+                "Bad minimum value '" + str(x) + "' given for " + self.description
+            )
 
     @property
     def max(self):
@@ -181,7 +201,9 @@ class db_item(object):
         try:
             self._max = self.dtype(x)
         except ValueError:
-            log.error("Bad maximum value '" + str(x) + "' given for " + self.description)
+            log.error(
+                "Bad maximum value '" + str(x) + "' given for " + self.description
+            )
 
     @property
     def tol(self):
@@ -189,7 +211,8 @@ class db_item(object):
 
     @tol.setter
     def tol(self, x):
-        if x == '': x = 0
+        if x == "":
+            x = 0
         try:
             self._tol = int(x)
         except ValueError:
@@ -266,8 +289,9 @@ class db_item(object):
 
 # These are support functions for loading the initial database
 def check_for_variables(entry):
-    for ch in entry['key']:
-        if ch.islower(): return ch
+    for ch in entry["key"]:
+        if ch.islower():
+            return ch
     return None
 
 
@@ -276,8 +300,8 @@ def expand_entry(entry, var, count):
     l = []
     for i in range(count):
         newentry = copy.deepcopy(entry)
-        newentry['key'] = newentry['key'].replace(var, str(i+1))
-        newentry['description'] = newentry['description'].replace('%' + var, str(i+1))
+        newentry["key"] = newentry["key"].replace(var, str(i + 1))
+        newentry["description"] = newentry["description"].replace("%" + var, str(i + 1))
         ch = check_for_variables(newentry)
         if ch:
             l.extend(expand_entry(newentry, ch, variables[ch]))
@@ -288,29 +312,29 @@ def expand_entry(entry, var, count):
 
 def add_item(entry):
 
-    log.debug("Adding - {}".format(entry.get('description', '')))
+    log.debug("Adding - {}".format(entry.get("description", "")))
     try:
-        newitem = db_item(entry['key'], entry['type'])
+        newitem = db_item(entry["key"], entry["type"])
     except:
-        log.error("Failure to add entry - " + entry['key'])
+        log.error("Failure to add entry - " + entry["key"])
         return None
 
-    x = entry.get('description', '')
-    newitem.description = x if x != None else ''
-    newitem.min = entry.get('min', None)
-    newitem.max = entry.get('max', None)
-    x = entry.get('units', '')
-    newitem.units = x if x != None else ''
-    newitem.tol = entry.get('tol', 0)
-    if entry['key'] == 'LEADER':
+    x = entry.get("description", "")
+    newitem.description = x if x != None else ""
+    newitem.min = entry.get("min", None)
+    newitem.max = entry.get("max", None)
+    x = entry.get("units", "")
+    newitem.units = x if x != None else ""
+    newitem.tol = entry.get("tol", 0)
+    if entry["key"] == "LEADER":
         # Always set the fixid LEADER to True on startup
         # The quorum plugin will ensure the correct value gets set
         # and clients who are reconnecting will get the proper value
         newitem.value = True
     else:
-        newitem.value = entry.get('initial', None)
-    newitem.init_aux(entry.get('aux', []))
-    __database[entry['key']] = newitem
+        newitem.value = entry.get("initial", None)
+    newitem.init_aux(entry.get("aux", []))
+    __database[entry["key"]] = newitem
     return newitem
 
 
@@ -321,19 +345,19 @@ def init(f):
     global variables
     __database = {}
     variables = {}
-    log = logging.getLogger('database')
+    log = logging.getLogger("database")
     log.info("Initializing Database")
 
     state = "var"
     # Can pass in config data or a config file
-    if isinstance(f,str) and os.path.exists(f):
+    if isinstance(f, str) and os.path.exists(f):
         db = cfg.from_yaml(f)
     else:
         db = yaml.safe_load(f)
-    if 'variables' in db:
-        for key, value in db['variables'].items():
+    if "variables" in db:
+        for key, value in db["variables"].items():
             variables[key] = int(value)
-    for entry in db['entries']:
+    for entry in db["entries"]:
         ch = check_for_variables(entry)
         if ch:
             try:
@@ -341,7 +365,7 @@ def init(f):
                 for each in entries:
                     add_item(each)
             except KeyError:
-                log.error("Variable {0} not set for {1}".format(ch, entry['key']))
+                log.error("Variable {0} not set for {1}".format(ch, entry["key"]))
         else:
             add_item(entry)
 
@@ -352,8 +376,8 @@ def init(f):
 
 # These are the public functions for interacting with the database
 def write(key, value):
-    if '.' in key:
-        x = key.split('.')
+    if "." in key:
+        x = key.split(".")
         entry = __database[x[0]]
         entry.set_aux_value(x[1], value)
     else:
@@ -362,8 +386,8 @@ def write(key, value):
 
 
 def read(key):
-    if '.' in key:
-        x = key.split('.')
+    if "." in key:
+        x = key.split(".")
         entry = __database[x[0]]
         return entry.get_aux_value(x[1])
     else:
@@ -382,7 +406,7 @@ def listkeys():
 # the items value is set.
 def callback_add(name, key, function, udata):
     item = __database[key]
-    item.callbacks.append( (name, function, udata) )
+    item.callbacks.append((name, function, udata))
     log.debug("Adding callback function for %s on key %s" % (name, key))
 
 
@@ -390,16 +414,17 @@ def callback_del(name, key, function, udata):
     if key == "*":
         for each in __database:
             try:
-                __database[each].callbacks.remove( (name, function, udata) )
+                __database[each].callbacks.remove((name, function, udata))
                 log.debug("Deleting callback function for %s on key %s" % (name, each))
             except ValueError:
                 pass
     else:
         log.debug("Deleting callback function for %s on key %s" % (name, key))
         try:
-            __database[key].callbacks.remove( (name, function, udata) )
+            __database[key].callbacks.remove((name, function, udata))
         except ValueError:
             log.debug("Callback not deleted because it was not found in the list")
+
 
 # Maintenance Functions
 def update():

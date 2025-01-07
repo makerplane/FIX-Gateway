@@ -29,13 +29,15 @@ from .ui.main_ui import Ui_MainWindow
 
 from . import table
 from . import statusModel
+
 # from . import simulate
+
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        #self.client = client
+        # self.client = client
         self.statusview = statusModel.StatusView()
         self.layoutStatus.addWidget(self.statusview)
         self.dataview = table.DataTable()

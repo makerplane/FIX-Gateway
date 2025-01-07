@@ -25,7 +25,8 @@ except:
 
 __status = None
 
-class Status():
+
+class Status:
     def __init__(self, plugins, config_status):
         self.plugins = plugins
         self.version = "0.2"
@@ -33,7 +34,7 @@ class Status():
         self.config_status = config_status
 
     def get_dict(self):
-        result = OrderedDict({"Version":self.version})
+        result = OrderedDict({"Version": self.version})
         result.update(self.config_status)
         result.update(get_system_status())
         # Database information
@@ -41,21 +42,25 @@ class Status():
         result["Database Statistics"] = db
         # Add plugin status
         for name in self.plugins:
-            d = OrderedDict({"Running":self.plugins[name].is_running()})
+            d = OrderedDict({"Running": self.plugins[name].is_running()})
             x = self.plugins[name].get_status()
-            if x: d.update(x)
+            if x:
+                d.update(x)
             result["Connection: " + name] = d
         return result
 
 
 if psutil != None:
+
     def get_system_status():
         p = psutil.Process()
         d = OrderedDict()
         d["CPU Percent"] = "%.2f" % p.cpu_percent()
         d["Memory Percent"] = "%.2f" % p.memory_percent()
         return {"Performance": d}
+
 else:
+
     def get_system_status():
         return {}
 
@@ -73,18 +78,17 @@ def initialize(p, ss):
         log.info("psutil package not found.  No system stats will be available.")
 
 
-
 def get_dict():
     return __status.get_dict()
 
 
-def dict2string(d, indent = 0, spaces = 3):
+def dict2string(d, indent=0, spaces=3):
     s = " " * indent * spaces
     result = ""
     for each in d:
         if type(d[each]) in [dict, OrderedDict]:
             result += s + each + "\n"
-            result += dict2string( d[each], indent+1 , spaces)
+            result += dict2string(d[each], indent + 1, spaces)
         else:
             result += "{0}{1}: {2}\n".format(s, each, d[each])
     return result

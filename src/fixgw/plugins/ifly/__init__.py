@@ -58,16 +58,18 @@ import re
 #  I have since been unable to reproduce this error
 
 from pynmea2 import nmea_utils
+
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
         print("running ifly plugin")
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
 
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.s.bind(('192.168.1.1', 2000))
+        self.s.bind(("192.168.1.1", 2000))
 
     def run(self):
 
@@ -76,25 +78,29 @@ class MainThread(threading.Thread):
 
             if len(msg) < 1 or not self.parent.quorum.leader:
                 continue
-            nmea_msg = re.findall(r"\$.*$", msg.decode(errors='ignore'),re.M)
+            nmea_msg = re.findall(r"\$.*$", msg.decode(errors="ignore"), re.M)
             if len(nmea_msg) > 0:
                 try:
                     data = pynmea2.parse(nmea_msg[0])
                 except:
                     continue
-                #print(repr(data))
-                if not hasattr(data,'sentence_type'):
+                # print(repr(data))
+                if not hasattr(data, "sentence_type"):
                     continue
-                if data.sentence_type == 'RMB':
+                if data.sentence_type == "RMB":
                     # Info about destination, only sent when waypoint is active
                     lat = -1
                     lon = -1
-                    if data.dest_lat_dir == 'N':
+                    if data.dest_lat_dir == "N":
                         lat = 1
-                    if data.dest_lon_dir == 'E':
+                    if data.dest_lon_dir == "E":
                         long = 1
-                    self.parent.db_write("WPLAT", lat * nmea_utils.dm_to_sd(data.dest_lat))
-                    self.parent.db_write("WPLON", lon * nmea_utils.dm_to_sd(data.dest_lon))
+                    self.parent.db_write(
+                        "WPLAT", lat * nmea_utils.dm_to_sd(data.dest_lat)
+                    )
+                    self.parent.db_write(
+                        "WPLON", lon * nmea_utils.dm_to_sd(data.dest_lon)
+                    )
 
                     self.parent.db_write("WPNAME", data.dest_waypoint_id.ljust(5)[:5])
 
@@ -104,10 +110,9 @@ class MainThread(threading.Thread):
                         head_type = " True"
                     elif data.heading_to_dest_type == "M":
                         head_type = " Mag"
-                    self.parent.db_write("WPHEAD",f"{data.heading_to_dest}{head_type}")
- 
-        self.running = False
+                    self.parent.db_write("WPHEAD", f"{data.heading_to_dest}{head_type}")
 
+        self.running = False
 
     def stop(self):
         self.getout = True
@@ -132,4 +137,3 @@ class Plugin(plugin.PluginBase):
 
     def get_status(self):
         return self.status
-

@@ -30,7 +30,8 @@ import fixgw.plugin as plugin
 # they are inputs to FIXGateway.  The opposite is true of send_items
 recv_items = []
 send_items = []
-var_sep = ','
+var_sep = ","
+
 
 class UDPClient(threading.Thread):
     def __init__(self, host, port):
@@ -39,8 +40,7 @@ class UDPClient(threading.Thread):
         self.host = host
         self.port = int(port)
 
-        self.sock = socket.socket(socket.AF_INET,  # Internet
-                             socket.SOCK_DGRAM)  # UDP
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.settimeout(2.0)
@@ -56,12 +56,12 @@ class UDPClient(threading.Thread):
     def run(self):
         buff = ""
         while not self.getout:
-            #Reads the UDP packet splits then sends it to the Queue
+            # Reads the UDP packet splits then sends it to the Queue
             try:
                 data = self.sock.recv(1024)  # buffer size is 1024 bytes
                 if data:
-                    for d in data.decode('utf-8'):
-                        if d != '\n':
+                    for d in data.decode("utf-8"):
+                        if d != "\n":
                             buff += d
                         else:
                             self.save_data(buff)
@@ -81,10 +81,10 @@ class Item(object):
         self.item = None
         self.format = ""
         self.conversion = None
-        #self.__value = 0.0
+        # self.__value = 0.0
 
     def setValue(self, value):
-        #self.__value = value
+        # self.__value = value
         if self.item != None:
             self.item.value = value
 
@@ -99,13 +99,14 @@ class Item(object):
     def __str__(self):
         return self.key
 
+
 def parseProtocolFile(fg_root, xml_file):
     # Open the XML Protocol file
     filepath = os.path.join(fg_root, "Protocol/" + xml_file)
     # Needed to work OK in a snap
     if not os.path.isfile(filepath):
         filepath = os.path.join(fg_root, xml_file)
- 
+
     tree = ET.parse(os.path.expanduser(filepath))
     root = tree.getroot()
     if root.tag != "PropertyList":
@@ -134,7 +135,6 @@ def parseProtocolFile(fg_root, xml_file):
                 i.format = "%.2f"
 
 
-
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
@@ -143,12 +143,14 @@ class MainThread(threading.Thread):
         self.log = parent.log
         self.config = parent.config
         self.msg_sent = 0
-        self.host = self.config['send_host']
-        self.port = int(self.config['send_port'])
-        self.delay_time = 1.0 / float(self.config['rate'])
+        self.host = self.config["send_host"]
+        self.port = int(self.config["send_port"])
+        self.delay_time = 1.0 / float(self.config["rate"])
 
     def run(self):
-        self.clientThread = UDPClient(self.config['recv_host'], self.config['recv_port'])
+        self.clientThread = UDPClient(
+            self.config["recv_host"], self.config["recv_port"]
+        )
         self.clientThread.start()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while not self.getout:
@@ -158,7 +160,7 @@ class MainThread(threading.Thread):
                 ss.append("%.2f" % x.value)
             msg = var_sep.join(ss)
             msg += "\n"
-            sock.sendto(bytearray(msg, 'UTF-8'), (self.host, self.port))
+            sock.sendto(bytearray(msg, "UTF-8"), (self.host, self.port))
             self.msg_sent += 1
 
     def stop(self):
@@ -173,8 +175,9 @@ class Plugin(plugin.PluginBase):
 
     def run(self):
         try:
-            self.xml_list = parseProtocolFile(self.config['fg_root'],
-                                              self.config['xml_file'])
+            self.xml_list = parseProtocolFile(
+                self.config["fg_root"], self.config["xml_file"]
+            )
         except Exception as e:
             self.log.critical(e)
             self.stop()
@@ -186,11 +189,19 @@ class Plugin(plugin.PluginBase):
         for each in recv_items:
             each.item = self.db_get_item(each.key)
             if each.item == None:
-                self.log.warning("{0} found in protocol file but not in the database".format(each.key))
+                self.log.warning(
+                    "{0} found in protocol file but not in the database".format(
+                        each.key
+                    )
+                )
         for each in send_items:
             each.item = self.db_get_item(each.key)
             if each.item == None:
-                self.log.warning("{0} found in protocol file but not in the database".format(each.key))
+                self.log.warning(
+                    "{0} found in protocol file but not in the database".format(
+                        each.key
+                    )
+                )
 
         self.thread.start()
 
@@ -208,12 +219,19 @@ class Plugin(plugin.PluginBase):
         d = OrderedDict()
         # For stuff that might fail we just ignore the errors and get what we get
         try:
-            d["Listening on"] = "{}:{}".format(self.thread.clientThread.host, self.thread.clientThread.port)
+            d["Listening on"] = "{}:{}".format(
+                self.thread.clientThread.host, self.thread.clientThread.port
+            )
             d["Sending to"] = "{}:{}".format(self.thread.host, self.thread.port)
-            d["Properties"] = OrderedDict([("Receiving",len(recv_items)),
-                                           ("Sending",len(send_items))])
-            d["Messages"] = OrderedDict([("Received", self.thread.clientThread.msg_recv),
-                                         ("Sent", self.thread.msg_sent)])
+            d["Properties"] = OrderedDict(
+                [("Receiving", len(recv_items)), ("Sending", len(send_items))]
+            )
+            d["Messages"] = OrderedDict(
+                [
+                    ("Received", self.thread.clientThread.msg_recv),
+                    ("Sent", self.thread.msg_sent),
+                ]
+            )
         except:
             pass
 

@@ -29,7 +29,7 @@ import fixgw.plugin as plugin
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
 
@@ -39,7 +39,7 @@ class MainThread(threading.Thread):
         except:
             self.parent.log.error("Can't connect to gpsd")
             return
-        
+
         while not self.getout:
             p = None
             try:
@@ -52,18 +52,18 @@ class MainThread(threading.Thread):
             self.parent.db_write("GPS_SATS_VISIBLE", p.sats)
             self.parent.db_write("GPS_FIX_TYPE", p.mode)
 
-            if p.mode >=2:
+            if p.mode >= 2:
                 self.parent.db_write("LAT", p.lat)
                 self.parent.db_write("LONG", p.lon)
                 self.parent.db_write("TRACK", p.track)
-                self.parent.db_write("GS", p.hspeed * 1.94384) # m/s to knots
+                self.parent.db_write("GS", p.hspeed * 1.94384)  # m/s to knots
                 self.parent.db_write("GPS_ACCURACY_HORIZ", p.error["x"] * 3.28084)
-            if p.mode >=3:
-                self.parent.db_write("GPS_ELLIPSOID_ALT", p.alt * 3.28084) # m to ft
+            if p.mode >= 3:
+                self.parent.db_write("GPS_ELLIPSOID_ALT", p.alt * 3.28084)  # m to ft
                 self.parent.db_write("GPS_ACCURACY_VERTICAL", p.error["v"] * 3.28084)
                 self.parent.db_write("GPS_ACCURACY_SPEED", p.error["s"] * 1.94384)
         time.sleep(0.2)
-                            
+
     def stop(self):
         self.getout = True
 

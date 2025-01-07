@@ -34,11 +34,12 @@ from fixgw.plugins.mavlink.Mav import Mav
 
 import math
 
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        #print("running mavlink plugin")
-        self.getout = False   # indicator for when to stop
+        # print("running mavlink plugin")
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
         self.config = parent.config
@@ -49,29 +50,34 @@ class MainThread(threading.Thread):
         self.roll = 0
 
     def run(self):
-        self._type = self.config['type']
-        self.baud = int(self.config['baud']) if ( 'baud' in self.config) else 57600
-        self.port = self.config['port'] if ( 'port' in self.config) else '/dev/ttyACM0'
-        self.options = self.config['options'] if ( "options" in self.config) else {}
-        
+        self._type = self.config["type"]
+        self.baud = int(self.config["baud"]) if ("baud" in self.config) else 57600
+        self.port = self.config["port"] if ("port" in self.config) else "/dev/ttyACM0"
+        self.options = self.config["options"] if ("options" in self.config) else {}
+
         while not self.getout:
             time.sleep(0.1)
             try:
                 print("Mav init")
-                self.conn = Mav(self.parent, port=self.port, baud=self.baud, options=self.options)
+                self.conn = Mav(
+                    self.parent, port=self.port, baud=self.baud, options=self.options
+                )
             except Exception as e:
                 try:
-                    print(e) 
+                    print(e)
                     self.conn.close()
                 except Exception:
                     self.log.debug(f"Mavlink failed to connect")
- 
-                self.log.debug(f"Mavlink failed to connect, trying again in 1 second type: {self._type} port: {self.port} baud: {self.baud}")
+
+                self.log.debug(
+                    f"Mavlink failed to connect, trying again in 1 second type: {self._type} port: {self.port} baud: {self.baud}"
+                )
                 self.log.debug(e)
-                time.sleep(1)      
+                time.sleep(1)
                 continue
             self.log.debug("Wait for heartbeat")
-            try: self.conn.wait_heartbeat()
+            try:
+                self.conn.wait_heartbeat()
             except Exception as e:
                 self.conn.close()
                 self.log.debug(f"Mavlink failed wait_heartbeat")
@@ -111,9 +117,9 @@ class MainThread(threading.Thread):
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
-        if config['type'] == 'serial':
-          self.thread = MainThread(self)
-          self.status = OrderedDict()   
+        if config["type"] == "serial":
+            self.thread = MainThread(self)
+            self.status = OrderedDict()
         else:
             raise ValueError("Only serial type is implemented")
 
@@ -133,4 +139,3 @@ class Plugin(plugin.PluginBase):
 
     def get_status(self):
         return self.status
-

@@ -25,24 +25,27 @@ from collections import OrderedDict
 import serial
 import fixgw.plugin as plugin
 
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
         self._c = None
-        self.engine = parent.config['engine_no']
+        self.engine = parent.config["engine_no"]
 
     def run(self):
         try:
-            self._c = serial.Serial(self.parent.config['port'],
-                                    self.parent.config['baud'],
-                                    timeout=0.5,)
+            self._c = serial.Serial(
+                self.parent.config["port"],
+                self.parent.config["baud"],
+                timeout=0.5,
+            )
         except serial.serialutil.SerialException:
             self.parent.log.error(f"Could not open port: {self.parent.config['port']}")
             return
-        
+
         while not self.getout:
             try:
                 message = self._c.read_until(b"\x03")
@@ -56,11 +59,11 @@ class MainThread(threading.Thread):
     def _parse(self, message):
         if len(message) != 16:
             return
-        
+
         if not message.endswith(b"\x03"):
             self.parent.log.debug("Incomplete message received")
             return
-        
+
         index = message.find(0x02)
 
         if index != -1:
@@ -70,25 +73,25 @@ class MainThread(threading.Thread):
 
         data = struct.unpack(">BBBBBBhhhhBB", message)
 
-        data[0] # start of message
-        data[1] #address
-        if data[2] != 8: #message type (should be 8 for TP-3)
+        data[0]  # start of message
+        data[1]  # address
+        if data[2] != 8:  # message type (should be 8 for TP-3)
             self.parent.log.warning("Unsupported message")
             return
-        
-        data[3] #message lenght
+
+        data[3]  # message lenght
         channels = [{}, {}, {}, {}]
         channels[3]["type"] = (data[4] & 0b11110000) >> 4  # CH4 type
-        channels[2]["type"] = data[4] & 0b00001111       # CH3 type
+        channels[2]["type"] = data[4] & 0b00001111  # CH3 type
         channels[1]["type"] = (data[5] & 0b11110000) >> 4  # CH2 type
-        channels[0]["type"] = data[5] & 0b00001111       # CH1 type
+        channels[0]["type"] = data[5] & 0b00001111  # CH1 type
         channels[0]["value"] = data[6]  # ch1 val
         channels[1]["value"] = data[7]  # ch2 val
         channels[2]["value"] = data[8]  # ch3 val
         channels[3]["value"] = data[9]  # ch4 val
         data[10]  # checksum
         data[11]  # end
-        
+
         for c in channels:
             db_key = ""
             if c["type"] == 0:  # not in use
@@ -106,9 +109,9 @@ class MainThread(threading.Thread):
             elif c["type"] == 5:  # voltage
                 db_key = f"VOLT"
                 c["value"] /= 10
-            
+
             print(db_key, c["value"])
-            self.parent.db_write(db_key, c["value"])            
+            self.parent.db_write(db_key, c["value"])
 
 
 class Plugin(plugin.PluginBase):

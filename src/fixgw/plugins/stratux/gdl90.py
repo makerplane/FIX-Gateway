@@ -1,5 +1,5 @@
-
 import struct
+
 
 def build_crc_table():
     crc16table = []
@@ -15,7 +15,7 @@ def calc_crc(msg: bytes):
     crc = 0
     for i in range(len(msg)):
         crc = CRC16TABLE[crc >> 8] ^ (crc << 8) ^ msg[i]
-        crc = crc & 0xffff
+        crc = crc & 0xFFFF
     return crc
 
 
@@ -23,8 +23,8 @@ def decodeGDL90(msg: bytes):
     msg_cleaned = bytearray()
     ctr = 0
     n = 1
-    while n < len(msg)-3:
-        if (msg[n] == 0x7d) or (msg[n] == 0x7e):
+    while n < len(msg) - 3:
+        if (msg[n] == 0x7D) or (msg[n] == 0x7E):
             n += 1
             msg_cleaned.append(msg[n] ^ 0x20)
         else:
@@ -32,16 +32,16 @@ def decodeGDL90(msg: bytes):
         n += 1
 
     # Last byte should be 0x7E
-    if msg[-1] != 0x7e:
+    if msg[-1] != 0x7E:
         print("packet format error")
 
     msg_cleaned = bytes(msg_cleaned)  # struct.pack('B'*len(msg_cleaned), *msg_cleaned)
-    msg_crc = struct.unpack('H', msg[-3:-1])[0]
+    msg_crc = struct.unpack("H", msg[-3:-1])[0]
     msg_calc_crc = calc_crc(msg_cleaned)
     # print(msg_cleaned)
     # print(msg_crc, msg_calc_crc)
     if msg_crc != msg_calc_crc:
-        return b''
+        return b""
 
     return msg_cleaned
 

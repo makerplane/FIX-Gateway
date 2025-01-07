@@ -25,7 +25,7 @@ from PyQt6.QtWidgets import *
 
 # This function creates and returns a proper control to use to adjust
 # the value..
-def getValueControl(item, parent, signals = True):
+def getValueControl(item, parent, signals=True):
     if item.dtype is float:
         control = QDoubleSpinBox(parent)
         span = item.max - item.min

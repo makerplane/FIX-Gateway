@@ -30,25 +30,27 @@ import fixgw.plugin as plugin
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
         self._c = None
 
     def run(self):
         try:
-            self._c = serial.Serial(self.parent.config['port'],
-                                    baudrate=38400,
-                                    timeout=0.5,)
+            self._c = serial.Serial(
+                self.parent.config["port"],
+                baudrate=38400,
+                timeout=0.5,
+            )
         except serial.SerialException:
             self.parent.log.error("Serial port error")
             return
-        
+
         power_fail_timer = None
         while not self.getout:
             try:
                 self._c.reset_input_buffer()
-                self._c.write(str.encode('\rstatus-rpi\r'))
+                self._c.write(str.encode("\rstatus-rpi\r"))
                 time.sleep(0.2)
                 sp3_time = self._c.readline()
                 sp3_date = self._c.readline()
@@ -105,15 +107,17 @@ class MainThread(threading.Thread):
                 self.parent.log.error("Bad data")
                 continue
 
-            if power_fail == 3: # We are running on battery
+            if power_fail == 3:  # We are running on battery
                 self.parent.db_write("POWER_FAIL", True)
                 if not power_fail_timer:
                     power_fail_timer = time.time()
                     self.parent.log.warning("Power has failed")
-                
+
                 if power_fail_timer and "shutdown_after" in self.parent.config:
-                    if time.time() > power_fail_timer + (self.parent.config['shutdown_after'] * 60):
-                        self._c.write(str.encode("quit\n"))                        
+                    if time.time() > power_fail_timer + (
+                        self.parent.config["shutdown_after"] * 60
+                    ):
+                        self._c.write(str.encode("quit\n"))
                         self._c.write(str.encode("poweroff\n"))
                         os.system("sudo shutdown -h now")
 

@@ -28,7 +28,7 @@ import fixgw.plugin as plugin
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
         self._buffer = bytearray()
@@ -36,9 +36,11 @@ class MainThread(threading.Thread):
         self._vario_values = []
 
     def run(self):
-        self._c = serial.Serial(self.parent.config['port'],
-                                baudrate=115200,
-                                timeout=0.5,)
+        self._c = serial.Serial(
+            self.parent.config["port"],
+            baudrate=115200,
+            timeout=0.5,
+        )
         while not self.getout:
             try:
                 s = self._c.read(self._c.in_waiting)
@@ -62,39 +64,39 @@ class MainThread(threading.Thread):
             return
 
         status = int(message[41:47], 16) & 1
-        
-        pitch = int(message[8:12]) / 10.0     
+
+        pitch = int(message[8:12]) / 10.0
         self.parent.db_write("PITCH", pitch)
-        
-        roll = int(message[12:17]) / 10.0     
+
+        roll = int(message[12:17]) / 10.0
         self.parent.db_write("ROLL", roll)
-        
-        yaw = int(message[17:20]) 
+
+        yaw = int(message[17:20])
         self.parent.db_write("YAW", yaw)
 
         # 1/10 m/s to knots
-        speed = round(int(message[20:24]) * 0.194384)          
+        speed = round(int(message[20:24]) * 0.194384)
         self.parent.db_write("TAS", speed)
-        
+
         alt = round(int(message[24:29]) * 3.28084)  # meters to feet
 
         if status == 0:
             self.parent.db_write("ALT", alt)
             self.parent.db_write("TALT", alt)
-            
+
             turn_rate = int(message[29:33]) / 10
             self.parent.db_write("ROT", turn_rate)
         else:
             self.parent.db_write("PALT", alt)
 
             vs = int(message[29:33]) / 10 * 60
-            
+
             self._vario_values.append(vs)
             if len(self._vario_values) > 128:
                 self._vario_values.pop(0)
             if len(self._vario_values):
                 vs = round(sum(self._vario_values) / len(self._vario_values))
-                
+
             self.parent.db_write("VS", vs)
 
         alat = int(message[33:36]) / 100

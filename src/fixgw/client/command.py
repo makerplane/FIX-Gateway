@@ -21,15 +21,21 @@ from collections import OrderedDict
 import fixgw.netfix as netfix
 import fixgw.status as status
 
+
 def printData(x):
     flags = ""
     if len(x) == 3:
-        if 'a' in x[2]: flags += " Annuc"
-        if 'o' in x[2]: flags += " Old"
-        if 'f' in x[2]: flags += " Fail"
-        if 'b' in x[2]: flags += " Bad"
-        if 's' in x[2]: flags += " SecFail"
-    print("{} = {}{}".format(x[0],x[1],flags))
+        if "a" in x[2]:
+            flags += " Annuc"
+        if "o" in x[2]:
+            flags += " Old"
+        if "f" in x[2]:
+            flags += " Fail"
+        if "b" in x[2]:
+            flags += " Bad"
+        if "s" in x[2]:
+            flags += " SecFail"
+    print("{} = {}{}".format(x[0], x[1], flags))
 
 
 class Command(cmd.Cmd):
@@ -53,18 +59,23 @@ class Command(cmd.Cmd):
             return
 
         try:
-            if '.' in args[0]:
+            if "." in args[0]:
                 print(x[1])
             else:
                 flags = ""
-                if x[2]: # Do we have any flags?
-                    if 'a' in x[2]: flags += " Annuc"
-                    if 'o' in x[2]: flags += " Old"
-                    if 'f' in x[2]: flags += " Fail"
-                    if 'b' in x[2]: flags += " Bad"
-                    if 's' in x[2]: flags += " SecFail"
+                if x[2]:  # Do we have any flags?
+                    if "a" in x[2]:
+                        flags += " Annuc"
+                    if "o" in x[2]:
+                        flags += " Old"
+                    if "f" in x[2]:
+                        flags += " Fail"
+                    if "b" in x[2]:
+                        flags += " Bad"
+                    if "s" in x[2]:
+                        flags += " SecFail"
 
-                print(x[1]+flags)
+                print(x[1] + flags)
         except:
             print("Unknown Response {}".format(x[0]))
 
@@ -82,7 +93,6 @@ class Command(cmd.Cmd):
             except netfix.ResponseError as e:
                 print("Problem Receiving Response -", e)
                 return
-
 
     def do_list(self, line):
         """list\nList Database Keys"""
@@ -118,11 +128,13 @@ class Command(cmd.Cmd):
                 print("TOL:   {0}".format(res[6]))
                 if res[7]:
                     print("Auxillary Data:")
-                    x = res[7].split(',')
+                    x = res[7].split(",")
                     for aux in x:
                         val = self.client.read("{}.{}".format(args[0], aux))
-                        if val[1] == 'None': s = ""
-                        else: s = val[1]
+                        if val[1] == "None":
+                            s = ""
+                        else:
+                            s = val[1]
                         print("  {0} = {1}".format(aux, s))
 
             except netfix.SendError as e:
@@ -131,7 +143,6 @@ class Command(cmd.Cmd):
             except netfix.ResponseError as e:
                 print("Problem Receiving Response -", e)
                 return
-
 
     def do_poll(self, line):
         """Poll\nContinuously prints updates to the given key"""
@@ -144,14 +155,17 @@ class Command(cmd.Cmd):
             self.client.unsubscribe(each)
         self.client.clearDataCallback()
 
-
     def do_flag(self, line):
         """flag [key] [abfs] [true/false]\nSet or clear quality flags"""
         args = line.split(" ")
         if len(args) < 3:
             print("Missing Argument")
         else:
-            bit = True if args[2].lower() in ["true", "high", "1", "yes", "set"] else False
+            bit = (
+                True
+                if args[2].lower() in ["true", "high", "1", "yes", "set"]
+                else False
+            )
             try:
                 self.client.flag(args[0], args[1][0], bit)
             except netfix.SendError as e:
@@ -163,7 +177,7 @@ class Command(cmd.Cmd):
 
     def do_status(self, line):
         """status <json>\nRead status information.  If the 'json' argument is
-added the output will be in JSON format."""
+        added the output will be in JSON format."""
         try:
             res = self.client.getStatus()
         except netfix.SendError as e:
@@ -173,7 +187,7 @@ added the output will be in JSON format."""
             print("Problem Receiving Response -", e)
             return
 
-        if line == 'json':
+        if line == "json":
             print(res)
         else:
             d = json.loads(res, object_pairs_hook=OrderedDict)
@@ -189,7 +203,6 @@ added the output will be in JSON format."""
         except netfix.ResponseError as e:
             print("Problem Receiving Response -", e)
             return
-
 
     def do_quit(self, line):
         """quit\nExit Plugin"""

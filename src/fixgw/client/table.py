@@ -23,6 +23,7 @@ from . import connection
 from . import dbItemDialog
 from . import common
 
+
 class CheckButton(QPushButton):
     def setChecked(self, value):
         super(CheckButton, self).setChecked(value)
@@ -38,8 +39,10 @@ class DataTable(QTableWidget):
         cols = ["Value", "A", "O", "B", "F", "S", "Description"]
         self.setColumnCount(len(cols))
         self.setHorizontalHeaderLabels(cols)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        #self.horizontalHeader().setMaximumSectionSize(int(self.width() * 20/100))
+        self.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents
+        )
+        # self.horizontalHeader().setMaximumSectionSize(int(self.width() * 20/100))
 
         self.dblist = connection.db.get_item_list()
         self.dblist.sort()
@@ -92,7 +95,6 @@ class DataTable(QTableWidget):
 
         self.resizeColumnsToContents()
         self.verticalHeader().sectionDoubleClicked.connect(self.keySelected)
-
 
     def keySelected(self, x):
         key = self.verticalHeaderItem(x).text()

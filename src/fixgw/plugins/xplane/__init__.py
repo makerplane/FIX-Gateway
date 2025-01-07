@@ -25,7 +25,7 @@ import select
 import struct
 import fixgw.plugin as plugin
 
-#TODO Replace with configuration
+# TODO Replace with configuration
 UDP_IP = "127.0.0.1"
 UDP_PORT = 49203
 
@@ -33,12 +33,11 @@ UDP_PORT = 49203
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
 
-        self.sock = socket.socket(socket.AF_INET,  # Internet
-                                  socket.SOCK_DGRAM)  # UDP
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
         self.sock.bind((UDP_IP, UDP_PORT))
         self.sock.setblocking(0)
 
@@ -63,7 +62,7 @@ class MainThread(threading.Thread):
             self.parent.db_write("LONG", data[1])
         else:
             self.parent.log.debug("Dunno Index:" + str(index))
-        #self.parent.db_write("",data[0])
+        # self.parent.db_write("",data[0])
 
     def senddata(self):
         """Function that sends data to X-Plane"""
@@ -72,15 +71,17 @@ class MainThread(threading.Thread):
             data += struct.pack("i", int(each))
 
             for i in range(8):
-                if self.inputkeys[each][i].lower() == 'x':
+                if self.inputkeys[each][i].lower() == "x":
                     data += chr(0) + chr(192) + chr(121) + chr(196)
-                    #data += struct.pack("f", 0.0)
+                    # data += struct.pack("f", 0.0)
                 else:
-                    data += struct.pack("f", float(self.parent.db_read(self.inputkeys[each][i].upper())))
-            #for each in data:
+                    data += struct.pack(
+                        "f", float(self.parent.db_read(self.inputkeys[each][i].upper()))
+                    )
+            # for each in data:
             #    print hex(ord(each)),
-            #print ""
-            self.sock.sendto(data, (UDP_IP,49200))
+            # print ""
+            self.sock.sendto(data, (UDP_IP, 49200))
 
     def run(self):
         while True:
@@ -89,7 +90,7 @@ class MainThread(threading.Thread):
             ready = select.select([self.sock], [], [], 0.1)
             if ready[0]:
                 data, addr = self.sock.recvfrom(4096)
-                #print data
+                # print data
                 header = data[:4]
                 if header != "DATA":
                     self.parent.log.error("Bad data packet")
@@ -99,14 +100,14 @@ class MainThread(threading.Thread):
                     continue
                 for x in range((len(data) - 5) / 36):
                     start = x * 36 + 5
-                    #index = struct.unpack("i",data[start:start+4])[0]
+                    # index = struct.unpack("i",data[start:start+4])[0]
                     index = ord(data[start])
                     udata = []
                     for i in range(8):
                         y = start + i * 4 + 4
-                        udata.append(struct.unpack("f", data[y:y + 4])[0])
+                        udata.append(struct.unpack("f", data[y : y + 4])[0])
                     self.writedata(index, udata)
-                    #print "index:", index, "Data: ", udata
+                    # print "index:", index, "Data: ", udata
             self.senddata()
 
     def stop(self):

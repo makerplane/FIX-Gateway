@@ -21,6 +21,7 @@ import threading
 import fixgw.plugin as plugin
 import fixgw.status as status
 
+
 class Command(cmd.Cmd):
     def __init__(self):
         super(Command, self).__init__()
@@ -45,7 +46,7 @@ class Command(cmd.Cmd):
             print("Missing Argument")
         else:
             try:
-                #TODO: Should do more error checking here
+                # TODO: Should do more error checking here
                 self.plugin.db_write(args[0], args[1])
             except KeyError:
                 print(("Unknown Key " + args[0]))
@@ -73,7 +74,8 @@ class Command(cmd.Cmd):
             print("TOL:   {0}".format(str(x.tol)))
             print("Auxillary Data:")
             for each in x.aux:
-                if each: print("  {0} = {1}".format(each,str(x.aux[each])))
+                if each:
+                    print("  {0} = {1}".format(each, str(x.aux[each])))
             for each in x.callbacks:
                 print("Callback function defined: {0}".format(each[0]))
         except KeyError:
@@ -104,20 +106,20 @@ class Command(cmd.Cmd):
         """flag\nSet or clear quality flags"""
         args = line.split(" ")
         if len(args) < 3:
-            print("Not Enough Arguments") # TODO print usage??
+            print("Not Enough Arguments")  # TODO print usage??
             return
         try:
             x = self.plugin.db_get_item(args[0])
         except KeyError:
             print("Unknown Key " + args[0])
         bit = True if args[2].lower() in ["true", "high", "1", "yes"] else False
-        if args[1].lower()[0] == 'b':
+        if args[1].lower()[0] == "b":
             x.bad = bit
-        elif args[1].lower()[0] == 'f':
+        elif args[1].lower()[0] == "f":
             x.fail = bit
-        elif args[1].lower()[0] == 'a':
+        elif args[1].lower()[0] == "a":
             x.annunciate = bit
-        elif args[1].lower()[0] == 's':
+        elif args[1].lower()[0] == "s":
             x.secfail = bit
 
     def do_status(self, line):
@@ -138,13 +140,14 @@ class Command(cmd.Cmd):
     def callback_function(self, key, value, udata):
         print("{0} = {1}".format(key, value))
 
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         """The calling object should pass itself as the parent.
-           This gives the thread all the plugin goodies that the
-           parent has."""
+        This gives the thread all the plugin goodies that the
+        parent has."""
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
         self.cmd = Command()

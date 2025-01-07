@@ -1,15 +1,14 @@
-
 # In an effort to have some redundancy I wanted a way to control some things,
 # such as the auto pilot, from only one gateway at a time. But should one gateway fail
-# the other can takover sending commands to the auto pilot. 
+# the other can takover sending commands to the auto pilot.
 # Some keys were created in the database:
 # QVOTEn, n is the node id and each node will set its own value.
 # LEADER, leader is true if this gateway has the highest vote.
-# 
+#
 # The module fixgw.quorum contains the bool variable quorum.leader that can be used
 # to determine if you are the leader.
 #
-# NOTE: LEADER could have just been a global variable, making it a fixid allows us to also check the status from 
+# NOTE: LEADER could have just been a global variable, making it a fixid allows us to also check the status from
 # other applications. For example we could display a message in pyEFIS if the local canfix is the LEADER or not.
 #
 # Each node should be configured to send their QVOTEn key to all other nodes in the cluster
@@ -31,16 +30,19 @@ import logging
 from collections import OrderedDict
 import fixgw.plugin as plugin
 
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        #print("running mavlink plugin")
-        self.getout = False   # indicator for when to stop
+        # print("running mavlink plugin")
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
         self.config = parent.config
         self.vote_key = f"QVOTE{self.config['nodeid']}"
-        self.vote_value = self.config['nodeid'] #(self.config['nodeid'] ** self.config['total_nodes']) + self.config['nodeid']
+        self.vote_value = self.config[
+            "nodeid"
+        ]  # (self.config['nodeid'] ** self.config['total_nodes']) + self.config['nodeid']
         self.parent.quorum.enabled = True
         self.parent.quorum.nodeid = self.config["nodeid"]
         self.parent.quorum.vote_key = self.vote_key
@@ -51,7 +53,7 @@ class MainThread(threading.Thread):
         # The LEADER in pyEFIS might not get updated because we start with LEADER false, and if it stays false
         # nothing will trigger the update.
         # If we make LEADER True at startup, so it can be changed to false to trigger an update, it still might not always
-        # notify pyEFIS.  pyEFIS tries to reconnect every two seconds, if we change LEADER from false to true before 
+        # notify pyEFIS.  pyEFIS tries to reconnect every two seconds, if we change LEADER from false to true before
         # pyEFIS reconnects and subscribes to LEADER then pyEFIS will not get the first change.
         # The only solution I could come up for this is to startup with LEADER set to true
         # Before we set it based on quorum, we pause long enough to allow pyEFIS the time to reconnect and subscribe.
@@ -64,28 +66,30 @@ class MainThread(threading.Thread):
 
         while not self.getout:
             time.sleep(0.3)
-            self.parent.db_write(self.vote_key,self.vote_value)
+            self.parent.db_write(self.vote_key, self.vote_value)
             highest_vote = 0
             nodes_seen = 0
-            for nodeid in range(1, self.config['total_nodes'] + 1):
+            for nodeid in range(1, self.config["total_nodes"] + 1):
                 data = self.parent.db_read(f"QVOTE{nodeid}")
                 # Only accept a vote if no old,bad,etc
-                if True not in data[1:]: 
+                if True not in data[1:]:
                     nodes_seen += 1
                     if highest_vote < data[0]:
                         highest_vote = data[0]
-            if self.config['total_nodes'] > 2 and (( nodes_seen / self.config['total_nodes']) <= 0.50):
+            if self.config["total_nodes"] > 2 and (
+                (nodes_seen / self.config["total_nodes"]) <= 0.50
+            ):
                 # When more than two nodes we require real quorum
                 # If 50% or less of the total nodes are seen, we do not have quorum and no one is a leader
                 self.parent.quorum.leader = False
                 self.parent.db_write("LEADER", False)
             else:
-                self.parent.quorum.leader = (self.vote_value == highest_vote)
-                self.parent.db_write("LEADER", self.vote_value == highest_vote )
-
+                self.parent.quorum.leader = self.vote_value == highest_vote
+                self.parent.db_write("LEADER", self.vote_value == highest_vote)
 
     def stop(self):
         self.getout = True
+
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
@@ -106,4 +110,3 @@ class Plugin(plugin.PluginBase):
 
     def get_status(self):
         return self.status
-

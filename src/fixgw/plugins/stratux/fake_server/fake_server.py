@@ -71,20 +71,25 @@ getSituation = """{{
   "AHRSStatus": 7
 }}"""
 
+
 class TestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         global pitch, roll, dpitch, droll, lat, long
         self.close_connection = True
-        if(self.path == "/getSituation"):
+        if self.path == "/getSituation":
             self.send_response(200)
-            self.send_header('Content-type','application/json')
+            self.send_header("Content-type", "application/json")
             self.end_headers()
             pitch += dpitch
             roll += droll
-            if(pitch > 10): dpitch = -0.1
-            if(pitch < -10): dpitch = 0.1
-            if(roll > 10): droll = -0.15
-            if(roll < -10): droll = 0.15
+            if pitch > 10:
+                dpitch = -0.1
+            if pitch < -10:
+                dpitch = 0.1
+            if roll > 10:
+                droll = -0.15
+            if roll < -10:
+                droll = 0.15
             lat += 0.01
             long += 0.015
             s = getSituation.format(PITCH=pitch, ROLL=roll, LAT=lat, LONG=long)
@@ -92,7 +97,8 @@ class TestHandler(http.server.BaseHTTPRequestHandler):
         else:
             self.send_error(404)
 
-#sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+# sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 with socketserver.TCPServer(("", PORT), TestHandler) as httpd:
     print("serving at port", PORT)

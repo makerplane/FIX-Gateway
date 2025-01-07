@@ -20,6 +20,7 @@ import threading
 import socket
 import logging
 import time
+
 try:
     import queue
 except:
@@ -28,14 +29,18 @@ from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
+
 class ResponseError(Exception):
     pass
+
 
 class SendError(Exception):
     pass
 
+
 class NotConnectedError(Exception):
     pass
+
 
 # A convenience class for working with the get_report() response.
 class Report:
@@ -48,7 +53,7 @@ class Report:
         self.tol = res[6]
         self.aux = []
         if res[7]:
-            x = res[7].split(',')
+            x = res[7].split(",")
             for aux in x:
                 self.aux.append(aux)
 
@@ -67,7 +72,7 @@ class ClientThread(threading.Thread):
         self.timeout = 1.0
         self.s = None
         # This Queue will hold normal data parameter responses
-        #self.dataqueue = queue.Queue()
+        # self.dataqueue = queue.Queue()
         # This Queue will hold command responses
         self.cmdqueue = queue.Queue()
         self.connectedEvent = threading.Event()
@@ -86,7 +91,7 @@ class ClientThread(threading.Thread):
 
     def handle_request(self, d):
         log.debug("Response - {}".format(d))
-        if d[0] == '@':
+        if d[0] == "@":
             self.cmdqueue.put([d[1], d[2:]])
         else:
             x = d.split(";")
@@ -94,13 +99,18 @@ class ClientThread(threading.Thread):
                 log.error("Bad Data Sentence Received")
             if len(x) == 3:
                 s = ""
-                if x[2][0] == "1": s += "a";
-                if x[2][1] == "1": s += "o";
-                if x[2][2] == "1": s += "b";
-                if x[2][3] == "1": s += "f";
-                if x[2][4] == "1": s += "s";
+                if x[2][0] == "1":
+                    s += "a"
+                if x[2][1] == "1":
+                    s += "o"
+                if x[2][2] == "1":
+                    s += "b"
+                if x[2][3] == "1":
+                    s += "f"
+                if x[2][4] == "1":
+                    s += "s"
                 x[2] = s
-            #self.dataqueue.put(x)
+            # self.dataqueue.put(x)
             if self.dataCallback:
                 self.dataCallback(x)
 
@@ -127,7 +137,7 @@ class ClientThread(threading.Thread):
                         if self.getout:
                             self.connectedState(False)
                             self.s.close()
-                            break;
+                            break
                     except Exception as e:
                         log.error("Receive Failure {0}".format(e))
                         break
@@ -140,14 +150,20 @@ class ClientThread(threading.Thread):
                             try:
                                 dstring = data.decode("utf-8")
                             except UnicodeDecodeError:
-                                self.log.debug("Bad Message from {0}".format(self.addr[0]))
+                                self.log.debug(
+                                    "Bad Message from {0}".format(self.addr[0])
+                                )
                             for d in dstring:
-                                if d=='\n':
+                                if d == "\n":
                                     try:
                                         self.handle_request(buff)
                                     except Exception as e:
                                         # TODO: Print file and line number here.  Use traceback module
-                                        log.error("Error handling request {} - {}".format(buff, e))
+                                        log.error(
+                                            "Error handling request {} - {}".format(
+                                                buff, e
+                                            )
+                                        )
                                     buff = ""
                                 else:
                                     buff += d
@@ -159,25 +175,27 @@ class ClientThread(threading.Thread):
             else:
                 # TODO: Replace with configuration time
                 time.sleep(2)
-                log.debug("Attempting to Reconnect to {0}:{1}".format(self.host, self.port))
+                log.debug(
+                    "Attempting to Reconnect to {0}:{1}".format(self.host, self.port)
+                )
 
     def stop(self):
         self.getout = True
 
-    def connectWait(self, timeout = 1.0):
+    def connectWait(self, timeout=1.0):
         return self.connectedEvent.wait(timeout)
 
     def isConnected(self):
         return self.connectedEvent.isSet()
 
-    def getResponse(self, c, timeout = 1.0):
+    def getResponse(self, c, timeout=1.0):
         # TODO Check for errors and report those as well
         if not self.isConnected():
             raise ResponseError("Not Connected to Server")
         try:
-            x = self.cmdqueue.get(timeout = 1.0)
+            x = self.cmdqueue.get(timeout=1.0)
             while x[0] != c:
-                x = self.cmdqueue.get(timeout = 1.0)
+                x = self.cmdqueue.get(timeout=1.0)
             return x
         except queue.Empty:
             raise ResponseError("Timeout waiting on data")
@@ -189,20 +207,25 @@ class ClientThread(threading.Thread):
 
 
 def decodeDataString(d):
-    if '!' in d: # This is an error
-        x = d.split('!')
+    if "!" in d:  # This is an error
+        x = d.split("!")
         return int(x[1])
-    x = d.split(';')
+    x = d.split(";")
     id = x[0]
     v = x[1]
     if len(x) == 3:
-        f = "" # Quality Flags
-        if x[2][0] == '1': f += "a"
-        if x[2][1] == '1': f += "o"
-        if x[2][2] == '1': f += "b"
-        if x[2][3] == '1': f += "f"
-        if x[2][4] == '1': f += "s"
-        return (id,v,f)
+        f = ""  # Quality Flags
+        if x[2][0] == "1":
+            f += "a"
+        if x[2][1] == "1":
+            f += "o"
+        if x[2][2] == "1":
+            f += "b"
+        if x[2][3] == "1":
+            f += "f"
+        if x[2][4] == "1":
+            f += "s"
+        return (id, v, f)
     else:
         return (id, v)
 
@@ -245,10 +268,10 @@ class Client:
             done = False
             while not done:
                 try:
-                    res = self.cthread.getResponse('l')
-                    a = res[1].split(';')
-                    #print(f"###############\n{a[2].split(',')}")
-                    total = total + a[2].split(',')
+                    res = self.cthread.getResponse("l")
+                    a = res[1].split(";")
+                    # print(f"###############\n{a[2].split(',')}")
+                    total = total + a[2].split(",")
                 except:
                     done = True
         return total
@@ -256,53 +279,54 @@ class Client:
     def getReport(self, id):
         with self.lock:
             self.cthread.send("@q{}\n".format(id).encode())
-            res = self.cthread.getResponse('q')
-            if '!' in res[1]:
-                e = res[1].split('!')
-                if e[1] == '001':
+            res = self.cthread.getResponse("q")
+            if "!" in res[1]:
+                e = res[1].split("!")
+                if e[1] == "001":
                     raise ResponseError("Key Not Found {}".format(e[0]))
                 else:
                     raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
-            a = res[1].split(';')
+            a = res[1].split(";")
             return a
 
     def read(self, id):
         with self.lock:
             self.cthread.send("@r{}\n".format(id).encode())
-            res = self.cthread.getResponse('r')
+            res = self.cthread.getResponse("r")
             return decodeDataString(res[1])
 
     def write(self, id, value, flags=""):
         with self.lock:
-            a = "1" if 'a' in flags else "0"
-            b = "1" if 'b' in flags else "0"
-            f = "1" if 'f' in flags else "0"
-            s = "1" if 's' in flags else "0"
+            a = "1" if "a" in flags else "0"
+            b = "1" if "b" in flags else "0"
+            f = "1" if "f" in flags else "0"
+            s = "1" if "s" in flags else "0"
             sendStr = "{0};{1};{2}{3}{4}{5}\n".format(id, value, a, b, f, s)
             self.cthread.send(sendStr.encode())
-
 
     def subscribe(self, id):
         with self.lock:
             self.cthread.send("@s{}\n".format(id).encode())
-            res = self.cthread.getResponse('s')
+            res = self.cthread.getResponse("s")
 
     def unsubscribe(self, id):
         with self.lock:
             self.cthread.send("@u{}\n".format(id).encode())
-            res = self.cthread.getResponse('u')
+            res = self.cthread.getResponse("u")
 
     def flag(self, id, flag, setting):
         with self.lock:
-            if setting: s = '1'
-            else:       s = '0'
+            if setting:
+                s = "1"
+            else:
+                s = "0"
             self.cthread.send("@f{};{};{}\n".format(id, flag.lower(), s).encode())
-            res = self.cthread.getResponse('f')
-            if '!' in res[1]:
-                e = res[1].split('!')
-                if e[1] == '001':
+            res = self.cthread.getResponse("f")
+            if "!" in res[1]:
+                e = res[1].split("!")
+                if e[1] == "001":
                     raise ResponseError("Key Not Found {}".format(e[0]))
-                elif e[1] == '002':
+                elif e[1] == "002":
                     raise ResponseError("Unknown Flag {}".format(flag))
                 else:
                     raise ResponseError("Response Error {} for {}".format(e[1], e[0]))
@@ -310,16 +334,16 @@ class Client:
     def writeValue(self, id, value):
         with self.lock:
             self.cthread.send("@w{};{}\n".format(id, value).encode())
-            res = self.cthread.getResponse('w')
+            res = self.cthread.getResponse("w")
             return res[1]
 
     def getStatus(self):
         with self.lock:
             self.cthread.send("@xstatus\n".encode())
-            res = self.cthread.getResponse('x')
+            res = self.cthread.getResponse("x")
         return res[1][7:]
 
     def stop(self):
         with self.lock:
             self.cthread.send("@xkill\n".encode())
-            res = self.cthread.getResponse('x')
+            res = self.cthread.getResponse("x")

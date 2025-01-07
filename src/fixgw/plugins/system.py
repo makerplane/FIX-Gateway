@@ -26,13 +26,14 @@ import time
 from collections import OrderedDict
 import fixgw.plugin as plugin
 
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
-        self.functions = [] # List of closures to call each time through the loop
+        self.functions = []  # List of closures to call each time through the loop
 
     def run(self):
         while True:
@@ -45,6 +46,7 @@ class MainThread(threading.Thread):
 
     def stop(self):
         self.getout = True
+
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):

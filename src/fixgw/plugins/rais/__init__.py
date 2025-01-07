@@ -29,6 +29,7 @@ import threading
 
 from fixgw.database import callback_add
 
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
@@ -36,16 +37,16 @@ class MainThread(threading.Thread):
         self.parent = parent
         self.log = parent.log
         self.config = parent.config
-        rais_server_module = importlib.import_module(self.config['rais_server_module'])
+        rais_server_module = importlib.import_module(self.config["rais_server_module"])
         cfg = None
-        if 'rais_config_path' in self.config:
-            cfg = self.config['rais_config_path']
+        if "rais_config_path" in self.config:
+            cfg = self.config["rais_config_path"]
         self.rais = rais_server_module.RAIS(config_file=cfg)
-        self.rais.setParameterCallback (self.callback)
+        self.rais.setParameterCallback(self.callback)
         self.baro_publisher = rais_server_module.GivenBarometer(self.rais.pubsub_config)
 
     def baro_changed(self, key, value, udata):
-        assert(key == "BARO")
+        assert key == "BARO"
         try:
             self.baro_publisher.send(value[0])
         except:
@@ -54,11 +55,11 @@ class MainThread(threading.Thread):
     def run(self):
         callback_add("", "BARO", self.baro_changed, "")
         while not self.getout:
-            self.rais.listen (loop=False, timeout=0)
-            time.sleep(.1)
+            self.rais.listen(loop=False, timeout=0)
+            time.sleep(0.1)
 
     def callback(self, dbkey, value):
-            self.parent.db_write(dbkey, value)
+        self.parent.db_write(dbkey, value)
 
     def stop(self):
         self.getout = True
@@ -67,8 +68,8 @@ class MainThread(threading.Thread):
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
-        if not config['rais_directory'] in sys.path:
-            sys.path.append (config['rais_directory'])
+        if not config["rais_directory"] in sys.path:
+            sys.path.append(config["rais_directory"])
         self.thread = MainThread(self)
 
     def run(self):

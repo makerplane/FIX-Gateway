@@ -34,8 +34,9 @@ class TestThread(threading.Thread):
     def run(self):
         starttime = time.time()
         self.parent.log.debug("Starting Thread")
-        while(True):
-            if self.getout: break
+        while True:
+            if self.getout:
+                break
             low = self.parent.config["low"]
             high = self.parent.config["high"]
             x = (random.random() * (high - low)) + low

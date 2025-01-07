@@ -26,13 +26,14 @@ from . import connection
 from .ui import itemDialog_ui
 from . import common
 
-types = {int:"Integer", float:"Float", bool:"Bool", str:"String"}
+types = {int: "Integer", float: "Float", bool: "Bool", str: "String"}
 
 
 # Returns a function that can be used as a slot for aux value changes
 def auxValueSlotClosure(item, auxname):
     def func(value):
         item.set_aux_value(auxname, value)
+
     return func
 
 
@@ -53,6 +54,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
             none_label.hide()
             control.show()
             self.item.set_aux_value(auxname, 0.0)
+
         return func
 
     def auxDelClosure(self, auxname):
@@ -69,7 +71,6 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
 
         return func
 
-
     def setKey(self, key):
         self.key = key
         self.labelKey.setText(key)
@@ -84,7 +85,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
         l1a = QLabel(self.scrollAreaWidgetContents)
         l1a.setText("Lifetime:")
         r1a = QLabel(self.scrollAreaWidgetContents)
-        r1a.setText(str(self.item.tol)+ " ms")
+        r1a.setText(str(self.item.tol) + " ms")
         self.formLayout.addRow(l1a, r1a)
 
         if self.item.dtype in [int, float]:
@@ -163,7 +164,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
             vc.hide()
             d["control"] = vc
 
-            vl =  QLabel(self.scrollAreaWidgetContents)
+            vl = QLabel(self.scrollAreaWidgetContents)
             vl.setText("None")
             d["none"] = vl
 
@@ -193,6 +194,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
                 vl.hide()
                 vc.show()
             self.formLayout.addRow(l, box)
+
 
 # TODO:
 #   When an aux item is None it is displayed as a label that says 'None.'  There

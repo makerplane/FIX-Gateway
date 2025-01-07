@@ -26,29 +26,30 @@ import can
 
 from . import megasquirt
 
+
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
-        self.interface = config['interface']
-        self.channel = config['channel']
-        #self.device = int(config['device'])
-        #self.node = int(config['node'])
-        #mapfilename = config['mapfile'].format(CONFIG=config['CONFIGPATH'])
-        #self.mapping = mapping.Mapping(mapfilename, self.log)
+        self.interface = config["interface"]
+        self.channel = config["channel"]
+        # self.device = int(config['device'])
+        # self.node = int(config['node'])
+        # mapfilename = config['mapfile'].format(CONFIG=config['CONFIGPATH'])
+        # self.mapping = mapping.Mapping(mapfilename, self.log)
         self.thread = None
-        if self.config.get('items',False):
+        if self.config.get("items", False):
             # We have items configured
-            self.thread = megasquirt.Get(self,self.config['items'])
+            self.thread = megasquirt.Get(self, self.config["items"])
         self.recvcount = 0
         self.errorcount = 0
         self.wantcount = 0
 
     def run(self):
-        self.bus = can.ThreadSafeBus(self.channel, interface = self.interface)
-        #for each in self.mapping.output_mapping:
-            # TODO This will work to collect the data that needs sent
-            # But we need another thread where we can send on a timer.
-            #self.db_callback_add(each, self.mapping.getOutputFunction(self.bus, each, self.node))
+        self.bus = can.ThreadSafeBus(self.channel, interface=self.interface)
+        # for each in self.mapping.output_mapping:
+        # TODO This will work to collect the data that needs sent
+        # But we need another thread where we can send on a timer.
+        # self.db_callback_add(each, self.mapping.getOutputFunction(self.bus, each, self.node))
         self.thread.start()
 
     def stop(self):
@@ -63,13 +64,14 @@ class Plugin(plugin.PluginBase):
 
     def get_status(self):
         x = OrderedDict()
-        x["CAN Interface"]=self.interface
-        x["CAN Channel"]=self.channel
-        x["Received Frames"]=self.recvcount
-        x["Wanted Frames"]=self.wantcount
-        x["Sent Frames"]=self.mapping.sendcount
-        x["Error Count"]=self.errorcount
+        x["CAN Interface"] = self.interface
+        x["CAN Channel"] = self.channel
+        x["Received Frames"] = self.recvcount
+        x["Wanted Frames"] = self.wantcount
+        x["Sent Frames"] = self.mapping.sendcount
+        x["Error Count"] = self.errorcount
         return x
+
 
 # TODO: Add error reporting in debug mode
 # TODO: Add output parameter mapping

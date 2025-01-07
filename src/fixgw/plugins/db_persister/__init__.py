@@ -31,49 +31,56 @@ import re
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
 
         f_path = f"{parent.config['CONFIGPATH']}/{parent.config['db_schema']}"
-        db_desc = yaml.load(open(f_path, 'r'), Loader=yaml.FullLoader)
-        self.log.info(f'loaded db schema from {f_path}')
+        db_desc = yaml.load(open(f_path, "r"), Loader=yaml.FullLoader)
+        self.log.info(f"loaded db schema from {f_path}")
 
         f_path = f"{parent.config['CONFIGPATH']}/{parent.config['h5f_file']}"
         self.h5f = tables.open_file(f_path, mode="a", title="Test file")
-        self.log.info(f'opened h5f {f_path}')
+        self.log.info(f"opened h5f {f_path}")
 
         def persist(key, value, udata=None):
             # print(key, (value))
             # print(key, value, (value[0], time.time()))
-            tbl = self.h5f.get_node('/', key)
-            tbl.row['value'] = value[0]
-            tbl.row['timestamp'] = time.time()
+            tbl = self.h5f.get_node("/", key)
+            tbl.row["value"] = value[0]
+            tbl.row["timestamp"] = time.time()
             # print(tbl.row)
             tbl.row.append()
 
-        regex = re.compile(parent.config['entries_regex'])
-        persisted_entries = (e for e in db_desc['entries'] if regex.match(e['key']))
-        self.log.info(f'registering {persisted_entries} for persistence')
+        regex = re.compile(parent.config["entries_regex"])
+        persisted_entries = (e for e in db_desc["entries"] if regex.match(e["key"]))
+        self.log.info(f"registering {persisted_entries} for persistence")
 
         for entry in persisted_entries:
-            key = entry['key']
+            key = entry["key"]
             self.parent.db_callback_add(key, persist)
 
             try:
-                self.h5f.get_node('/', key)
+                self.h5f.get_node("/", key)
             except:
                 description = {
-                    'value': 
-                        tables.Float64Col() if entry['type']=='float' else 
-                        tables.IntCol() if entry['type']=='int' else 
-                        tables.BoolCol() if entry['type']=='bool' else 
-                        tables.StringCol(),
-                    'timestamp': tables.Time64Col(),
+                    "value": (
+                        tables.Float64Col()
+                        if entry["type"] == "float"
+                        else (
+                            tables.IntCol()
+                            if entry["type"] == "int"
+                            else (
+                                tables.BoolCol()
+                                if entry["type"] == "bool"
+                                else tables.StringCol()
+                            )
+                        )
+                    ),
+                    "timestamp": tables.Time64Col(),
                 }
-                self.h5f.create_table('/', key, description)
-                self.log.debug(f'create table {key}')
-
+                self.h5f.create_table("/", key, description)
+                self.log.debug(f"create table {key}")
 
     def run(self):
         while not self.getout:
@@ -85,7 +92,6 @@ class MainThread(threading.Thread):
 
     def stop(self):
         self.getout = True
-
 
 
 class Plugin(plugin.PluginBase):

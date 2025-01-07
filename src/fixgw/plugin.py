@@ -31,8 +31,10 @@ except:
 
 jobQueue = queue.Queue()
 
+
 class PluginFail(Exception):
     pass
+
 
 # This is the base class for all plugin objects.  Every plugin should
 # inherit this class and override at least the run function.  See the
@@ -40,7 +42,7 @@ class PluginFail(Exception):
 class PluginBase(object):
     def __init__(self, name, config):
         self.name = name
-        self.log = logging.getLogger('fixgw.' + name)
+        self.log = logging.getLogger("fixgw." + name)
         self.log.info("Initializing")
         self.config = config
         self.log.debug("Config: " + str(self.config))
@@ -53,14 +55,13 @@ class PluginBase(object):
         self.run()
         self.running = True
 
-
     def shutdown(self):
         self.stop()
         self.log.info("Stopping")
         self.running = False
 
     def quit(self):
-        """ Sends a job back to the main program to quit program """
+        """Sends a job back to the main program to quit program"""
         jobQueue.put("QUIT")
 
     def is_running(self):

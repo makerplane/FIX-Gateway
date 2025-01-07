@@ -26,14 +26,15 @@ import fixgw.netfix
 
 log = logging.getLogger(__name__)
 
+
 # This class represents a single data point in the database.
 class DB_Item(object):
-    def __init__(self, client, key, dtype='float'):
+    def __init__(self, client, key, dtype="float"):
         super(DB_Item, self).__init__()
         if key == None:
             raise ValueError("Trying to create a Null Item")
         self.lock = threading.RLock()
-        self.supressWrite = True # Keeps us from writing to the server
+        self.supressWrite = True  # Keeps us from writing to the server
         self.dtype = dtype
         self.key = key
         self._value = 0.0
@@ -46,7 +47,9 @@ class DB_Item(object):
         self._secFail = False
         self._max = 100.0
         self._min = 0.0
-        self._tol = 100     # Timeout lifetime in milliseconds.  Any older and quality is bad
+        self._tol = (
+            100  # Timeout lifetime in milliseconds.  Any older and quality is bad
+        )
         self.timestamp = datetime.utcnow()
         self.aux = {}
         self.subscribe = True
@@ -71,7 +74,6 @@ class DB_Item(object):
     def __str__(self):
         s = "{} = {}".format(self.key, self._value)
         return s
-
 
     # initialize the auxiliary data dictionary.  aux should be a list of
     # aux names
@@ -99,8 +101,10 @@ class DB_Item(object):
                     if self.auxChanged != None:
                         self.auxChanged(name, value)
                     if not self.supressWrite:
-                        res = self.client.writeValue("{}.{}".format(self.key, name), self.aux[name])
-                        if '!' in res:
+                        res = self.client.writeValue(
+                            "{}.{}".format(self.key, name), self.aux[name]
+                        )
+                        if "!" in res:
                             # TODO: Should probably report the error???
                             return
             except ValueError:
@@ -121,7 +125,7 @@ class DB_Item(object):
     # Outputs the value to the send queue and on to the fixgw server
     def output_value(self):
         flags = "1" if self.annunciate else "0"
-        flags += "0" # if self.old else "0"
+        flags += "0"  # if self.old else "0"
         flags += "1" if self.bad else "0"
         flags += "1" if self.fail else "0"
 
@@ -138,7 +142,7 @@ class DB_Item(object):
     @property
     def value(self):
         with self.lock:
-            return self._value #, self.annunciate, self.old, self.bad, self.fail)
+            return self._value  # , self.annunciate, self.old, self.bad, self.fail)
 
     def valueConvert(self, x):
         if self.dtype == bool:
@@ -156,14 +160,16 @@ class DB_Item(object):
             if self.dtype != str:
                 # bounds check and cap
                 try:
-                    if y < self._min: y = self._min
+                    if y < self._min:
+                        y = self._min
                 except:  # Probably only fails if min has not been set
-                    #raise
+                    # raise
                     pass  # ignore at this point
                 try:
-                    if y > self._max: y = self._max
+                    if y > self._max:
+                        y = self._max
                 except:  # Probably only fails if max has not been set
-                    #raise
+                    # raise
                     pass  # ignore at this point
         return y
 
@@ -184,10 +190,10 @@ class DB_Item(object):
             self.valueWrite(self._value)
         if not self.supressWrite:
             res = self.client.writeValue(self.key, self._value)
-            if '!' in res:
+            if "!" in res:
                 # TODO: Should probably report the error???
                 return
-            vals = res.split(';')
+            vals = res.split(";")
             last = self._value
             y = self.valueConvert(vals[1])
             if y != last:
@@ -206,7 +212,6 @@ class DB_Item(object):
             self.secFail = vals[2][4]
             self.supressWrite = False
 
-
     @property
     def dtype(self):
         with self.lock:
@@ -215,7 +220,7 @@ class DB_Item(object):
     @dtype.setter
     def dtype(self, dtype):
         with self.lock:
-            types = {'float':float, 'int':int, 'bool':bool, 'str':str}
+            types = {"float": float, "int": int, "bool": bool, "str": str}
             try:
                 self._dtype = types[dtype]
                 self._typestring = dtype
@@ -237,7 +242,7 @@ class DB_Item(object):
     @units.setter
     def units(self, value):
         with self.lock:
-            self._units = value.replace("deg",u'\N{DEGREE SIGN}')
+            self._units = value.replace("deg", "\N{DEGREE SIGN}")
 
     @property
     def min(self):
@@ -250,7 +255,9 @@ class DB_Item(object):
             try:
                 self._min = self.dtype(x)
             except ValueError:
-                log.error("Bad minimum value '" + str(x) + "' given for " + self.description)
+                log.error(
+                    "Bad minimum value '" + str(x) + "' given for " + self.description
+                )
 
     @property
     def max(self):
@@ -263,7 +270,9 @@ class DB_Item(object):
             try:
                 self._max = self.dtype(x)
             except ValueError:
-                log.error("Bad maximum value '" + str(x) + "' given for " + self.description)
+                log.error(
+                    "Bad maximum value '" + str(x) + "' given for " + self.description
+                )
 
     @property
     def tol(self):
@@ -280,8 +289,8 @@ class DB_Item(object):
 
     def convertBool(self, x):
         if type(x) == str:
-            x=x.lower()
-            if x in ['0', 'false', 'no', 'f']:
+            x = x.lower()
+            if x in ["0", "false", "no", "f"]:
                 return False
             else:
                 return True
@@ -304,7 +313,7 @@ class DB_Item(object):
                 self.annunciateChanged(self._annunciate)
             try:
                 if not self.supressWrite:
-                    self.client.flag(self.key, 'a', self._annunciate)
+                    self.client.flag(self.key, "a", self._annunciate)
             except Exception as e:
                 log.error(e)
 
@@ -324,7 +333,7 @@ class DB_Item(object):
                 self.oldChanged(self._old)
             try:
                 if not self.supressWrite:
-                    self.client.flag(self.key, 'o', self._old)
+                    self.client.flag(self.key, "o", self._old)
             except Exception as e:
                 log.error(e)
 
@@ -344,7 +353,7 @@ class DB_Item(object):
                 self.badChanged(self._bad)
             try:
                 if not self.supressWrite:
-                    self.client.flag(self.key, 'b', self._bad)
+                    self.client.flag(self.key, "b", self._bad)
             except Exception as e:
                 log.error(e)
 
@@ -364,7 +373,7 @@ class DB_Item(object):
                 self.failChanged(self._fail)
             try:
                 if not self.supressWrite:
-                    self.client.flag(self.key, 'f', self._fail)
+                    self.client.flag(self.key, "f", self._fail)
             except Exception as e:
                 log.error(e)
 
@@ -384,7 +393,7 @@ class DB_Item(object):
                 self.secFailChanged(self._secFail)
             try:
                 if not self.supressWrite:
-                    self.client.flag(self.key, 's', self._secFail)
+                    self.client.flag(self.key, "s", self._secFail)
             except Exception as e:
                 log.error(e)
 
@@ -393,11 +402,11 @@ class DB_Item(object):
             try:
                 self.supressWrite = True
                 self.value = report[1]
-                self.annunciate = True if 'a' in report[2] else False
-                self.old = True if 'o' in report[2] else False
-                self.bad = True if 'b' in report[2] else False
-                self.fail = True if 'f' in report[2] else False
-                self.secFail = True if 's' in report[2] else False
+                self.annunciate = True if "a" in report[2] else False
+                self.old = True if "o" in report[2] else False
+                self.bad = True if "b" in report[2] else False
+                self.fail = True if "f" in report[2] else False
+                self.secFail = True if "s" in report[2] else False
             except:
                 raise
             finally:
@@ -405,7 +414,7 @@ class DB_Item(object):
 
 
 class UpdateThread(threading.Thread):
-    def __init__(self, function, interval = 1.0):
+    def __init__(self, function, interval=1.0):
         super(UpdateThread, self).__init__()
         self.daemon = True
         self.interval = interval
@@ -458,7 +467,7 @@ class Database(object):
             for key, item in self.__items.items():
                 try:
                     self.client.unsubscribe(key)
-                except: # We ignore errors because the server is probably down
+                except:  # We ignore errors because the server is probably down
                     pass
                 if item.destroyed != None:
                     item.destroyed()
@@ -469,8 +478,8 @@ class Database(object):
 
     # This callback gets a data update sentence from the server
     def dataFunction(self, x):
-        if '.' in x[0]:
-            tokens = x[0].split('.')
+        if "." in x[0]:
+            tokens = x[0].split(".")
             i = self.__items[tokens[0]]
             i.supressWrite = True
             i.set_aux_value(tokens[1], x[1])
@@ -492,11 +501,11 @@ class Database(object):
                 item = self.define_item(key, rep)
                 res = self.client.read(key)
                 item.value = res[1]
-                item.annunciate = 'a' in res[2]
-                item.old = 'o' in res[2]
-                item.bad = 'b' in res[2]
-                item.fail = 'f' in res[2]
-                item.secFail = 's' in res[2]
+                item.annunciate = "a" in res[2]
+                item.old = "o" in res[2]
+                item.bad = "b" in res[2]
+                item.fail = "f" in res[2]
+                item.secFail = "s" in res[2]
                 auxlist = item.get_aux_list()
                 for aux in auxlist:
                     val = self.client.read("{}.{}".format(key, aux))
@@ -527,7 +536,7 @@ class Database(object):
         # Send a read command to the server to get initial data
         res = self.client.read(key)
         item.value = res[1]
-        for each in item.aux: # Read the Auxiliary data
+        for each in item.aux:  # Read the Auxiliary data
             self.client.read("{0}.{1}".format(key, each))
         if item.reportReceived != None:
             item.reportReceived()
@@ -536,7 +545,6 @@ class Database(object):
         self.client.subscribe(key)
         self.__items[key] = item
         return item
-
 
     # If the create flag is set to True this function will create an
     # item with the given key if it does not exist.  Otherwise just

@@ -30,21 +30,24 @@ from Adafruit_BNO055 import BNO055
 from collections import OrderedDict
 import fixgw.plugin as plugin
 
+
 class MainThread(threading.Thread):
     def __init__(self, parent):
         """The calling object should pass itself as the parent.
         This gives the thread all the plugin goodies that the
         parent has."""
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
         self.count = 0
-        self.sleep_time = 0.005 # 3 x .005 give +/-60Hz refresh rate
-        self.bno = BNO055.BNO055(serial_port='/dev/ttyAMA0', rst=18)
+        self.sleep_time = 0.005  # 3 x .005 give +/-60Hz refresh rate
+        self.bno = BNO055.BNO055(serial_port="/dev/ttyAMA0", rst=18)
         if not self.bno.begin():
-            self.parent.db_write("ORISYSW",0) # TODO put 0 to orientation system status but a fail flag are need here.
-            raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+            self.parent.db_write(
+                "ORISYSW", 0
+            )  # TODO put 0 to orientation system status but a fail flag are need here.
+            raise RuntimeError("Failed to initialize BNO055! Is the sensor connected?")
 
     def run(self):
         while True:
@@ -80,15 +83,17 @@ class MainThread(threading.Thread):
             self.parent.db_write("ROLL", roll)
             self.parent.db_write("PITCH", pitch)
             time.sleep(sleep_time)
-            x,y,z = self.bno.read_accelerometer()
-            x = -x/60
-            y = -y/60
-            z = -z/60
+            x, y, z = self.bno.read_accelerometer()
+            x = -x / 60
+            y = -y / 60
+            z = -z / 60
             self.parent.db_write("ALAT", x)
             self.parent.db_write("ANORM", y)
             self.parent.db_write("ALONG", z)
             time.sleep(self.sleep_time)
-            sys, gyro, accel, mag = self.bno.get_calibration_status() # 0 to 3 calibration status, 3 is full calibrated
+            sys, gyro, accel, mag = (
+                self.bno.get_calibration_status()
+            )  # 0 to 3 calibration status, 3 is full calibrated
             self.parent.db_write("ORISYSW", sys)
             self.parent.db_write("GYROW", gyro)
             self.parent.db_write("ACCELW", accel)
@@ -100,18 +105,19 @@ class MainThread(threading.Thread):
 
 
 class Plugin(plugin.PluginBase):
-    """ All plugins for FIX Gateway should implement at least the class
+    """All plugins for FIX Gateway should implement at least the class
     named 'Plugin.'  They should be derived from the base class in
     the plugin module.
 
     The run and stop methods of the plugin should be overridden but the
     base module functions should be called first."""
+
     def __init__(self, name, config):
         super(Plugin, self).__init__(name, config)
         self.thread = MainThread(self)
 
     def run(self):
-        """ The run method should return immediately.  The main routine will
+        """The run method should return immediately.  The main routine will
         block when calling this function.  If the plugin is simply a collection
         of callback functions, those can be setup here and no thread will be
         necessary"""
@@ -119,7 +125,7 @@ class Plugin(plugin.PluginBase):
         self.thread.start()
 
     def stop(self):
-        """ The stop method should not return until the plugin has completely
+        """The stop method should not return until the plugin has completely
         stopped.  This generally means a .join() on a thread.  It should
         also undo any callbacks that were set up in the run() method"""
         self.thread.stop()
@@ -130,6 +136,6 @@ class Plugin(plugin.PluginBase):
         super(Plugin, self).stop()
 
     def get_status(self):
-        """ The get_status method should return a dict or OrderedDict that
+        """The get_status method should return a dict or OrderedDict that
         is basically a key/value pair of statistics"""
-        return OrderedDict({"Count":self.thread.count})
+        return OrderedDict({"Count": self.thread.count})

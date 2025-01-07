@@ -29,20 +29,22 @@ import fixgw.plugin as plugin
 class MainThread(threading.Thread):
     def __init__(self, parent):
         super(MainThread, self).__init__()
-        self.getout = False   # indicator for when to stop
+        self.getout = False  # indicator for when to stop
         self.parent = parent  # parent plugin object
         self.log = parent.log  # simplifies logging
         self._c = None
 
     def run(self):
         try:
-            self._c = serial.Serial(self.parent.config['port'],
-                                    self.parent.config['baud'],
-                                    timeout=0.5,)
+            self._c = serial.Serial(
+                self.parent.config["port"],
+                self.parent.config["baud"],
+                timeout=0.5,
+            )
         except serial.serialutil.SerialException:
             self.parent.log.error(f"Could not open port: {self.parent.config['port']}")
             return
-        
+
         while not self.getout:
             try:
                 self._parse(self._c.read_until())
@@ -55,39 +57,39 @@ class MainThread(threading.Thread):
     def _parse(self, message):
         if not len(message):
             return
-        
-        message = message.decode('ASCII')
-        
-        if not message.endswith('\n'):
+
+        message = message.decode("ASCII")
+
+        if not message.endswith("\n"):
             self.parent.log.debug("Incomplete message received")
             return
-        
-        index = message.find('Z')
+
+        index = message.find("Z")
 
         if index != -1:
             message = message[index:]
         else:
             self.parent.log.debug("Beginning of message was not found")
 
-        if message.startswith("ZM"):    # Fuel flow right
+        if message.startswith("ZM"):  # Fuel flow right
             if "FUELF2" not in self.parent.db_list():
                 # Second engine not in config
                 return
-            
+
             try:
                 fuel_flow = int(message[2:])
             except ValueError:
                 self.parent.log.error(f"Bad data received: {message}")
                 return
             self.parent.db_write("FUELF2", fuel_flow / 0.1)
-        elif message.startswith("ZO"):    # Fuel flow left
+        elif message.startswith("ZO"):  # Fuel flow left
             try:
                 fuel_flow = int(message[2:])
             except ValueError:
                 self.parent.log.error(f"Bad data received: {message}")
                 return
             self.parent.db_write("FUELF1", fuel_flow / 0.1)
-        elif message.startswith("ZR"):    # Fuel remaining
+        elif message.startswith("ZR"):  # Fuel remaining
             try:
                 fuel_remaining = float(message[2:])
             except ValueError:
