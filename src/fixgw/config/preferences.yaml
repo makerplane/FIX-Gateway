@@ -14,7 +14,6 @@ includes:
   FLIGHT_GEAR_CONFIG: connections/flight_gear_simulator.yaml
   XPLANE_CONFIG: connections/xplane.yaml
   CANFIX_CONFIG: connections/canfix.yaml
-  GUI_CONFIG: connections/gui.yaml
   SYSTEM_CONFIG: connections/system.yaml
   ANNUNCIATE_CONFIG: connections/annunciate.yaml
   RPI_BNO055_CONFIG: connections/rpi_bno055.yaml
@@ -47,7 +46,6 @@ enabled:
   FLIGHT_GEAR: false
   XPLANE: false
   CANFIX: false
-  GUI: false
   SYSTEM: true
   ANNUNCIATE: true
   RPI_BNO055: false
