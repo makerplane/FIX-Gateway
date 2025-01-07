@@ -33,7 +33,7 @@ config = """
     channel: tcan0
 
     # Use the actual current mapfile
-    mapfile: 'fixgw/config/canfix/map.yaml'
+    mapfile: 'src/fixgw/config/canfix/map.yaml'
     # The following is our Node Identification Information
     # See the CAN-FIX Protocol Specification for more information
     node: 145     # CAN-FIX Node ID
@@ -116,7 +116,7 @@ class TestCanfix(unittest.TestCase):
 
     def setUp(self):
         # Use the default database
-        database.init("fixgw/config/database.yaml")
+        database.init("src/fixgw/config/database.yaml")
 
         import fixgw.plugins.canfix
 

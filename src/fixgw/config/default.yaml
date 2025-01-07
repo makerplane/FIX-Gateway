@@ -1,0 +1,111 @@
+# This is the main configuration file for the FIX-Gateway Server
+
+# For use in this configuration, {CONFIG} will be replaced with the
+# directory where this file is found.
+
+# File that defines the database.
+# No need to change this, if you need to add some custom keys do 
+# that inside the file database/custom.yaml
+database file: "{CONFIG}/database.yaml"
+
+# Set to false if you do not want to auto-start
+auto start: true
+
+# Set initial values after the database is initialized.
+# If there are duplicate assignments in these files, the last
+# file listed will overwrite data in previous files
+# Plugins may overwrite this data as well.
+initialization files:
+   - "{CONFIG}/init_data/default.ini"
+  # - "{CONFIG}/init_data/airplanes/cessna/c170b.ini"
+  # - "{CONFIG}/init_data/flight_gear/cessna_172.ini"
+  # - "{CONFIG}/init_data/engines/aeromomentum/am13.ini"
+  #- "{CONFIG}/init_data/engines/rotax/582.ini"
+# Make your edits in this file:
+   - "{CONFIG}/init_data/custom.ini"
+# If you create a file for your engine, airplane or equipment
+# and want to share it please make a pull request on github.
+# Other users with the same engine will appreciate that
+
+# Connections:
+# if 'load' is 'yes' the connection plugin will be loaded at program start
+# if 'module' should be set to the location of the Python module that
+# represents the connection plugin.
+# All other configuration options will be passed to the connection plugin
+# itself. See the FIX-Gateway documentation for specific connection plugin
+# configuration options.
+connections:
+  include:
+  - QUORUM_CONFIG
+  - DATA_RECORDER_CONFIG
+  - NETFIX_CONFIG
+  - COMMAND_CONFIG
+  - FLIGHT_GEAR_CONFIG
+  - XPLANE_CONFIG
+  - CANFIX_CONFIG
+  - SYSTEM_CONFIG
+  - ANNUNCIATE_CONFIG
+  - RPI_BNO055_CONFIG
+  - RPI_BMP085_CONFIG
+  - RPI_VIRTUALWIRE_CONFIG
+  - RPI_BARO_ENCODER_CONFIG
+  - RPI_BUTTONS_CONFIG
+  - MCP3008_CONFIG
+  - RAIS_CONFIG
+  - COMPUTE_CONFIG
+  - DIMMER_CONFIG
+  - GRAND_RAPIDS_EIS_CONFIG
+  - STRATUX_CONFIG
+  - MAVLINK_CONFIG
+  - IFLY_CONFIG
+  - MEGASQUIRT_CONFIG
+  - MGL_CONFIG
+  - MGL_SERIAL_CONFIG
+  - SHADIN_CONFIG
+  - GPSD_CONFIG
+  - STROM_PI_CONFIG
+  - DYNON_CONFIG
+  - DEMO_CONFIG
+
+# Logging configuration - See Python logging.config module documenation
+# This is logging for system messages, not system data
+# If you want a Flight Data Recorder, see the file connections/data_recorder.yaml
+logging:
+  version: 1
+  disable_existing_loggers: False
+  loggers:
+    '':
+      # messages with levels below the one given will not be logged
+      #level: DEBUG
+      #level: INFO
+      level: WARNING
+      #level: ERROR
+      #level: CRITICAL
+
+      handlers: [stderr, syslog]
+      propagate: True
+
+  formatters:
+    standard:
+      format: "%(levelname)s:%(asctime)s:%(name)s - %(message)s"
+      datefmt: "%Y%m%d-%H:%M:%S"
+      class: logging.Formatter
+
+  handlers:
+    stderr:
+      class: logging.StreamHandler
+      formatter: standard
+      stream: ext://sys.stderr
+
+#    file:
+#      class: logging.FileHandler
+#      formatter: standard
+#      filename: fixgw.log
+#      mode: w
+#      #mode: a
+
+    syslog:
+      class: logging.handlers.SysLogHandler
+      address: /dev/log
+      facility: local6
+      formatter: standard

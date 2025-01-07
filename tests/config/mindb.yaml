@@ -7,6 +7,11 @@ variables:
   t: 2  # Fuel Tanks
 
 entries:
+- key: GATEWAY_VERSION
+  description: Version of the gateway
+  type: str
+  tol: 0
+
 - key: IAS
   description: Indicated Airspeed
   type: float

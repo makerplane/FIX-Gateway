@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #  Copyright (c) 2018 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -14,32 +16,5 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import unittest
-#import string
-#import io
-import subprocess
-import os
-#import fixgw
-#import fixgw.server
-import time
-
-
-class TestProcess(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def test_MinimalSuccess(self):
-        """Minimal Process start/stop test"""
-        p = subprocess.Popen(["python3", "fixGw.py", "--debug", "--config-file", "tests/config/minimal.yaml"])
-        time.sleep(0.3)
-        p.terminate()
-        x = p.wait()
-        self.assertEqual(x,0)
-
-    def tearDown(self):
-        pass
-
-
-if __name__ == '__main__':
-    unittest.main()
+import fixgw.server as server
+server.main()

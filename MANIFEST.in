@@ -1,1 +1,1 @@
-recursive-include fixgw/config *
+recursive-include src/fixgw/config *

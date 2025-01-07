@@ -10,6 +10,7 @@ description: |
     sudo snap set system experimental.user-daemons=true
     
     Release Notes:
+    * enabled client GUI using fixgateway.client --gui
     * Updated to core24 and python 3.12
 
     Many new plugins that need your help testing:
@@ -54,9 +55,11 @@ parts:
     plugin: python
     source: .
     override-build: |
+      sed -i 's/"PyQt6==6.8.0",//' pyproject.toml
       craftctl default
-      craftctl set version=$(python3 fixgw/version.py)
+      craftctl set version=$(python3 src/fixgw/version.py)
     stage-packages:
+      - libxcb-cursor0
       - libarchive13t64
       - cmake
       - build-essential
@@ -69,6 +72,7 @@ parts:
       - python3-numpy
       - python3-lxml
       - python3-psutil
+      - python3-pyqt6
       - libblas3
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
@@ -99,9 +103,17 @@ apps:
 
   client:
     command: bin/fixgwc
-    plugs: [network]
+    plugs: 
+      - network
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+      QT_PLUGIN_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/qt6/plugins/
+      QT_QPA_PLATFORM: xcb
 
 
