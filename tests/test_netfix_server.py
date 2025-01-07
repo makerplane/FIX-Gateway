@@ -139,7 +139,7 @@ entries:
 netfix_config = """
 type: server
 host: 0.0.0.0
-port: 3490
+port: 34901
 buffer_size: 1024
 timeout: 1.0
 """
@@ -162,7 +162,7 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.settimeout(1.0)
-        self.sock.connect(("127.0.0.1", 3490))
+        self.sock.connect(("127.0.0.1", 34901))
 
     def tearDown(self):
         self.sock.shutdown(socket.SHUT_RDWR)
