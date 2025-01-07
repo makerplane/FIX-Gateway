@@ -396,6 +396,7 @@ def spanFunction(inputs, output, require_leader):
         flag_fail = False
         flag_secfail = False
         vmin = None
+        vmax = None
         for each in vals:
             if vals[each] is None:
                 return  # We don't have one of each yet

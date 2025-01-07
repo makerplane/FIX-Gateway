@@ -98,7 +98,7 @@ class MainThread(threading.Thread):
                                         f"QVOTE{cfobj.value}", cfobj.value
                                     )
                                 except:
-                                    log.warning(
+                                    self.log.warning(
                                         f"Received a vote for QVOTE{cfobj.value} but this fixid does not exist"
                                     )
                     if self.interesting[msg.arbitration_id]:

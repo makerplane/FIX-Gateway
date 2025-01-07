@@ -123,14 +123,19 @@ class DB_Item(object):
                 raise
 
     # Outputs the value to the send queue and on to the fixgw server
-    def output_value(self):
-        flags = "1" if self.annunciate else "0"
-        flags += "0"  # if self.old else "0"
-        flags += "1" if self.bad else "0"
-        flags += "1" if self.fail else "0"
+    # This does not seem to be used anywhere and
+    # contains syntax errors creating lint errors
+    # Since it seems like this should exist and be used
+    # I am leaving it here as a reminder
 
-        # TODO Handle the Aux data.
-        db.queue_out("{0};{1};{2}\n".format(self.key, self.value, flags).encode())
+    # def output_value(self):
+    #     flags = "1" if self.annunciate else "0"
+    #     flags += "0"  # if self.old else "0"
+    #     flags += "1" if self.bad else "0"
+    #     flags += "1" if self.fail else "0"
+
+    #     # TODO Handle the Aux data.
+    #     db.queue_out("{0};{1};{2}\n".format(self.key, self.value, flags).encode())
 
     # return the age of the item in milliseconds
     @property

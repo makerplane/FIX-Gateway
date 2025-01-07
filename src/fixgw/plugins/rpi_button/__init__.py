@@ -66,7 +66,7 @@ class MainThread(threading.Thread):
             time.sleep(0.05)
             self.count += 1
             input = GPIO.input(self.btnpin)
-            if (not prev_input) and input:
+            if (not self.prev_input) and input:
                 self.parent.db_write(self.btnkey, "True")
             else:
                 self.parent.db_write(self.btnkey, "False")

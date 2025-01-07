@@ -537,7 +537,7 @@ class ClientThread(threading.Thread):
     def get_status(self):
         connected = 0
         disconnected = 0
-        for c in clients:
+        for c in self.clients:
             if c.isConnected:
                 connected += 1
             else:
