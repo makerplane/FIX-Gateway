@@ -27,12 +27,9 @@
 
 import threading
 import time
-import logging
 from collections import OrderedDict
 import fixgw.plugin as plugin
 from fixgw.plugins.mavlink.Mav import Mav
-
-import math
 
 
 class MainThread(threading.Thread):
@@ -67,7 +64,7 @@ class MainThread(threading.Thread):
                     print(e)
                     self.conn.close()
                 except Exception:
-                    self.log.debug(f"Mavlink failed to connect")
+                    self.log.debug("Mavlink failed to connect")
 
                 self.log.debug(
                     f"Mavlink failed to connect, trying again in 1 second type: {self._type} port: {self.port} baud: {self.baud}"
@@ -80,7 +77,7 @@ class MainThread(threading.Thread):
                 self.conn.wait_heartbeat()
             except Exception as e:
                 self.conn.close()
-                self.log.debug(f"Mavlink failed wait_heartbeat")
+                self.log.debug("Mavlink failed wait_heartbeat")
                 self.log.debug(e)
                 time.sleep(1)
                 continue
@@ -104,7 +101,7 @@ class MainThread(threading.Thread):
                     loopc += 1
                 except Exception as e:
                     self.conn.close()
-                    self.log.debug(f"Mavlink failed while processing messages")
+                    self.log.debug("Mavlink failed while processing messages")
                     self.log.debug(e)
                     time.sleep(1)
                     break

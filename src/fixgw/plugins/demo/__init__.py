@@ -473,7 +473,6 @@ class MainThread(threading.Thread):
             },
             {
                 "MAVMSG": "CHT 100, EGT 500, FUELQ 21,21,42",
-                "CHT11": 100,
                 "CHT11": 95,
                 "CHT12": 90,
                 "CHT13": 120,

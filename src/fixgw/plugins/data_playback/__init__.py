@@ -1,12 +1,10 @@
 import threading
 import time
-import logging
 import fixgw.plugin as plugin
 import fixgw.database as database
 from collections import OrderedDict
 import json
 import datetime
-import os
 
 
 class MainThread(threading.Thread):

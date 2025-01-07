@@ -21,14 +21,13 @@
 from __future__ import print_function
 
 import argparse
-import threading
 import sys
 import logging
 
-logging.basicConfig()
-
 import fixgw.netfix as netfix
 from . import command
+
+logging.basicConfig()
 
 
 # Used to print to stderr

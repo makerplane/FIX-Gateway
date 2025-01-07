@@ -230,7 +230,7 @@ rdac = {
         "type": "sint",
         "freq": 500,
     },
-    ###Note special calculation needed for voltage value
+    # Note special calculation needed for voltage value
     # function ToVolts(v: word): string;
     # begin
     #  result:=IntToStr(round(v/5.73758));

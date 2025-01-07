@@ -16,12 +16,9 @@
 #  USA.import plugin
 
 import threading
-import time
 from collections import OrderedDict
 import fixgw.plugin as plugin
 import socket
-import struct
-import math
 import pynmea2
 import re
 
@@ -94,7 +91,7 @@ class MainThread(threading.Thread):
                     if data.dest_lat_dir == "N":
                         lat = 1
                     if data.dest_lon_dir == "E":
-                        long = 1
+                        lon = 1
                     self.parent.db_write(
                         "WPLAT", lat * nmea_utils.dm_to_sd(data.dest_lat)
                     )

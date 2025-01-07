@@ -22,7 +22,6 @@
 # THE SOFTWARE.
 import binascii
 import logging
-import struct
 import time
 
 import serial

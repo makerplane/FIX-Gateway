@@ -18,9 +18,9 @@
 #  This is the gui client.  It gives us a graphical interface into the
 #  inner workings of the gateway.
 
-from PyQt6.QtGui import *
-from PyQt6.QtCore import *
-from PyQt6.QtWidgets import *
+from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDialog, QLabel, QCheckBox, QPushButton, QHBoxLayout
 
 from . import connection
 from .ui import itemDialog_ui

@@ -21,7 +21,7 @@ def calc_crc(msg: bytes):
 
 def decodeGDL90(msg: bytes):
     msg_cleaned = bytearray()
-    ctr = 0
+    # ctr = 0
     n = 1
     while n < len(msg) - 3:
         if (msg[n] == 0x7D) or (msg[n] == 0x7E):

@@ -19,7 +19,6 @@
 #  X-Plane Plugin
 
 import threading
-import time  # <---Not used need to verify if it's needed?'
 import socket
 import select
 import struct
@@ -105,7 +104,7 @@ class MainThread(threading.Thread):
                     udata = []
                     for i in range(8):
                         y = start + i * 4 + 4
-                        udata.append(struct.unpack("f", data[y : y + 4])[0])
+                        udata.append(struct.unpack("f", data[y : y + 4])[0])  # noqa: E203
                     self.writedata(index, udata)
                     # print "index:", index, "Data: ", udata
             self.senddata()

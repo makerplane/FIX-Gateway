@@ -144,6 +144,7 @@ buffer_size: 1024
 timeout: 1.0
 """
 
+
 # Basically what we do with this test is set up a skeleton of the application
 # by loading and initializing the database module and loading the netfix
 # plugin.  Then we just create out own local sockets and test.
@@ -155,9 +156,9 @@ class TestNetfixServerSimple(unittest.TestCase):
         nc = yaml.safe_load(netfix_config)
         import fixgw.plugins.netfix
 
-        self.pl =  fixgw.plugins.netfix.Plugin("netfix", nc)
+        self.pl = fixgw.plugins.netfix.Plugin("netfix", nc)
         self.pl.start()
-        time.sleep(0.1) # Give plugin a chance to get started
+        time.sleep(0.1)  # Give plugin a chance to get started
         # Grab a client socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -169,14 +170,12 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.sock.close()
         self.pl.shutdown()
 
-
     def test_value_write(self):
         self.sock.sendall("@wALT;2500\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@wALT;2500.0;00000\n")
         x = database.read("ALT")
         self.assertEqual(x, (2500.0, False, False, False, False, False))
-
 
     def test_subscription(self):
         self.sock.sendall("@sALT\n".encode())
@@ -186,10 +185,9 @@ class TestNetfixServerSimple(unittest.TestCase):
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "ALT;3000.0;00000\n")
 
-
     def test_multiple_subscription_fail(self):
         """Test that we receive an error if we try to subscribe to the same
-           point again"""
+        point again"""
         self.sock.sendall("@sALT\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@sALT\n")
@@ -201,7 +199,6 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.sock.sendall("@sALT\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@sALT!002\n")
-
 
     def test_unsubscribe(self):
         self.sock.sendall("@sIAS\n".encode())
@@ -224,7 +221,6 @@ class TestNetfixServerSimple(unittest.TestCase):
         database.write("ALT", 3200)
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "ALT;3200.0;00000\n")
-
 
     def test_normal_write(self):
         self.sock.sendall("IAS;121.2;0000\n".encode())
@@ -251,7 +247,6 @@ class TestNetfixServerSimple(unittest.TestCase):
         time.sleep(0.1)
         x = database.read("IAS")
         self.assertEqual(x, (121.6, False, False, False, False, True))
-
 
     def test_read(self):
         database.write("IAS", 105.4)
@@ -294,7 +289,6 @@ class TestNetfixServerSimple(unittest.TestCase):
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@rIAS;105.4;00000\n")
 
-
     def test_read_errors(self):
         self.sock.sendall("@rJUNKID\n".encode())
         res = self.sock.recv(1024).decode()
@@ -303,7 +297,6 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.sock.sendall("@rOILP1.lowWarned\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@rOILP1.lowWarned!001\n")
-
 
     def test_write_errors(self):
         self.sock.sendall("@wJUNKID;12.8\n".encode())
@@ -325,8 +318,6 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.sock.sendall("@wOILP1.lowWarned;12.0\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@wOILP1.lowWarned!001\n")
-
-
 
     def test_value_write_with_subscription(self):
         """Make sure we don't get a response to a value write on our subscriptions"""
@@ -355,13 +346,11 @@ class TestNetfixServerSimple(unittest.TestCase):
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "IAS;136.4;00000\n")
 
-
     def test_aux_write(self):
         self.sock.sendall("@wOILP1.lowWarn;12.5\n".encode())
-        res = self.sock.recv(1024).decode()
+        self.sock.recv(1024).decode()
         x = database.read("OILP1.lowWarn")
         self.assertEqual(x, 12.5)
-
 
     def test_aux_subscription(self):
         self.sock.sendall("@sOILP1\n".encode())
@@ -371,19 +360,16 @@ class TestNetfixServerSimple(unittest.TestCase):
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "OILP1.lowWarn;12.5\n")
 
-
     def test_string_type(self):
         self.sock.sendall("@wACID;727WB\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@wACID;727WB;00000\n")
-
 
     def test_none_string(self):
         database.write("ACID", None)
         self.sock.sendall("@rACID\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@rACID;;00000\n")
-
 
     def test_list(self):
         # Get out list from the database and sort it
@@ -392,13 +378,12 @@ class TestNetfixServerSimple(unittest.TestCase):
         # get list from the server, convert to list and sort
         self.sock.sendall("@l\n".encode())
         res = self.sock.recv(1024).decode()
-        a = res.split(';')
-        list = a[2].split(',')
+        a = res.split(";")
+        list = a[2].split(",")
         list.sort()
         # join them back into a string and compare.  This is mostly
         # just to make it easy to see if it fails
-        self.assertEqual(','.join(db), ','.join(db))
-
+        self.assertEqual(",".join(db), ",".join(db))
 
     def test_tol_subscription(self):
         start = time.time()
@@ -411,18 +396,22 @@ class TestNetfixServerSimple(unittest.TestCase):
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "ROLL;0.5;01000\n")
         elapsed = time.time() - start
-        self.assertTrue(elapsed > .2)
-
+        self.assertTrue(elapsed > 0.2)
 
     def test_get_report(self):
         self.sock.sendall("@qAOA\n".encode())
         res = self.sock.recv(1024).decode()
         i = database.get_raw_item("AOA")
-        s = "@qAOA;{};{};{};{};{};{};{}\n".format(i.description, i.typestring,
-                                                i.min, i.max, i.units, i.tol,
-                                                ','.join(i.aux.keys()))
+        s = "@qAOA;{};{};{};{};{};{};{}\n".format(
+            i.description,
+            i.typestring,
+            i.min,
+            i.max,
+            i.units,
+            i.tol,
+            ",".join(i.aux.keys()),
+        )
         self.assertEqual(res, s)
-
 
     def test_min_max(self):
         i = database.get_raw_item("ALT")
@@ -435,7 +424,6 @@ class TestNetfixServerSimple(unittest.TestCase):
         self.sock.sendall("@wALT;{}\n".format(val).encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@wALT;{};00000\n".format(i.max))
-
 
     def test_flags(self):
         self.sock.sendall("@fALT;a;1\n".encode())
@@ -490,7 +478,6 @@ class TestNetfixServerSimple(unittest.TestCase):
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@rALT;0.0;00000\n")
 
-
     def test_subscribe_flags(self):
         """Test that writing just the flags will trigger a subscription response"""
         self.sock.sendall("@sALT\n".encode())
@@ -522,12 +509,10 @@ class TestNetfixServerSimple(unittest.TestCase):
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "ALT;0.0;00000\n")
 
-
     def test_unknown_command(self):
         self.sock.sendall("@oALT\n".encode())
         res = self.sock.recv(1024).decode()
         self.assertEqual(res, "@oALT!004\n")
-
 
     # def test_status_command(self):
     #     pass
@@ -536,7 +521,7 @@ class TestNetfixServerSimple(unittest.TestCase):
     #     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
 
 

@@ -1,5 +1,4 @@
 import threading
-import time
 from collections import OrderedDict
 import fixgw.plugin as plugin
 from fixgw.plugins.stratux import gdl90
@@ -33,9 +32,9 @@ class MainThread(threading.Thread):
                 pitch = struct.unpack(">h", msg[6:8])[0] / 10.0
                 heading = struct.unpack(">h", msg[8:10])[0] / 10.0
                 slipskid = struct.unpack(">h", msg[10:12])[0] / 10.0
-                yawrate = struct.unpack(">h", msg[12:14])[0] / 10.0
-                g = struct.unpack(">h", msg[14:16])[0] / 10.0
-                ias = struct.unpack(">h", msg[16:18])[0] / 10.0
+                yawrate = struct.unpack(">h", msg[12:14])[0] / 10.0  # noqa: F841
+                g = struct.unpack(">h", msg[14:16])[0] / 10.0  # noqa: F841
+                ias = struct.unpack(">h", msg[16:18])[0] / 10.0  # noqa: F841
                 alt = struct.unpack(">h", msg[18:20])[0] - 5000.5
                 vs = struct.unpack(">h", msg[20:22])[0]
 

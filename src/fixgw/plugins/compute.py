@@ -21,7 +21,6 @@
 #  minimums or maximums and the like.  Specific calculations for things like
 #  True Airspeed could be done also.
 
-from collections import OrderedDict
 import fixgw.plugin as plugin
 from fixgw.database import read
 import fixgw.quorum as quorum

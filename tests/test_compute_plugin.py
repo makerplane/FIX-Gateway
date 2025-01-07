@@ -18,7 +18,6 @@ import unittest
 import io
 import time
 import yaml
-import socket
 import fixgw.database as database
 
 
@@ -206,6 +205,7 @@ functions:
     #   AOA_max_pitch_trend: The maximum difference between the starting samples and ending samples of pitch before it's considered 'not level flight'
 """
 
+
 # Basically what we do with this test is set up a skeleton of the application
 # by loading and initializing the database module and loading the compute
 # plugin.
@@ -217,14 +217,12 @@ class TestComputePlugin(unittest.TestCase):
         cc = yaml.safe_load(config)
         import fixgw.plugins.compute
 
-        self.pl =  fixgw.plugins.compute.Plugin("compute", cc)
+        self.pl = fixgw.plugins.compute.Plugin("compute", cc)
         self.pl.start()
-        time.sleep(0.1) # Give plugin a chance to get started
-
+        time.sleep(0.1)  # Give plugin a chance to get started
 
     def tearDown(self):
         self.pl.shutdown()
-
 
     def test_compute_average(self):
         database.write("EGT11", 300)
@@ -243,7 +241,6 @@ class TestComputePlugin(unittest.TestCase):
         x = database.read("EGTAVG1")
         self.assertEqual(x, (330, False, False, False, False, True))
 
-
     def test_compute_span(self):
         database.write("EGT11", 300)
         database.write("EGT12", 320)
@@ -260,7 +257,6 @@ class TestComputePlugin(unittest.TestCase):
         database.write("EGT13", (340, False, False, False, True))
         x = database.read("EGTSPAN1")
         self.assertEqual(x, (60, False, False, False, False, True))
-
 
     def test_compute_max(self):
         database.write("CHT11", 300)
@@ -289,7 +285,6 @@ class TestComputePlugin(unittest.TestCase):
         x = database.read("CHTMAX1")
         self.assertEqual(x, (380, False, False, False, False, True))
 
-
     def test_compute_min(self):
         database.write("CHT11", 300)
         database.write("CHT12", 320)
@@ -317,7 +312,6 @@ class TestComputePlugin(unittest.TestCase):
         x = database.read("CHTMIN1")
         self.assertEqual(x, (280, False, False, False, False, True))
 
-
     def test_compute_sum(self):
         database.write("FUELQ1", 10)
         database.write("FUELQ2", 10)
@@ -343,7 +337,6 @@ class TestComputePlugin(unittest.TestCase):
         database.write("FUELQ1", (10, False, False, False, True))
         x = database.read("FUELQT")
         self.assertEqual(x, (25, False, False, False, False, True))
-
 
     def test_compute_aoa(self):
         database.write("IAS.Vs", 72)
@@ -391,24 +384,24 @@ class TestComputePlugin(unittest.TestCase):
             database.write("ANORM", 9.8)
             database.write("HEAD", 100)
         x = database.read("AOA")
-        y,a,o,b,f,s = x
-        x = (round(y,2),a,o,b,f,s)
+        y, a, o, b, f, s = x
+        x = (round(y, 2), a, o, b, f, s)
         self.assertEqual(x, (3.0, False, False, False, False, False))
 
         database.write("IAS", 100)
         database.write("ANORM", 10.8)
         x = database.read("AOA")
-        y,a,o,b,f,s = x
-        x = (round(y,2),a,o,b,f,s)
+        y, a, o, b, f, s = x
+        x = (round(y, 2), a, o, b, f, s)
         self.assertEqual(x, (4.72, False, False, False, False, False))
 
         database.write("IAS", 130)
         database.write("ANORM", 7.8)
         x = database.read("AOA")
-        y,a,o,b,f,s = x
-        x = (round(y,2),a,o,b,f,s)
+        y, a, o, b, f, s = x
+        x = (round(y, 2), a, o, b, f, s)
         self.assertEqual(x, (2.59, False, False, False, False, False))
 
-if __name__ == '__main__':
-    unittest.main()
 
+if __name__ == "__main__":
+    unittest.main()

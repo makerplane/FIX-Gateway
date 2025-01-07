@@ -26,7 +26,6 @@
 
 import threading
 import time
-import logging
 from collections import OrderedDict
 import fixgw.plugin as plugin
 

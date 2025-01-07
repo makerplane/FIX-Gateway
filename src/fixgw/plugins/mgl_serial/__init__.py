@@ -102,12 +102,12 @@ class MainThread(threading.Thread):
             elif c["type"] == 2:  # temperature
                 db_key = f"OILT{self.engine}"
             elif c["type"] == 3:  # current
-                db_key = f"CURRNT"
+                db_key = "CURRNT"
                 c["value"] /= 10
             elif c["type"] == 4:  # fuel level
-                db_key = f"FUELQT"
+                db_key = "FUELQT"
             elif c["type"] == 5:  # voltage
-                db_key = f"VOLT"
+                db_key = "VOLT"
                 c["value"] /= 10
 
             print(db_key, c["value"])

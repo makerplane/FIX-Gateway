@@ -25,7 +25,6 @@ try:
     import queue
 except:
     import Queue as queue
-from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
