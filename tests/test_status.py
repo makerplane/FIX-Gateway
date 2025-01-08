@@ -197,10 +197,6 @@ def test_status_get_dict_with_plugin_variations(mock_fixgw):
         assert result["Connection: plugin_stopped"]["Running"] is False
 
 
-# def test_dict2string_empty_dict():
-#    assert dict2string({}) == ""
-
-
 def test_dict2string_non_dict_values():
     data = {"Key": "Value", "Number": 42, "Nested": {"SubKey": "SubValue"}}
     expected = "Key: Value\n" "Number: 42\n" "Nested\n" "   SubKey: SubValue\n"
