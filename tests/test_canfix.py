@@ -19,8 +19,27 @@ import time
 import yaml
 import random
 import can
+import canfix
 
 import fixgw.database as database
+import fixgw.quorum as quorum
+import pytest
+
+# canfix needs updated to support quorum so we will monkey patch it for now
+# Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
+# Request to add this to the canfix specification: https://github.com/makerplane/canfix-spec/issues/4
+canfix.NodeStatus.knownTypes = (
+    ("Status", "WORD", 1),
+    ("Unit Temperature", "INT", 0.1),
+    ("Supply Voltage", "INT", 0.1),
+    ("CAN Transmit Frame Count", "UDINT", 1),
+    ("CAN Receive Frame Count", "UDINT", 1),
+    ("CAN Transmit Error Count", "UDINT", 1),
+    ("CAN Transmit Error Count", "UDINT", 1),
+    ("CAN Receive Overrun Count", "UDINT", 1),
+    ("Serial Number", "UDINT", 1),
+    ("Quorum", "UINT", 1),
+)
 
 
 config = """
@@ -41,6 +60,23 @@ config = """
     CONFIGPATH: ''
 """
 
+bad_mapfile_config = """
+    load: yes
+    module: fixgw.plugins.canfix
+    # See the python-can documentation for the meaning of these options
+    interface: virtual
+    channel: tcan0
+
+    # Use the actual current mapfile
+    mapfile: 'missing_map_file.yaml'
+    # The following is our Node Identification Information
+    # See the CAN-FIX Protocol Specification for more information
+    node: 145     # CAN-FIX Node ID
+    device: 145   # CAN-FIX Device Type
+    revision: 0   # Software Revision Number
+    model: 0      # Model Number
+    CONFIGPATH: ''
+"""
 # This is a list of the parameters that we are testing.  It is a list of tuples
 # that contain (FIXID, CANID, DataString, Value, Test tolerance)
 ptests = [
@@ -104,6 +140,11 @@ ptests = [
     #          ("OILT1", 0x220, "FF0000", 0.0, 0.001),
 ]
 
+qtests = [
+    ("QVOTE1", 1, 1),
+    ("QVOTE2", 2, 2),
+]
+
 
 def string2data(s):
     b = bytearray()
@@ -135,6 +176,11 @@ class TestCanfix(unittest.TestCase):
     def tearDown(self):
         self.pl.shutdown()
 
+    def test_missing_mapfile(self):
+        with pytest.raises(Exception):
+            badcc = yaml.safe_load(config)
+            self.bad_pl = fixgw.plugins.canfix.Plugin("canfix", bad_cc)
+
     def test_parameter_writes(self):
         for param in ptests:
             msg = can.Message(is_extended_id=False, arbitration_id=param[1])
@@ -164,6 +210,31 @@ class TestCanfix(unittest.TestCase):
                     msg.data.append(random.randrange(256))
                 msg.dlc = dsize
                 self.bus.send(msg)
+
+    def test_quorum_outputs_diabled(self):
+        quorum.enabled = False
+        for param in qtests:
+            p = canfix.NodeStatus()
+            p.sendNode = param[1]
+            p.parameter = 0x09
+            p.value = param[2]
+            self.bus.send(p.msg)
+            time.sleep(0.03)
+            x = database.read(param[0])
+            self.assertTrue(x[0] == 0)
+
+    def test_quorum_outputs_enabled(self):
+        quorum.enabled = True
+        for param in qtests:
+            p = canfix.NodeStatus()
+            p.sendNode = param[1]
+            p.parameter = 0x09
+            p.value = param[2]
+            self.bus.send(p.msg)
+            time.sleep(0.03)
+            x = database.read(param[0])
+            self.assertTrue(x[0] == param[2])
+        quorum.enabled = False
 
     # We don't really have any of these yet
     # def test_owned_outputs(self):
