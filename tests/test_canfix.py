@@ -14,7 +14,6 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import unittest
 import time
 import yaml
 import random
@@ -25,9 +24,9 @@ import fixgw.database as database
 import fixgw.quorum as quorum
 import pytest
 import fixgw.plugins.canfix
-
+from collections import namedtuple
 from unittest.mock import MagicMock, patch
-
+import logging 
 # canfix needs updated to support quorum so we will monkey patch it for now
 # Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
 # Request to add this to the canfix specification: https://github.com/makerplane/canfix-spec/issues/4
@@ -148,6 +147,8 @@ ptests = [
 qtests = [
     ("QVOTE1", 1, 1),
     ("QVOTE2", 2, 2),
+    ("QVOTE3", 3, 3),
+
 ]
 
 
@@ -175,214 +176,241 @@ def button_data(data_type, data_code, index, button_bits, canid, nodeid, ns):
     data.extend(valueData)
     return data
 
+Objects = namedtuple("Objects", ["bus", "database", "interface", "channel", "node", "device", "revision", "model"])
 
-class TestCanfix(unittest.TestCase):
+@pytest.fixture
+def plugin():
+    # Use the default database
+    database.init("src/fixgw/config/database.yaml")
 
-    def setUp(self):
-        # Use the default database
-        database.init("src/fixgw/config/database.yaml")
+    cc = yaml.safe_load(config)
+    pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+    pl.start()
+    can_bus = can.Bus(cc["channel"], interface=cc["interface"])
+    time.sleep(0.1)  # Give plugin a chance to get started
 
-        cc = yaml.safe_load(config)
-        self.pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        self.pl.start()
-        self.interface = cc["interface"]
-        self.channel = cc["channel"]
-        self.node = cc["node"]
-        self.device = cc["device"]
-        self.revision = cc["revision"]
-        self.model = cc["model"]
-        self.bus = can.Bus(self.channel, interface=self.interface)
-        time.sleep(0.1)  # Give plugin a chance to get started
+    yield Objects(
+        bus = can_bus,
+        interface = cc["interface"],
+        channel = cc["channel"],
+        node = cc["node"],
+        device = cc["device"],
+        revision = cc["revision"],
+        model = cc["model"],
+        database = database
+    )
+    pl.shutdown() 
+    can_bus.shutdown()
+def test_missing_mapfile():
+    with pytest.raises(Exception):
+        bad_cc = yaml.safe_load(bad_mapfile_config)
+        bad_pl = fixgw.plugins.canfix.Plugin("canfix", bad_cc)
+        # bad_pl.start()
 
-    def tearDown(self):
-        self.pl.shutdown()
-
-    def test_missing_mapfile(self):
-        with pytest.raises(Exception):
-            bad_cc = yaml.safe_load(bad_mapfile_config)
-            self.bad_pl = fixgw.plugins.canfix.Plugin("canfix", bad_cc)
-            # self.bad_pl.start()
-
-    def test_parameter_writes(self):
-        for param in ptests:
-            msg = can.Message(is_extended_id=False, arbitration_id=param[1])
-            msg.data = string2data(param[2])
-            self.bus.send(msg)
-            time.sleep(0.03)
-            x = database.read(param[0])
-            if "." in param[0]:
-                val = x
-            else:
-                val = x[0]
-            self.assertTrue(abs(val - param[3]) <= param[4])
-
-    def test_unowned_outputs(self):
-        database.write("BARO", 30.04)
-        msg = self.bus.recv(1.0)
-        self.assertEqual(msg.arbitration_id, self.node + 1760)
-        self.assertEqual(msg.data, bytearray([12, 0x90, 0x01, 0x58, 0x75]))
-
-    def test_all_frame_ids(self):
-        """Loop through every CAN ID and every length of data with random data"""
-        random.seed(14)  # We want deterministic input for testing
-        # Not all ids are usable this causes a warning.
-        # Need to only use known ids accroding to canfix library
-        # Check against venv/lib/python3.10/site-packages/canfix/protocol.py parameters[pid]
-        import canfix.protocol
-
-        for id in range(2048):
-            if id in canfix.protocol.parameters:
-                for dsize in range(9):
-                    msg = can.Message(is_extended_id=False, arbitration_id=id)
-                    for x in range(dsize):
-                        msg.data.append(random.randrange(256))
-                    msg.dlc = dsize
-                    self.bus.send(msg)
-
-    def test_quorum_outputs_diabled(self):
-        quorum.enabled = False
-        for param in qtests:
-            p = canfix.NodeStatus()
-            p.sendNode = param[1]
-            p.parameter = 0x09
-            p.value = param[2]
-            self.bus.send(p.msg)
-            time.sleep(0.03)
-            x = database.read(param[0])
-            self.assertTrue(x[0] == 0)
-
-    def test_quorum_outputs_enabled(self):
-        quorum.enabled = True
-        for param in qtests:
-            p = canfix.NodeStatus()
-            p.sendNode = param[1]
-            p.parameter = 0x09
-            p.value = param[2]
-            self.bus.send(p.msg)
-            time.sleep(0.03)
-            x = database.read(param[0])
-            self.assertTrue(x[0] == param[2])
-        quorum.enabled = False
-
-    def test_switch_inputs(self):
-        msg = can.Message(arbitration_id=776, is_extended_id=False)
-        # Set TSBTN112 True
-        msg.data = bytearray(b"\x91\x00\x00\x01\x00\x00\x00\x00")
-        self.bus.send(msg)
+def test_parameter_writes(plugin):
+    for param in ptests:
+        msg = can.Message(is_extended_id=False, arbitration_id=param[1])
+        msg.data = string2data(param[2])
+        plugin.bus.send(msg)
         time.sleep(0.03)
-        assert database.read("TSBTN112")[0] == True
-        # Set TSBTN112 False and TBTN212 True
-        msg.data = bytearray(b"\x91\x00\x00\x02\x00\x00\x00\x00")
-        self.bus.send(msg)
-        time.sleep(0.03)
-        assert database.read("TSBTN112")[0] == False
-        assert database.read("TSBTN212")[0] == True
-        assert database.read("TSBTN124")[0] == False
-        # Set TSBTN124, a Toggle button, to True
-        # All other buttons are False
-        msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
-        self.bus.send(msg)
-        time.sleep(0.03)
-        # TSBTN124 wss toggeled False to True
-        assert database.read("TSBTN124")[0] == True
-        # Set all buttons False
-        msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
-        self.bus.send(msg)
-        time.sleep(0.03)
-        # Sending false on a toggle button does not change its state
-        assert database.read("TSBTN124")[0] == True
-        # Set TSBTN124 to True
-        msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
-        self.bus.send(msg)
-        time.sleep(0.03)
-        # Button toggled from True to False
-        assert database.read("TSBTN124")[0] == False
-        # Set all buttons False
-        msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
-        self.bus.send(msg)
-        time.sleep(0.03)
-        # Sending false for toggle does not change state
-        assert database.read("TSBTN124")[0] == False
+        x = database.read(param[0])
+        if "." in param[0]:
+            val = x
+        else:
+            val = x[0]
+        assert abs(val - param[3]) <= param[4]
 
-    def test_nodespecific_switch_inputs(self):
-        #msg = can.Message(arbitration_id=1905, is_extended_id=False)
-        # Set MAVADJ True
-        #database.write("MAVADJ", False) 
-        index = 0
-        canid = 0x309
-        nodeid = 0x91
-        button_bits=[False] * 40
-        # Set first button true
-        button_bits[0] = True
-        # Set 7th button True
-        button_bits[6] = True
-        code = (index // 32) + 0x0C
-        # Setup the can message as node specific
-        msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
-        # Set the message data
+def test_unowned_outputs(plugin):
+    database.write("BARO", 30.04)
+    msg = plugin.bus.recv(1.0)
+    assert msg.arbitration_id == plugin.node + 1760
+    assert msg.data == bytearray([12, 0x90, 0x01, 0x58, 0x75])
+
+def test_all_frame_ids(plugin):
+    """Loop through every CAN ID and every length of data with random data"""
+    random.seed(14)  # We want deterministic input for testing
+    # Not all ids are usable this causes a warning.
+    # Need to only use known ids accroding to canfix library
+    # Check against venv/lib/python3.10/site-packages/canfix/protocol.py parameters[pid]
+    import canfix.protocol
+
+    for id in range(2048):
+        if id in canfix.protocol.parameters:
+            for dsize in range(9):
+                msg = can.Message(is_extended_id=False, arbitration_id=id)
+                for x in range(dsize):
+                    msg.data.append(random.randrange(256))
+                msg.dlc = dsize
+                plugin.bus.send(msg)
+# TODO Add asserts above
+
+def test_quorum_outputs_diabled(plugin):
+    quorum.enabled = False
+    for param in qtests:
+        p = canfix.NodeStatus()
+        p.sendNode = param[1]
+        p.parameter = 0x09
+        p.value = param[2]
+        plugin.bus.send(p.msg)
+        time.sleep(0.03)
+        x = database.read(param[0])
+        assert x[0] == 0
+
+def test_quorum_outputs_enabled(plugin,caplog):
+    quorum.enabled = True
+    quorum.nodeid = 1
+    p = canfix.NodeStatus()
+    for param in qtests:
+        p.sendNode = param[1]
+        p.parameter = 0x09
+        p.value = param[2]
+        plugin.bus.send(p.msg)
+        time.sleep(0.03)
+        x = database.read(param[0])
+        #print(f"{param[0]}: {x[0]}, {param[1]} {param[2]}")
+        if param[2] == 1:
+            assert x[0] == 0
+        else:
+            assert x[0] == param[2]
+    p.sendNode = 5
+    # Test invalid value 101
+    p.value  = 101
+    plugin.bus.send(p.msg)
+    time.sleep(0.03)
+    assert database.read("QVOTE5")[0] == 0
+    # Test invalid value 0
+    p.value  = 0
+    plugin.bus.send(p.msg)
+    time.sleep(0.03)
+    assert database.read("QVOTE5")[0] == 0
+    # Test DB not configured for 6 nodes
+    p.sendNode = 6
+    p.value  = 6
+    with caplog.at_level(logging.WARNING):
+        plugin.bus.send(p.msg)
+        time.sleep(0.03)
+        assert "Received a vote for QVOTE6 but this fixid does not exist" in caplog.text
+     
+    quorum.enabled = False
+    quorum.nodeid = None
+
+def test_switch_inputs(plugin):
+    msg = can.Message(arbitration_id=776, is_extended_id=False)
+    # Set TSBTN112 True
+    msg.data = bytearray(b"\x91\x00\x00\x01\x00\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    assert database.read("TSBTN112")[0] == True
+    # Set TSBTN112 False and TBTN212 True
+    msg.data = bytearray(b"\x91\x00\x00\x02\x00\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    assert database.read("TSBTN112")[0] == False
+    assert database.read("TSBTN212")[0] == True
+    assert database.read("TSBTN124")[0] == False
+    # Set TSBTN124, a Toggle button, to True
+    # All other buttons are False
+    msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    # TSBTN124 wss toggeled False to True
+    assert database.read("TSBTN124")[0] == True
+    # Set all buttons False
+    msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    # Sending false on a toggle button does not change its state
+    assert database.read("TSBTN124")[0] == True
+    # Set TSBTN124 to True
+    msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    # Button toggled from True to False
+    assert database.read("TSBTN124")[0] == False
+    # Set all buttons False
+    msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    # Sending false for toggle does not change state
+    assert database.read("TSBTN124")[0] == False
+
+def test_nodespecific_switch_inputs(plugin):
+    #msg = can.Message(arbitration_id=1905, is_extended_id=False)
+    # Set MAVADJ True
+    #database.write("MAVADJ", False) 
+    index = 0
+    canid = 0x309
+    nodeid = 0x91
+    button_bits=[False] * 40
+    # Set first button true
+    button_bits[0] = True
+    # Set 7th button True
+    button_bits[6] = True
+    code = (index // 32) + 0x0C
+    # Setup the can message as node specific
+    msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
+    # Set the message data
+    msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    assert database.read("MAVADJ")[0] == True
+    assert database.read("MAVWPVALID")[0] == True
+    assert database.read("MAVREQADJ")[0] == False
+    assert database.read("MAVREQAUTOTUNE")[0] == False
+
+    # Reset all buttons to False
+    button_bits=[False] * 40
+    msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
+    # Set the message data
+    msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    assert database.read("MAVADJ")[0] == False
+    assert database.read("MAVWPVALID")[0] == False
+    assert database.read("MAVREQADJ")[0] == False
+    assert database.read("MAVREQAUTOTUNE")[0] == False
+
+
+def test_nodespecific_switch_input_that_we_do_not_want(plugin):
+    index = 0
+    canid = 0x30a
+    nodeid = 0x91
+    button_bits=[False] * 40
+    # Set first button true
+    button_bits[0] = True
+    # Set 7th button True
+    button_bits[6] = True
+    code = (index // 32) + 0x0C
+    msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
+    with patch("canfix.parseMessage") as mock_parse:
+        # send valid message we do not want
+        mock_parse = MagicMock()
         msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
-        self.bus.send(msg)
+        plugin.bus.send(msg)
         time.sleep(0.03)
-        assert database.read("MAVADJ")[0] == True
-        assert database.read("MAVWPVALID")[0] == True
-        assert database.read("MAVREQADJ")[0] == False
-        assert database.read("MAVREQAUTOTUNE")[0] == False
-
-        # Reset all buttons to False
-        button_bits=[False] * 40
-        msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
-        # Set the message data
-        msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
-        self.bus.send(msg)
+        # send invalid message to test exception branch
+        mock_parse = MagicMock()
+        msg.data = button_data("BYTE[5]", code, 9, button_bits, canid, nodeid, True)
+        plugin.bus.send(msg)
         time.sleep(0.03)
-        assert database.read("MAVADJ")[0] == False
-        assert database.read("MAVWPVALID")[0] == False
-        assert database.read("MAVREQADJ")[0] == False
-        assert database.read("MAVREQAUTOTUNE")[0] == False
+    # Since we do not need either of these messages they are never parsed
+    mock_parse.assert_not_called()
+
+# We don't really have any of these yet
+# def test_owned_outputs():
+#     pass
+
+# These aren't implemented yet
+# def test_node_identification():
+#     pass
+#
+# def test_node_report():
+#     pass
+#
+# def test_parameter_disable_enable():
+#     pass
+#
+# def test_node_id_set():
+#     pass
 
 
-    def test_nodespecific_switch_input_that_we_do_not_want(self):
-        index = 0
-        canid = 0x30a
-        nodeid = 0x91
-        button_bits=[False] * 40
-        # Set first button true
-        button_bits[0] = True
-        # Set 7th button True
-        button_bits[6] = True
-        code = (index // 32) + 0x0C
-        msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
-        with patch("canfix.parseMessage") as mock_parse:
-            # send valid message we do not want
-            mock_parse = MagicMock()
-            msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
-            self.bus.send(msg)
-            time.sleep(0.03)
-            # send invalid message to test exception branch
-            mock_parse = MagicMock()
-            msg.data = button_data("BYTE[5]", code, 9, button_bits, canid, nodeid, True)
-            self.bus.send(msg)
-            time.sleep(0.03)
-        # Since we do not need either of these messages they are never parsed
-        mock_parse.assert_not_called()
-
-    # We don't really have any of these yet
-    # def test_owned_outputs(self):
-    #     pass
-
-    # These aren't implemented yet
-    # def test_node_identification(self):
-    #     pass
-    #
-    # def test_node_report(self):
-    #     pass
-    #
-    # def test_parameter_disable_enable(self):
-    #     pass
-    #
-    # def test_node_id_set(self):
-    #     pass
-
-
-if __name__ == "__main__":
-    unittest.main()
