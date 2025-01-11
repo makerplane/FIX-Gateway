@@ -24,6 +24,9 @@ import canfix
 import fixgw.database as database
 import fixgw.quorum as quorum
 import pytest
+import fixgw.plugins.canfix
+
+from unittest.mock import MagicMock, patch
 
 # canfix needs updated to support quorum so we will monkey patch it for now
 # Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
@@ -50,7 +53,7 @@ config = """
     channel: tcan0
 
     # Use the actual current mapfile
-    mapfile: 'src/fixgw/config/canfix/map.yaml'
+    mapfile: 'tests/config/canfix/map.yaml'
     # The following is our Node Identification Information
     # See the CAN-FIX Protocol Specification for more information
     node: 145     # CAN-FIX Node ID
@@ -77,6 +80,8 @@ bad_mapfile_config = """
     model: 0      # Model Number
     CONFIGPATH: ''
 """
+
+
 # This is a list of the parameters that we are testing.  It is a list of tuples
 # that contain (FIXID, CANID, DataString, Value, Test tolerance)
 ptests = [
@@ -152,14 +157,30 @@ def string2data(s):
         b.append(int(s[x : x + 2], 16))  # noqa: E203
     return b
 
+def button_data(data_type, data_code, index, button_bits, canid, nodeid, ns):
+    bytes_array = []
+    for x in range(5):
+        bytes_array.append(button_bits[8 * x:8 * (x + 1)])
+    valueData = canfix.utils.setValue(data_type,bytes_array)
+    data = bytearray([])
+    if ns:
+        data.append(data_code) # Control Code 12-19 index 1-8
+        x = (index % 32) << 11 | canid
+        data.append(x % 256)
+        data.append(x >> 8)
+    else:
+        data.append(nodeid)
+        data.append(index // 32)
+        data.append(0x00)
+    data.extend(valueData)
+    return data
+
 
 class TestCanfix(unittest.TestCase):
 
     def setUp(self):
         # Use the default database
         database.init("src/fixgw/config/database.yaml")
-
-        import fixgw.plugins.canfix
 
         cc = yaml.safe_load(config)
         self.pl = fixgw.plugins.canfix.Plugin("canfix", cc)
@@ -178,8 +199,9 @@ class TestCanfix(unittest.TestCase):
 
     def test_missing_mapfile(self):
         with pytest.raises(Exception):
-            badcc = yaml.safe_load(config)
+            bad_cc = yaml.safe_load(bad_mapfile_config)
             self.bad_pl = fixgw.plugins.canfix.Plugin("canfix", bad_cc)
+            # self.bad_pl.start()
 
     def test_parameter_writes(self):
         for param in ptests:
@@ -203,13 +225,19 @@ class TestCanfix(unittest.TestCase):
     def test_all_frame_ids(self):
         """Loop through every CAN ID and every length of data with random data"""
         random.seed(14)  # We want deterministic input for testing
+        # Not all ids are usable this causes a warning.
+        # Need to only use known ids accroding to canfix library
+        # Check against venv/lib/python3.10/site-packages/canfix/protocol.py parameters[pid]
+        import canfix.protocol
+
         for id in range(2048):
-            for dsize in range(9):
-                msg = can.Message(is_extended_id=False, arbitration_id=id)
-                for x in range(dsize):
-                    msg.data.append(random.randrange(256))
-                msg.dlc = dsize
-                self.bus.send(msg)
+            if id in canfix.protocol.parameters:
+                for dsize in range(9):
+                    msg = can.Message(is_extended_id=False, arbitration_id=id)
+                    for x in range(dsize):
+                        msg.data.append(random.randrange(256))
+                    msg.dlc = dsize
+                    self.bus.send(msg)
 
     def test_quorum_outputs_diabled(self):
         quorum.enabled = False
@@ -235,6 +263,108 @@ class TestCanfix(unittest.TestCase):
             x = database.read(param[0])
             self.assertTrue(x[0] == param[2])
         quorum.enabled = False
+
+    def test_switch_inputs(self):
+        msg = can.Message(arbitration_id=776, is_extended_id=False)
+        # Set TSBTN112 True
+        msg.data = bytearray(b"\x91\x00\x00\x01\x00\x00\x00\x00")
+        self.bus.send(msg)
+        time.sleep(0.03)
+        assert database.read("TSBTN112")[0] == True
+        # Set TSBTN112 False and TBTN212 True
+        msg.data = bytearray(b"\x91\x00\x00\x02\x00\x00\x00\x00")
+        self.bus.send(msg)
+        time.sleep(0.03)
+        assert database.read("TSBTN112")[0] == False
+        assert database.read("TSBTN212")[0] == True
+        assert database.read("TSBTN124")[0] == False
+        # Set TSBTN124, a Toggle button, to True
+        # All other buttons are False
+        msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
+        self.bus.send(msg)
+        time.sleep(0.03)
+        # TSBTN124 wss toggeled False to True
+        assert database.read("TSBTN124")[0] == True
+        # Set all buttons False
+        msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
+        self.bus.send(msg)
+        time.sleep(0.03)
+        # Sending false on a toggle button does not change its state
+        assert database.read("TSBTN124")[0] == True
+        # Set TSBTN124 to True
+        msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
+        self.bus.send(msg)
+        time.sleep(0.03)
+        # Button toggled from True to False
+        assert database.read("TSBTN124")[0] == False
+        # Set all buttons False
+        msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
+        self.bus.send(msg)
+        time.sleep(0.03)
+        # Sending false for toggle does not change state
+        assert database.read("TSBTN124")[0] == False
+
+    def test_nodespecific_switch_inputs(self):
+        #msg = can.Message(arbitration_id=1905, is_extended_id=False)
+        # Set MAVADJ True
+        #database.write("MAVADJ", False) 
+        index = 0
+        canid = 0x309
+        nodeid = 0x91
+        button_bits=[False] * 40
+        # Set first button true
+        button_bits[0] = True
+        # Set 7th button True
+        button_bits[6] = True
+        code = (index // 32) + 0x0C
+        # Setup the can message as node specific
+        msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
+        # Set the message data
+        msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
+        self.bus.send(msg)
+        time.sleep(0.03)
+        assert database.read("MAVADJ")[0] == True
+        assert database.read("MAVWPVALID")[0] == True
+        assert database.read("MAVREQADJ")[0] == False
+        assert database.read("MAVREQAUTOTUNE")[0] == False
+
+        # Reset all buttons to False
+        button_bits=[False] * 40
+        msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
+        # Set the message data
+        msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
+        self.bus.send(msg)
+        time.sleep(0.03)
+        assert database.read("MAVADJ")[0] == False
+        assert database.read("MAVWPVALID")[0] == False
+        assert database.read("MAVREQADJ")[0] == False
+        assert database.read("MAVREQAUTOTUNE")[0] == False
+
+
+    def test_nodespecific_switch_input_that_we_do_not_want(self):
+        index = 0
+        canid = 0x30a
+        nodeid = 0x91
+        button_bits=[False] * 40
+        # Set first button true
+        button_bits[0] = True
+        # Set 7th button True
+        button_bits[6] = True
+        code = (index // 32) + 0x0C
+        msg = can.Message(arbitration_id=0x6e0 + nodeid, is_extended_id=False)
+        with patch("canfix.parseMessage") as mock_parse:
+            # send valid message we do not want
+            mock_parse = MagicMock()
+            msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
+            self.bus.send(msg)
+            time.sleep(0.03)
+            # send invalid message to test exception branch
+            mock_parse = MagicMock()
+            msg.data = button_data("BYTE[5]", code, 9, button_bits, canid, nodeid, True)
+            self.bus.send(msg)
+            time.sleep(0.03)
+        # Since we do not need either of these messages they are never parsed
+        mock_parse.assert_not_called()
 
     # We don't really have any of these yet
     # def test_owned_outputs(self):
