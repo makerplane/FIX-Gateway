@@ -27,6 +27,7 @@ import fixgw.plugins.canfix
 from collections import namedtuple
 from unittest.mock import MagicMock, patch
 import logging
+import warnings
 
 # canfix needs updated to support quorum so we will monkey patch it for now
 # Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
@@ -414,13 +415,23 @@ def test_nodespecific_switch_input_that_we_do_not_want(plugin):
     mock_parse.assert_not_called()
 
 
-# def test_bad_parse(plugin):
-#    msg = can.Message(arbitration_id=776, is_extended_id=False)
-#    # Set TSBTN112 True
-#    msg.data = bytearray(b"\x91\x00\xFF\xFF\xFF\xFF\xFF\xFF")
-#    plugin.bus.send(msg)
-#    time.sleep(0.03)
-
+def test_bad_parse(plugin):
+    # Bad CAN data can cause exceptions if the code does not 
+    # Ensure the data is valid before using it
+    # I found, and fixed, such a bug when writing a test
+    # This test ensures we do not have regressions
+    try:
+        # Send Parameter set for VS
+        cur_vs = database.read("VS")[0]
+        msg = can.Message(arbitration_id=0x186, is_extended_id=False)
+        # Incomplete message sent
+        msg.data = bytearray(b"\x00\x00\x00\x00")
+        plugin.bus.send(msg)
+        time.sleep(0.3)
+    except Exception as e:
+        pytest.fail(f"An unexpected exception occurred: {e}")
+    # Data should not change if bad data is sent
+    assert cur_vs == database.read("VS")[0]
 
 def test_get_status(plugin):
     status = plugin.pl.get_status()

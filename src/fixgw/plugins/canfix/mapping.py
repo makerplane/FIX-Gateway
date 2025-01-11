@@ -148,13 +148,16 @@ class Mapping(object):
                         "Problem setting Aux Value for {0}".format(dbItem.key)
                     )
             else:
-                dbItem.value = (
-                    cfpar.value,
-                    cfpar.annunciate,
-                    cfpar.quality,
-                    cfpar.failure,
-                )
-
+                if cfpar.value is not None and cfpar.annunciate is not None and cfpar.quality is not None and cfpar.failure is not None:
+                    dbItem.value = (
+                        cfpar.value,
+                        cfpar.annunciate,
+                        cfpar.quality,
+                        cfpar.failure,
+                    )
+                else:
+                    # WTF to do here?
+                    pass
         return InputFunc
 
     # Returns a closure that should be used as the callback for database item
