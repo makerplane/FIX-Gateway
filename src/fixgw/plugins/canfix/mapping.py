@@ -36,6 +36,9 @@ class Mapping(object):
         self.output_mapping = {}
         self.log = log
         self.sendcount = 0
+        self.senderrorcount = 0
+        self.recvignorecount = 0
+        self.recvinvalidcount = 0
 
         # Open and parse the YAML mapping file passed to us
         try:
@@ -144,6 +147,7 @@ class Mapping(object):
                         m = cfpar.meta
                     dbItem.set_aux_value(m, cfpar.value)
                 except:
+                    self.recvinvalidcount += 1
                     self.log.warning(
                         "Problem setting Aux Value for {0}".format(dbItem.key)
                     )
@@ -156,8 +160,7 @@ class Mapping(object):
                         cfpar.failure,
                     )
                 else:
-                    # WTF to do here?
-                    pass
+                    self.recvinvalidcount += 1
         return InputFunc
 
     # Returns a closure that should be used as the callback for database item
@@ -238,6 +241,7 @@ class Mapping(object):
                 try:
                     bus.send(p.msg)
                 except Exception as e:
+                    self.senderrorcount += 1
                     self.log.error("CAN send failure:" + str(e))
                     # This does not seem to always flush the buffer
                     # a full tx queue seems to be the most common error
@@ -269,13 +273,16 @@ class Mapping(object):
                 try:
                     bus.send(p.msg)
                 except Exception as e:
+                    self.senderrorcount += 1
+                    self.log.debug(f"Output {dbKey}: Send Failed {p.msg}")
                     self.log.error("CAN send failure:" + str(e))
                     # This does not seem to always flush the buffer
                     # a full tx queue seems to be the most common error
                     # when the bus is disrupted
                     bus.flush_tx_buffer()
-                self.sendcount += 1
-                self.log.debug(f"Output {dbKey}: Sent {p.msg}")
+                else:
+                    self.sendcount += 1
+                    self.log.debug(f"Output {dbKey}: Sent {p.msg}")
 
         return outputCallback
 
@@ -290,12 +297,15 @@ class Mapping(object):
             try:
                 bus.send(p.msg)
             except Exception as e:
+                self.senderrorcount += 1
+                self.log.debug(f"Output {dbKey}: Send Failed {p.msg}")
                 self.log.error("CAN send failure:" + str(e))
                 # This does not seem to always flush the buffer
                 # a full tx queue seems to be the most common error
                 # when the bus is disrupted
                 bus.flush_tx_buffer()
-            self.sendcount += 1
+            else:
+                self.sendcount += 1
 
         return outputCallback
 

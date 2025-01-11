@@ -208,6 +208,8 @@ def plugin():
     )
     pl.shutdown()
     can_bus.shutdown()
+    quorum.enabled = False
+    quorum.nodeid = None
 
 
 def test_missing_mapfile():
@@ -230,12 +232,25 @@ def test_parameter_writes(plugin):
             val = x[0]
         assert abs(val - param[3]) <= param[4]
 
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == len(ptests)
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
 
 def test_unowned_outputs(plugin):
     database.write("BARO", 30.04)
     msg = plugin.bus.recv(1.0)
     assert msg.arbitration_id == plugin.node + 1760
     assert msg.data == bytearray([12, 0x90, 0x01, 0x58, 0x75])
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 0
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 1
+    assert status["Send Error Count"] == 0
 
 
 def test_all_frame_ids(plugin):
@@ -246,6 +261,7 @@ def test_all_frame_ids(plugin):
     # Check against venv/lib/python3.10/site-packages/canfix/protocol.py parameters[pid]
     import canfix.protocol
 
+    count = 0
     for id in range(2048):
         if id in canfix.protocol.parameters:
             for dsize in range(9):
@@ -254,13 +270,20 @@ def test_all_frame_ids(plugin):
                     msg.data.append(random.randrange(256))
                 msg.dlc = dsize
                 plugin.bus.send(msg)
+                count += 1
+    time.sleep(0.03)
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == count
+    assert status["Ignored Frames"] == 3294
+    assert status["Invalid Frames"] == 10
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
 
 
 # TODO Add asserts above
 
 
-def test_quorum_outputs_diabled(plugin):
-    quorum.enabled = False
+def test_ignore_quorum_mssages_when_diabled(plugin):
     for param in qtests:
         p = canfix.NodeStatus()
         p.sendNode = param[1]
@@ -269,46 +292,83 @@ def test_quorum_outputs_diabled(plugin):
         plugin.bus.send(p.msg)
         time.sleep(0.03)
         x = database.read(param[0])
+        # Nothing should change since we are not accepting the messages
         assert x[0] == 0
+    status = plugin.pl.get_status()
+    # All received frames should be ignored
+    assert status["Received Frames"] == len(qtests)
+    assert status["Ignored Frames"] == len(qtests)
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
 
 
-def test_quorum_outputs_enabled(plugin, caplog):
+def test_accept_quorum_mssages_when_enabled(plugin):
     quorum.enabled = True
     quorum.nodeid = 1
     p = canfix.NodeStatus()
+    # keep track of the frames we should ignore
+    ignoreframes = 0
     for param in qtests:
+        if param[1] == quorum.nodeid:
+            ignoreframes += 1
         p.sendNode = param[1]
         p.parameter = 0x09
         p.value = param[2]
         plugin.bus.send(p.msg)
         time.sleep(0.03)
         x = database.read(param[0])
-        # print(f"{param[0]}: {x[0]}, {param[1]} {param[2]}")
         if param[2] == 1:
             assert x[0] == 0
         else:
             assert x[0] == param[2]
-    p.sendNode = 5
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == len(qtests)
+    assert status["Ignored Frames"] == ignoreframes
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_reject_invalid_quorum_mssages_when_enabled(plugin, caplog):
+    quorum.enabled = True
+    quorum.nodeid = 1
+    p = canfix.NodeStatus()
+    p.parameter = 0x09
+    # keep track of the frames we should ignore
+    sentframes = 0
+    invalidframes = 0
     # Test invalid value 101
+    p.sendNode = 5
     p.value = 101
     plugin.bus.send(p.msg)
     time.sleep(0.03)
+    invalidframes += 1
+    sentframes += 1
     assert database.read("QVOTE5")[0] == 0
     # Test invalid value 0
     p.value = 0
     plugin.bus.send(p.msg)
     time.sleep(0.03)
+    invalidframes += 1
+    sentframes += 1
     assert database.read("QVOTE5")[0] == 0
+
     # Test DB not configured for 6 nodes
     p.sendNode = 6
     p.value = 6
+    invalidframes += 1
+    sentframes += 1
     with caplog.at_level(logging.WARNING):
         plugin.bus.send(p.msg)
         time.sleep(0.03)
         assert "Received a vote for QVOTE6 but this fixid does not exist" in caplog.text
-
-    quorum.enabled = False
-    quorum.nodeid = None
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == sentframes
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == invalidframes
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
 
 
 def test_switch_inputs(plugin):
@@ -350,6 +410,12 @@ def test_switch_inputs(plugin):
     time.sleep(0.03)
     # Sending false for toggle does not change state
     assert database.read("TSBTN124")[0] == False
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 6
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
 
 
 def test_nodespecific_switch_inputs(plugin):
@@ -387,6 +453,12 @@ def test_nodespecific_switch_inputs(plugin):
     assert database.read("MAVWPVALID")[0] == False
     assert database.read("MAVREQADJ")[0] == False
     assert database.read("MAVREQAUTOTUNE")[0] == False
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 2
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
 
 
 def test_nodespecific_switch_input_that_we_do_not_want(plugin):
@@ -413,10 +485,16 @@ def test_nodespecific_switch_input_that_we_do_not_want(plugin):
         time.sleep(0.03)
     # Since we do not need either of these messages they are never parsed
     mock_parse.assert_not_called()
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 2
+    assert status["Ignored Frames"] == 1
+    assert status["Invalid Frames"] == 1
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
 
 
 def test_bad_parse(plugin):
-    # Bad CAN data can cause exceptions if the code does not 
+    # Bad CAN data can cause exceptions if the code does not
     # Ensure the data is valid before using it
     # I found, and fixed, such a bug when writing a test
     # This test ensures we do not have regressions
@@ -432,6 +510,13 @@ def test_bad_parse(plugin):
         pytest.fail(f"An unexpected exception occurred: {e}")
     # Data should not change if bad data is sent
     assert cur_vs == database.read("VS")[0]
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 1
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 1
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
 
 def test_get_status(plugin):
     status = plugin.pl.get_status()
