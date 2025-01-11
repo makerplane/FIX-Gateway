@@ -17,10 +17,11 @@
 from collections import OrderedDict
 import fixgw.database as database
 import logging
+import fixgw
 
 try:
     import psutil
-except:
+except ImportError:
     psutil = None
 
 __status = None
@@ -29,12 +30,12 @@ __status = None
 class Status:
     def __init__(self, plugins, config_status):
         self.plugins = plugins
-        self.version = "0.2"
+        print(database)
         self.db_item_count = len(database.listkeys())
         self.config_status = config_status
 
     def get_dict(self):
-        result = OrderedDict({"Version": self.version})
+        result = OrderedDict({"Version": fixgw.__version__})
         result.update(self.config_status)
         result.update(get_system_status())
         # Database information
@@ -42,15 +43,18 @@ class Status:
         result["Database Statistics"] = db
         # Add plugin status
         for name in self.plugins:
-            d = OrderedDict({"Running": self.plugins[name].is_running()})
-            x = self.plugins[name].get_status()
-            if x:
-                d.update(x)
-            result["Connection: " + name] = d
+            try:
+                d = OrderedDict({"Running": self.plugins[name].is_running()})
+                x = self.plugins[name].get_status()
+                if x:
+                    d.update(x)
+                result["Connection: " + name] = d
+            except Exception as e:
+                result["Connection: " + name] = {"Error": str(e)}
         return result
 
 
-if psutil != None:
+if psutil is not None:
 
     def get_system_status():
         p = psutil.Process()
@@ -74,12 +78,15 @@ def initialize(p, ss):
     global log
     __status = Status(p, ss)
     log = logging.getLogger(__name__)
-    if psutil == None:
+    if psutil is None:
         log.info("psutil package not found.  No system stats will be available.")
 
 
 def get_dict():
-    return __status.get_dict()
+    if __status is not None:
+        return __status.get_dict()
+    else:
+        return {}
 
 
 def dict2string(d, indent=0, spaces=3):

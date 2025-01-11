@@ -14,13 +14,36 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import unittest
 import time
 import yaml
 import random
 import can
+import canfix
 
 import fixgw.database as database
+import fixgw.quorum as quorum
+import pytest
+import fixgw.plugins.canfix
+from collections import namedtuple
+from unittest.mock import MagicMock, patch
+import logging
+import warnings
+
+# canfix needs updated to support quorum so we will monkey patch it for now
+# Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
+# Request to add this to the canfix specification: https://github.com/makerplane/canfix-spec/issues/4
+canfix.NodeStatus.knownTypes = (
+    ("Status", "WORD", 1),
+    ("Unit Temperature", "INT", 0.1),
+    ("Supply Voltage", "INT", 0.1),
+    ("CAN Transmit Frame Count", "UDINT", 1),
+    ("CAN Receive Frame Count", "UDINT", 1),
+    ("CAN Transmit Error Count", "UDINT", 1),
+    ("CAN Transmit Error Count", "UDINT", 1),
+    ("CAN Receive Overrun Count", "UDINT", 1),
+    ("Serial Number", "UDINT", 1),
+    ("Quorum", "UINT", 1),
+)
 
 
 config = """
@@ -31,7 +54,7 @@ config = """
     channel: tcan0
 
     # Use the actual current mapfile
-    mapfile: 'src/fixgw/config/canfix/map.yaml'
+    mapfile: 'tests/config/canfix/map.yaml'
     # The following is our Node Identification Information
     # See the CAN-FIX Protocol Specification for more information
     node: 145     # CAN-FIX Node ID
@@ -40,6 +63,25 @@ config = """
     model: 0      # Model Number
     CONFIGPATH: ''
 """
+
+bad_mapfile_config = """
+    load: yes
+    module: fixgw.plugins.canfix
+    # See the python-can documentation for the meaning of these options
+    interface: virtual
+    channel: tcan0
+
+    # Use the actual current mapfile
+    mapfile: 'missing_map_file.yaml'
+    # The following is our Node Identification Information
+    # See the CAN-FIX Protocol Specification for more information
+    node: 145     # CAN-FIX Node ID
+    device: 145   # CAN-FIX Device Type
+    revision: 0   # Software Revision Number
+    model: 0      # Model Number
+    CONFIGPATH: ''
+"""
+
 
 # This is a list of the parameters that we are testing.  It is a list of tuples
 # that contain (FIXID, CANID, DataString, Value, Test tolerance)
@@ -104,6 +146,12 @@ ptests = [
     #          ("OILT1", 0x220, "FF0000", 0.0, 0.001),
 ]
 
+qtests = [
+    ("QVOTE1", 1, 1),
+    ("QVOTE2", 2, 2),
+    ("QVOTE3", 3, 3),
+]
+
 
 def string2data(s):
     b = bytearray()
@@ -112,76 +160,383 @@ def string2data(s):
     return b
 
 
-class TestCanfix(unittest.TestCase):
+def button_data(data_type, data_code, index, button_bits, canid, nodeid, ns):
+    bytes_array = []
+    for x in range(5):
+        bytes_array.append(button_bits[8 * x : 8 * (x + 1)])
+    valueData = canfix.utils.setValue(data_type, bytes_array)
+    data = bytearray([])
+    if ns:
+        data.append(data_code)  # Control Code 12-19 index 1-8
+        x = (index % 32) << 11 | canid
+        data.append(x % 256)
+        data.append(x >> 8)
+    else:
+        data.append(nodeid)
+        data.append(index // 32)
+        data.append(0x00)
+    data.extend(valueData)
+    return data
 
-    def setUp(self):
-        # Use the default database
-        database.init("src/fixgw/config/database.yaml")
 
-        import fixgw.plugins.canfix
+Objects = namedtuple(
+    "Objects",
+    ["bus", "pl", "interface", "channel", "node", "device", "revision", "model"],
+)
 
-        cc = yaml.safe_load(config)
-        self.pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        self.pl.start()
-        self.interface = cc["interface"]
-        self.channel = cc["channel"]
-        self.node = cc["node"]
-        self.device = cc["device"]
-        self.revision = cc["revision"]
-        self.model = cc["model"]
-        self.bus = can.Bus(self.channel, interface=self.interface)
-        time.sleep(0.1)  # Give plugin a chance to get started
 
-    def tearDown(self):
-        self.pl.shutdown()
+@pytest.fixture
+def plugin():
+    # Use the default database
+    database.init("src/fixgw/config/database.yaml")
 
-    def test_parameter_writes(self):
-        for param in ptests:
-            msg = can.Message(is_extended_id=False, arbitration_id=param[1])
-            msg.data = string2data(param[2])
-            self.bus.send(msg)
-            time.sleep(0.03)
-            x = database.read(param[0])
-            if "." in param[0]:
-                val = x
-            else:
-                val = x[0]
-            self.assertTrue(abs(val - param[3]) <= param[4])
+    cc = yaml.safe_load(config)
+    pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+    pl.start()
+    can_bus = can.Bus(cc["channel"], interface=cc["interface"])
+    time.sleep(0.1)  # Give plugin a chance to get started
 
-    def test_unowned_outputs(self):
-        database.write("BARO", 30.04)
-        msg = self.bus.recv(1.0)
-        self.assertEqual(msg.arbitration_id, self.node + 1760)
-        self.assertEqual(msg.data, bytearray([12, 0x90, 0x01, 0x58, 0x75]))
+    yield Objects(
+        bus=can_bus,
+        interface=cc["interface"],
+        channel=cc["channel"],
+        node=cc["node"],
+        device=cc["device"],
+        revision=cc["revision"],
+        model=cc["model"],
+        pl=pl,
+    )
+    pl.shutdown()
+    can_bus.shutdown()
+    quorum.enabled = False
+    quorum.nodeid = None
 
-    def test_all_frame_ids(self):
-        """Loop through every CAN ID and every length of data with random data"""
-        random.seed(14)  # We want deterministic input for testing
-        for id in range(2048):
+
+def test_missing_mapfile():
+    with pytest.raises(Exception):
+        bad_cc = yaml.safe_load(bad_mapfile_config)
+        bad_pl = fixgw.plugins.canfix.Plugin("canfix", bad_cc)
+        # bad_pl.start()
+
+
+def test_parameter_writes(plugin):
+    for param in ptests:
+        msg = can.Message(is_extended_id=False, arbitration_id=param[1])
+        msg.data = string2data(param[2])
+        plugin.bus.send(msg)
+        time.sleep(0.03)
+        x = database.read(param[0])
+        if "." in param[0]:
+            val = x
+        else:
+            val = x[0]
+        assert abs(val - param[3]) <= param[4]
+
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == len(ptests)
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_unowned_outputs(plugin):
+    database.write("BARO", 30.04)
+    msg = plugin.bus.recv(1.0)
+    assert msg.arbitration_id == plugin.node + 1760
+    assert msg.data == bytearray([12, 0x90, 0x01, 0x58, 0x75])
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 0
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 1
+    assert status["Send Error Count"] == 0
+
+
+def test_all_frame_ids(plugin):
+    """Loop through every CAN ID and every length of data with random data"""
+    random.seed(14)  # We want deterministic input for testing
+    # Not all ids are usable this causes a warning.
+    # Need to only use known ids accroding to canfix library
+    # Check against venv/lib/python3.10/site-packages/canfix/protocol.py parameters[pid]
+    import canfix.protocol
+
+    count = 0
+    for id in range(2048):
+        if id in canfix.protocol.parameters:
             for dsize in range(9):
                 msg = can.Message(is_extended_id=False, arbitration_id=id)
                 for x in range(dsize):
                     msg.data.append(random.randrange(256))
                 msg.dlc = dsize
-                self.bus.send(msg)
-
-    # We don't really have any of these yet
-    # def test_owned_outputs(self):
-    #     pass
-
-    # These aren't implemented yet
-    # def test_node_identification(self):
-    #     pass
-    #
-    # def test_node_report(self):
-    #     pass
-    #
-    # def test_parameter_disable_enable(self):
-    #     pass
-    #
-    # def test_node_id_set(self):
-    #     pass
+                plugin.bus.send(msg)
+                count += 1
+    time.sleep(0.03)
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == count
+    assert status["Ignored Frames"] == 3294
+    assert status["Invalid Frames"] == 10
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
 
 
-if __name__ == "__main__":
-    unittest.main()
+# TODO Add asserts above
+
+
+def test_ignore_quorum_mssages_when_diabled(plugin):
+    for param in qtests:
+        p = canfix.NodeStatus()
+        p.sendNode = param[1]
+        p.parameter = 0x09
+        p.value = param[2]
+        plugin.bus.send(p.msg)
+        time.sleep(0.03)
+        x = database.read(param[0])
+        # Nothing should change since we are not accepting the messages
+        assert x[0] == 0
+    status = plugin.pl.get_status()
+    # All received frames should be ignored
+    assert status["Received Frames"] == len(qtests)
+    assert status["Ignored Frames"] == len(qtests)
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_accept_quorum_mssages_when_enabled(plugin):
+    quorum.enabled = True
+    quorum.nodeid = 1
+    p = canfix.NodeStatus()
+    # keep track of the frames we should ignore
+    ignoreframes = 0
+    for param in qtests:
+        if param[1] == quorum.nodeid:
+            ignoreframes += 1
+        p.sendNode = param[1]
+        p.parameter = 0x09
+        p.value = param[2]
+        plugin.bus.send(p.msg)
+        time.sleep(0.03)
+        x = database.read(param[0])
+        if param[2] == 1:
+            assert x[0] == 0
+        else:
+            assert x[0] == param[2]
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == len(qtests)
+    assert status["Ignored Frames"] == ignoreframes
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_reject_invalid_quorum_mssages_when_enabled(plugin, caplog):
+    quorum.enabled = True
+    quorum.nodeid = 1
+    p = canfix.NodeStatus()
+    p.parameter = 0x09
+    # keep track of the frames we should ignore
+    sentframes = 0
+    invalidframes = 0
+    # Test invalid value 101
+    p.sendNode = 5
+    p.value = 101
+    plugin.bus.send(p.msg)
+    time.sleep(0.03)
+    invalidframes += 1
+    sentframes += 1
+    assert database.read("QVOTE5")[0] == 0
+    # Test invalid value 0
+    p.value = 0
+    plugin.bus.send(p.msg)
+    time.sleep(0.03)
+    invalidframes += 1
+    sentframes += 1
+    assert database.read("QVOTE5")[0] == 0
+
+    # Test DB not configured for 6 nodes
+    p.sendNode = 6
+    p.value = 6
+    invalidframes += 1
+    sentframes += 1
+    with caplog.at_level(logging.WARNING):
+        plugin.bus.send(p.msg)
+        time.sleep(0.03)
+        assert "Received a vote for QVOTE6 but this fixid does not exist" in caplog.text
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == sentframes
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == invalidframes
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_switch_inputs(plugin):
+    msg = can.Message(arbitration_id=776, is_extended_id=False)
+    # Set TSBTN112 True
+    msg.data = bytearray(b"\x91\x00\x00\x01\x00\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    assert database.read("TSBTN112")[0] == True
+    # Set TSBTN112 False and TBTN212 True
+    msg.data = bytearray(b"\x91\x00\x00\x02\x00\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    assert database.read("TSBTN112")[0] == False
+    assert database.read("TSBTN212")[0] == True
+    assert database.read("TSBTN124")[0] == False
+    # Set TSBTN124, a Toggle button, to True
+    # All other buttons are False
+    msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    # TSBTN124 wss toggeled False to True
+    assert database.read("TSBTN124")[0] == True
+    # Set all buttons False
+    msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    # Sending false on a toggle button does not change its state
+    assert database.read("TSBTN124")[0] == True
+    # Set TSBTN124 to True
+    msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    # Button toggled from True to False
+    assert database.read("TSBTN124")[0] == False
+    # Set all buttons False
+    msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    # Sending false for toggle does not change state
+    assert database.read("TSBTN124")[0] == False
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 6
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_nodespecific_switch_inputs(plugin):
+    # msg = can.Message(arbitration_id=1905, is_extended_id=False)
+    # Set MAVADJ True
+    # database.write("MAVADJ", False)
+    index = 0
+    canid = 0x309
+    nodeid = 0x91
+    button_bits = [False] * 40
+    # Set first button true
+    button_bits[0] = True
+    # Set 7th button True
+    button_bits[6] = True
+    code = (index // 32) + 0x0C
+    # Setup the can message as node specific
+    msg = can.Message(arbitration_id=0x6E0 + nodeid, is_extended_id=False)
+    # Set the message data
+    msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    assert database.read("MAVADJ")[0] == True
+    assert database.read("MAVWPVALID")[0] == True
+    assert database.read("MAVREQADJ")[0] == False
+    assert database.read("MAVREQAUTOTUNE")[0] == False
+
+    # Reset all buttons to False
+    button_bits = [False] * 40
+    msg = can.Message(arbitration_id=0x6E0 + nodeid, is_extended_id=False)
+    # Set the message data
+    msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
+    plugin.bus.send(msg)
+    time.sleep(0.03)
+    assert database.read("MAVADJ")[0] == False
+    assert database.read("MAVWPVALID")[0] == False
+    assert database.read("MAVREQADJ")[0] == False
+    assert database.read("MAVREQAUTOTUNE")[0] == False
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 2
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_nodespecific_switch_input_that_we_do_not_want(plugin):
+    index = 0
+    canid = 0x30A
+    nodeid = 0x91
+    button_bits = [False] * 40
+    # Set first button true
+    button_bits[0] = True
+    # Set 7th button True
+    button_bits[6] = True
+    code = (index // 32) + 0x0C
+    msg = can.Message(arbitration_id=0x6E0 + nodeid, is_extended_id=False)
+    with patch("canfix.parseMessage") as mock_parse:
+        # send valid message we do not want
+        mock_parse = MagicMock()
+        msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
+        plugin.bus.send(msg)
+        time.sleep(0.03)
+        # send invalid message to test exception branch
+        mock_parse = MagicMock()
+        msg.data = button_data("BYTE[5]", code, 9, button_bits, canid, nodeid, True)
+        plugin.bus.send(msg)
+        time.sleep(0.03)
+    # Since we do not need either of these messages they are never parsed
+    mock_parse.assert_not_called()
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 2
+    assert status["Ignored Frames"] == 1
+    assert status["Invalid Frames"] == 1
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_bad_parse(plugin):
+    # Bad CAN data can cause exceptions if the code does not
+    # Ensure the data is valid before using it
+    # I found, and fixed, such a bug when writing a test
+    # This test ensures we do not have regressions
+    try:
+        # Send Parameter set for VS
+        cur_vs = database.read("VS")[0]
+        msg = can.Message(arbitration_id=0x186, is_extended_id=False)
+        # Incomplete message sent
+        msg.data = bytearray(b"\x00\x00\x00\x00")
+        plugin.bus.send(msg)
+        time.sleep(0.3)
+    except Exception as e:
+        pytest.fail(f"An unexpected exception occurred: {e}")
+    # Data should not change if bad data is sent
+    assert cur_vs == database.read("VS")[0]
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 1
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 1
+    assert status["Sent Frames"] == 0
+    assert status["Send Error Count"] == 0
+
+
+def test_get_status(plugin):
+    status = plugin.pl.get_status()
+    assert status["CAN Interface"] == plugin.interface
+    assert status["CAN Channel"] == plugin.channel
+
+
+# We don't really have any of these yet
+# def test_owned_outputs():
+#     pass
+
+# These aren't implemented yet
+# def test_node_identification():
+#     pass
+#
+# def test_node_report():
+#     pass
+#
+# def test_parameter_disable_enable():
+#     pass
+#
+# def test_node_id_set():
+#     pass

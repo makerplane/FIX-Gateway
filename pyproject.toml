@@ -48,7 +48,8 @@ dependencies = [
     "numpy",
     "tables",
     "py-gpsd2",
-    "PyQt6"
+    "PyQt6",
+    "psutil"
 ]
 
 [project.optional-dependencies]
