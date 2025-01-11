@@ -176,7 +176,7 @@ def button_data(data_type, data_code, index, button_bits, canid, nodeid, ns):
     data.extend(valueData)
     return data
 
-Objects = namedtuple("Objects", ["bus", "database", "interface", "channel", "node", "device", "revision", "model"])
+Objects = namedtuple("Objects", ["bus", "pl", "interface", "channel", "node", "device", "revision", "model"])
 
 @pytest.fixture
 def plugin():
@@ -197,7 +197,7 @@ def plugin():
         device = cc["device"],
         revision = cc["revision"],
         model = cc["model"],
-        database = database
+        pl = pl
     )
     pl.shutdown() 
     can_bus.shutdown()
@@ -395,6 +395,18 @@ def test_nodespecific_switch_input_that_we_do_not_want(plugin):
         time.sleep(0.03)
     # Since we do not need either of these messages they are never parsed
     mock_parse.assert_not_called()
+
+#def test_bad_parse(plugin):
+#    msg = can.Message(arbitration_id=776, is_extended_id=False)
+#    # Set TSBTN112 True
+#    msg.data = bytearray(b"\x91\x00\xFF\xFF\xFF\xFF\xFF\xFF")
+#    plugin.bus.send(msg)
+#    time.sleep(0.03)
+
+def test_get_status(plugin):
+    status = plugin.pl.get_status()
+    assert status["CAN Interface"] == plugin.interface
+    assert status["CAN Channel"] == plugin.channel
 
 # We don't really have any of these yet
 # def test_owned_outputs():

@@ -108,7 +108,10 @@ class MainThread(threading.Thread):
                             self.log.warning(e)
                         else:
                             self.log.debug(
-                                "Fix Thread parseFrame() returned, {0}".format(cfobj)
+                                # A bug in canfix lib __str__ causes exception if indexName is not defined
+                                # So changed this to output cfobj.getName instead of cfobj
+                                # when canfix bug is resolved should change this back
+                                "Fix Thread parseFrame() returned, {0}".format(cfobj.getName)
                             )
                             if isinstance(cfobj, canfix.Parameter):
                                 self.mapping.inputMap(cfobj)
