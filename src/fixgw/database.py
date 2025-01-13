@@ -348,11 +348,8 @@ def init(f):
     log.info("Initializing Database")
 
     state = "var"
-    # Can pass in config data or a config file
-    if isinstance(f, str) and os.path.exists(f):
-        db = cfg.from_yaml(f)
-    else:
-        db = yaml.safe_load(f)
+    # Load database
+    db = cfg.from_yaml(f)
     if "variables" in db:
         for key, value in db["variables"].items():
             variables[key] = int(value)

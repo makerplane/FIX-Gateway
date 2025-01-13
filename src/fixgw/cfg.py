@@ -2,7 +2,55 @@ import yaml
 import os
 
 
-def from_yaml(fname, bpath=None, cfg=None, bc=[], preferences=None):
+class MetadataLoader(yaml.SafeLoader):
+    def __init__(self, stream, filename=None):
+        super().__init__(stream)
+        self.filename = filename
+        self._metadata_store = {}
+
+    def construct_mapping(self, node, deep=False):
+        """Override the default mapping constructor to include metadata."""
+        mapping = super().construct_mapping(node, deep=deep)
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if isinstance(key, str):
+                self._metadata_store[key] = {
+                    'line': key_node.start_mark.line + 1,
+                    'column': key_node.start_mark.column + 1,
+                    'filename': self.filename
+                }
+        return mapping
+
+    def construct_scalar(self, node):
+        """Override scalar constructor to include metadata."""
+        value = super().construct_scalar(node)
+        metadata = {
+            'line': node.start_mark.line + 1,
+            'column': node.start_mark.column + 1,
+            'filename': self.filename
+        }
+        self._metadata_store[value] = metadata
+        return value
+
+# Function to parse YAML and extract data and metadata
+def parse_yaml_with_metadata(yaml_string, filename=None):
+    if isinstance(yaml_string, str):
+        stream = yaml_string
+    else:
+        stream = yaml_string.read()
+
+    loader = MetadataLoader(stream, filename=filename)
+    data = loader.get_single_data()
+    metadata = loader._metadata_store
+    return data, metadata
+
+
+
+def from_yaml(fs, bpath=None, cfg=None, bc=None, preferences=None, metadata=None):
+    fname = None
+    fpath = None
+    if bc is None:
+        bc = []
     bc.append(fname)
     if len(bc) > 500:
         import pprint
@@ -10,15 +58,34 @@ def from_yaml(fname, bpath=None, cfg=None, bc=[], preferences=None):
         raise Exception(
             f"{pprint.pformat(bc)}\nPotential loop detected inside yaml includes, the breadcrumbs above might help detect where the issue is"
         )
-
-    fpath = os.path.dirname(fname)
     if not cfg:
-        # cfg only populated to process nested data
-        if not bpath:
-            bpath = fpath
-        with open(fname) as cf:
-            cfg = yaml.safe_load(cf)
+        if isinstance(fs, str):
+            # Must be a string of yaml or a filename
+            if os.path.isfile(fs):
+                # It is a filename
+                fname = fs
+                fpath = os.path.dirname(fname)
+                if not bpath:
+                    bpath = fpath
+                with open(fs) as cf:
+                    cfg, cfg_meta = parse_yaml_with_metadata(cf, fname)
+            else:
+                # Must be a yaml string
+                if not bpath:
+                    bpath = os.getcwd()
+                fpath = bpath
+                fname = bpath + '/<unknown>'
+                cfg, cfg_meta = parse_yaml_with_metadata(fs, fname)
+        else:
+            # should be a stream
+            if hasattr(fs, 'read'):
+                fname = getattr(fs, 'name', '<unknown>')  # Use stream name if it exists
+                fpath = os.path.dirname(fname)
+                if not bpath:
+                    bpath = fpath
+                cfg, cfg_meta = parse_yaml_with_metadata(fs, fname)
 
+    new_meta = {}
     new = {}
     if hasattr(cfg, "items"):
         for key, val in cfg.items():
@@ -99,4 +166,7 @@ def from_yaml(fname, bpath=None, cfg=None, bc=[], preferences=None):
             else:
                 # Save existing
                 new[key] = val
-    return new
+    if metadata:
+        return (new, new_meta)
+    else:
+        return new
