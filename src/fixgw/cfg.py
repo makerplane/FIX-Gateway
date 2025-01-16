@@ -1,36 +1,95 @@
 import yaml
+from yaml.loader import SafeLoader
+from io import StringIO
 import os
 
-
-class MetadataLoader(yaml.SafeLoader):
-    def __init__(self, stream, filename=None):
-        super().__init__(stream)
+class MetadataLoader(SafeLoader):
+    def __init__(self, stream, filename=None, *args, **kwargs):
+        super().__init__(stream, *args, **kwargs)
+        self.metadata = {}
         self.filename = filename
-        self._metadata_store = {}
 
     def construct_mapping(self, node, deep=False):
-        """Override the default mapping constructor to include metadata."""
-        mapping = super().construct_mapping(node, deep=deep)
-        for key_node, value_node in node.value:
-            key = self.construct_object(key_node, deep=deep)
-            if isinstance(key, str):
-                self._metadata_store[key] = {
-                    'line': key_node.start_mark.line + 1,
-                    'column': key_node.start_mark.column + 1,
-                    'filename': self.filename
+        mapping = {}
+        metadata_mapping = {}
+        if isinstance(node, yaml.MappingNode):
+            for key_node, value_node in node.value:
+                key = self.construct_object(key_node, deep=True)
+                value = self.construct_object(value_node, deep=True)
+
+                # Store metadata for the key
+                key_meta = {
+                    "line": key_node.start_mark.line + 1,
+                    "column": key_node.start_mark.column + 1,
+                    "file": self.filename,
                 }
+
+                # Store metadata for the value
+                value_meta = {
+                    "line": value_node.start_mark.line + 1,
+                    "column": value_node.start_mark.column + 1,
+                    "file": self.filename,
+                }
+
+                # Ensure nested metadata structure
+                metadata_mapping[f".__{key}__."] = key_meta
+                metadata_mapping[f".__{key}__."]["value_meta"] = value_meta
+
+                if isinstance(value_node, yaml.MappingNode):
+                    # Recurse into nested structures
+                    nested_mapping, nested_metadata = self.construct_mapping_with_metadata(value_node)
+                    mapping[key] = nested_mapping
+                    metadata_mapping[key] = nested_metadata
+                elif isinstance(value_node, yaml.SequenceNode):
+                    # Handle lists explicitly
+                    list_values = []
+                    list_metadata = {}
+                    for index, item_node in enumerate(value_node.value):
+                        item_value = self.construct_object(item_node, deep=True)
+                        list_values.append(item_value)
+
+                        # Derive metadata for list items
+                        item_meta = {
+                            "line": item_node.start_mark.line + 1,
+                            "column": item_node.start_mark.column + 1,
+                            "file": self.filename,
+                        }
+
+                        if isinstance(item_node, yaml.MappingNode):
+                            nested_mapping, nested_metadata = self.construct_mapping_with_metadata(item_node)
+                            list_metadata[index] = nested_metadata
+                        else:
+                            list_metadata[index] = {
+                                **item_meta,
+                                "value_meta": item_meta,
+                            }
+                    mapping[key] = list_values
+                    metadata_mapping[key] = list_metadata
+                else:
+                    mapping[key] = value
+
+        self.metadata.update(metadata_mapping)
         return mapping
 
-    def construct_scalar(self, node):
-        """Override scalar constructor to include metadata."""
-        value = super().construct_scalar(node)
-        metadata = {
-            'line': node.start_mark.line + 1,
-            'column': node.start_mark.column + 1,
-            'filename': self.filename
-        }
-        self._metadata_store[value] = metadata
-        return value
+    def construct_mapping_with_metadata(self, node):
+        previous_metadata = self.metadata
+        self.metadata = {}
+        mapping = self.construct_mapping(node, deep=True)
+        metadata = self.metadata
+        self.metadata = previous_metadata
+        return mapping, metadata
+
+    def construct_yaml_map(self, node):
+        data = super().construct_yaml_map(node)
+        data.update(self.construct_mapping(node))
+        return data
+
+    def get_data(self):
+        return self.construct_document(self.get_single_node())
+
+    def get_metadata(self):
+        return self.metadata
+
 
 # Function to parse YAML and extract data and metadata
 def parse_yaml_with_metadata(yaml_string, filename=None):
@@ -41,12 +100,17 @@ def parse_yaml_with_metadata(yaml_string, filename=None):
 
     loader = MetadataLoader(stream, filename=filename)
     data = loader.get_single_data()
-    metadata = loader._metadata_store
+    metadata = loader.get_metadata()
+
+#    metadata = loader._metadata_store
+#    metadata['root'] = {
+#        'filename': filename
+#    }
     return data, metadata
 
 
 
-def from_yaml(fs, bpath=None, cfg=None, bc=None, preferences=None, metadata=None):
+def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None, metadata=None):
     fname = None
     fpath = None
     if bc is None:
@@ -115,18 +179,19 @@ def from_yaml(fs, bpath=None, cfg=None, bc=None, preferences=None, metadata=None
                                         raise Exception(f"Cannot find include: {f}")
                         else:
                             raise Exception(f"Cannot find include: {f}")
-                    sub = from_yaml(ifile, bpath, bc=bc, preferences=preferences)
+                    sub, sub_meta = from_yaml(ifile, bpath, bc=bc, preferences=preferences, metadata=True)
                     if hasattr(sub, "items"):
                         for k, v in sub.items():
                             new[k] = v
                     else:
                         raise Exception(f"Include {val} from {fname} is invalid")
             elif isinstance(val, dict):
-                new[key] = from_yaml(fname, bpath, val, bc=bc, preferences=preferences)
+                new[key], new_meta[key] = from_yaml(fs=fname, bpath=bpath, cfg=val, cfg_meta=cfg_meta, bc=bc, preferences=preferences, metadata=True)
             elif isinstance(val, list):
                 new[key] = []
+                new_meta[key] = {}
                 # Included array elements
-                for l in val:
+                for lindex, l in enumerate(val):
                     if isinstance(l, dict):
                         if "include" in l:
                             ifile = fpath + "/" + l["include"]
@@ -149,23 +214,35 @@ def from_yaml(fs, bpath=None, cfg=None, bc=None, preferences=None, metadata=None
                                                 )
                                 else:
                                     raise Exception(f"Cannot find include: {f}")
+                            # Need to update this for metadata
                             with open(ifile) as cf:
-                                litems = yaml.safe_load(cf)
+                            #litems, cfg_litems = from_yaml(fs=ifile, bpath=bpath, cfg=val, cfg_meta=cfg_meta, bc=bc, preferences=preferences, metadata=True)
+                                #print("#########################")
+                                litems, cfg_litems = parse_yaml_with_metadata(cf, ifile)
                             if "items" in litems:
                                 if litems["items"] != None:
-                                    for a in litems["items"]:
+                                    for ax, a in enumerate(litems["items"]):
                                         new[key].append(a)
+                                        #print(f"#### {ax} len:{len(cfg_litems)} ####\n{a}\n{cfg_litems['items']}\n--\n{cfg_litems}\n--")
+                                        #for gee in cfg_litems:
+                                            #print(f"############\n{gee}\n{cfg_litems[gee]}")
+                                        new_meta[key] = (cfg_litems['items'][ax])
                             else:
                                 raise Exception(
                                     f"Error in {ifile}\nWhen including list items they need listed under 'items:' in the include file"
                                 )
                         else:
                             new[key].append(l)
+                            new_meta[key][lindex] = cfg_meta[key][lindex]
                     else:
                         new[key].append(l)
+                        new_meta[key][lindex] = cfg_meta[key][lindex]    
             else:
                 # Save existing
                 new[key] = val
+                #print(f"##meta:\n{cfg_meta}\nkey: {key}, val:{val}")
+                new_meta[key] = cfg_meta[f".__{key}__."]
+                #print(f"\n####### {key} #######\n{cfg_meta}[key]")
     if metadata:
         return (new, new_meta)
     else:

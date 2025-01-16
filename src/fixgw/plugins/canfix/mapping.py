@@ -23,8 +23,8 @@ import fixgw.database as database
 import yaml
 import canfix
 import fixgw.quorum as quorum
-
-
+from fixgw import cfg
+import os
 class Mapping(object):
     def __init__(self, mapfile, log=None):
         self.meta_replacements_in = {}
@@ -40,6 +40,8 @@ class Mapping(object):
         self.recvignorecount = 0
         self.recvinvalidcount = 0
 
+
+
         # Open and parse the YAML mapping file passed to us
         try:
             f = open(mapfile)
@@ -49,6 +51,12 @@ class Mapping(object):
         maps = yaml.safe_load(f)
         f.close()
 
+        if not os.path.exists(mapfile):
+            raise ValueError(f"Unable to open mapfile: '{mapfile}'")
+        maps, meta = cfg.from_yaml(mapfile,metadata=True)
+
+        if not maps.get("meta replacements",False):
+            raise ValueError(f"The mapfile '{mapfile}' must provide a valid 'meta replacements' section.")
         # dictionaries used for converting meta data strings from db to canfix and back
         self.meta_replacements_in = maps["meta replacements"]
         self.meta_replacements_out = {
@@ -83,9 +91,12 @@ class Mapping(object):
                 self.output_mapping[ea] = output
 
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
-        for each in maps["inputs"]:
+        for index, each in enumerate(maps["inputs"]):
             # p = canfix.protocol.parameters[each["canid"]]
             # Parameters start at 0x100 so we subtract that offset to index the array
+            if not self.valid_canid(each["canid"]):
+                #print(f"###:\n{meta}\n\n{meta['inputs'][index]}")
+                raise ValueError(f'{self.valid_canid(each["canid"],True)[1]} on line {meta["inputs"][index][".__canid__."]["line"]} of file \'{meta["inputs"][index][".__canid__."]["file"]}\'')
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:
                 self.input_mapping[ix] = [None] * 256
@@ -406,3 +417,20 @@ class Mapping(object):
             func = im[par.index]
             if func is not None:
                 func(par)
+
+
+    def valid_canid(self,canid,detailed=False):
+        if canid < 256:
+            return (False, "canid must be >= to 256 (0x100)") if detailed else False
+        if canid > 2015:
+            return (False, "canid must be <= to 2015 (0x7df)") if detailed else False
+        if canid in range (1536, 1759):
+            return (False, "canid must not be between 1536 (0x600) and 1759 (0x6DF)") if detailed else False
+        return (True, None) if detailed else True
+
+    def valid_index(self,index):
+        return index > 0 and index < 256
+
+    def valid_fixid(self,fixid):
+        return fixid in database.listkeys()
+

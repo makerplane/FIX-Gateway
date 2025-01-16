@@ -17,8 +17,10 @@
 import time
 import yaml
 import random
+import re
 import can
 import canfix
+from fixgw import cfg
 
 import fixgw.database as database
 import fixgw.quorum as quorum
@@ -517,6 +519,28 @@ def test_bad_parse(plugin):
     assert status["Sent Frames"] == 0
     assert status["Send Error Count"] == 0
 
+def test_mapfile_input_canid_too_low():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(re.sub('missing_map_file.yaml', 'tests/config/canfix/map_bad_input_canid_low.yaml',bad_mapfile_config))
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert str(excinfo.value) == "canid must be >= to 256 (0x100) on line 34 of file 'tests/config/canfix/map_bad_input_canid_low.yaml'"
+
+
+def test_mapfile_input_canid_too_high():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(re.sub('missing_map_file.yaml', 'tests/config/canfix/map_bad_input_canid_high.yaml',bad_mapfile_config))
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert str(excinfo.value) == "canid must be <= to 2015 (0x7df) on line 34 of file 'tests/config/canfix/map_bad_input_canid_high.yaml'"
 
 def test_get_status(plugin):
     status = plugin.pl.get_status()
