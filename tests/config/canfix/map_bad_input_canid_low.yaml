@@ -1,0 +1,151 @@
+#
+#        ********************* CAUTION *********************
+#  Be careful editing this file, unit tests are looking for invalid 
+#  data on spcific line numbers in this file 
+#
+# This file contains all of the mappings that tell the canfix plugin how
+# to talk to the FIX Gateway database.  This is a YAML file.
+
+# This is a list of replacement strings to map meta data from the CAN-FIX
+# protocol to the actual meta/auxiliary data described in the FGW database
+# definition.  The first is what would be called out in the CAN-FIX protocol
+# and the second is what it will be replaced with when being written to
+# the database.
+
+meta replacements:
+  Low Warn: lowWarn
+  Low Alarm: lowAlarm
+  High Warn: highWarn
+  High Alarm: highAlarm
+
+
+# Input mappings are for data that is read from the CAN-FIX bus and written into
+# the FixGW database.  This list contains the following information...
+
+# canid  - The CAN-FIX ID of the parameter represented by the received message
+# index - The CAN-FIX index of the parameter
+# fixid - The FIX Database ID (This should match an individual point
+#         in the database configuration)
+# priority - The redundancy priority of this point 0 = primary, 1 secondary, etc.
+# nodespecific - If True nodespecific messages will be accepted the same as 
+#                messages send as owner
+
+inputs:
+  - { canid: 0x10, index: 0, fixid: "PITCH", priority: 0 } 
+  - { canid: 0xF181, index: 0, fixid: "ROLL", priority: 0 }
+  - { canid: 0x183, index: 0, fixid: "IAS", priority: 0 }
+  - { canid: 0x184, index: 0, fixid: "ALT", priority: 0 }
+  - { canid: 0x18D, index: 0, fixid: "TAS", priority: 0 }
+  - { canid: 0x185, index: 0, fixid: "HEAD", priority: 0, nodespecific: True }
+  - { canid: 0x186, index: 0, fixid: "VS", priority: 0 }
+  - { canid: 0x190, index: 0, fixid: "BARO", priority: 0, nodespecific: True }
+  - { canid: 0x200, index: 0, fixid: "TACH1", priority: 0 }
+  - { canid: 0x201, index: 0, fixid: "TACH2", priority: 0 }
+  - { canid: 0x202, index: 0, fixid: "PROP1", priority: 0 }
+  - { canid: 0x203, index: 0, fixid: "PROP2", priority: 0 }
+  - { canid: 0x21E, index: 0, fixid: "MAP1", priority: 0 }
+  - { canid: 0x21F, index: 0, fixid: "MAP2", priority: 0 }
+  - { canid: 0x220, index: 0, fixid: "OILP1", priority: 0 }
+  - { canid: 0x221, index: 0, fixid: "OILP2", priority: 0 }
+  - { canid: 0x222, index: 0, fixid: "OILT1", priority: 0 }
+  - { canid: 0x223, index: 0, fixid: "OILT2", priority: 0 }
+  - { canid: 0x500, index: 0, fixid: "CHT11", priority: 0 }
+  - { canid: 0x500, index: 1, fixid: "CHT12", priority: 0 }
+  - { canid: 0x500, index: 2, fixid: "CHT13", priority: 0 }
+  - { canid: 0x500, index: 3, fixid: "CHT14", priority: 0 }
+  - { canid: 0x501, index: 0, fixid: "CHT21", priority: 0 }
+  - { canid: 0x501, index: 1, fixid: "CHT22", priority: 0 }
+  - { canid: 0x501, index: 2, fixid: "CHT23", priority: 0 }
+  - { canid: 0x501, index: 3, fixid: "CHT24", priority: 0 }
+  - { canid: 0x502, index: 0, fixid: "EGT11", priority: 0 }
+  - { canid: 0x502, index: 1, fixid: "EGT12", priority: 0 }
+  - { canid: 0x502, index: 2, fixid: "EGT13", priority: 0 }
+  - { canid: 0x502, index: 3, fixid: "EGT14", priority: 0 }
+  - { canid: 0x503, index: 0, fixid: "EGT21", priority: 0 }
+  - { canid: 0x503, index: 1, fixid: "EGT22", priority: 0 }
+  - { canid: 0x503, index: 2, fixid: "EGT23", priority: 0 }
+  - { canid: 0x503, index: 3, fixid: "EGT24", priority: 0 }
+  - { canid: 0x226, index: 0, fixid: "FUELQ1", priority: 0 }
+  - { canid: 0x227, index: 0, fixid: "FUELQ2", priority: 0 }
+  - { canid: 0x21A, index: 0, fixid: "FUELF1", priority: 0 }
+  - { canid: 0x21B, index: 0, fixid: "FUELF2", priority: 0 }
+  - { canid: 0x21C, index: 0, fixid: "FUELP1", priority: 0 }
+  - { canid: 0x21D, index: 0, fixid: "FUELP2", priority: 0 }
+  - { canid: 0x1C0, index: 0, fixid: "CDI", priority: 0 }
+  - { canid: 0x1C1, index: 0, fixid: "GSI", priority: 0 }
+  - { canid: 0x545, index: 0, fixid: "FTIME", priority: 0 }
+  - { canid: 0x520, index: 0, fixid: "HOBBS1", priority: 0 }
+  - { canid: 0x50E, index: 0, fixid: "VOLT", priority: 0 }
+  - { canid: 0x512, index: 0, fixid: "CURRNT", priority: 0 }
+  - { canid: 0x406, index: 0, fixid: "OAT", priority: 0 }
+  - { canid: 0x18B, index: 0, fixid: "ALAT", priority: 0 }
+  - { canid: 0x182, index: 0, fixid: "AOA", priority: 0 }
+  - { canid: 0x188, index: 0, fixid: "AGL", priority: 0 }
+  - { canid: 0x403, index: 0, fixid: "ROT", priority: 0 }
+
+
+  # Output mappings are for data that is read from the FixGW database and
+  # written to the CAN-FIX bus.  This list contains the following information...
+
+  # canid  - The CAN-FIX ID of the parameter represented by the received message
+  # index - The CAN-FIX index of the parameter
+  # fixid - The FIX Database ID (This should match an individual point
+  #         in the database configuration)
+  # owner - If true the message will be sent as a normal data update
+  #         otherwise a node specific parameter set message will be sent
+  # on_change - Default is True, when True data is only sent if it is different
+  #             from from previous value sent. Setting this to False will send every
+  #             message.
+  # Switches - Like the inputs switches can be output in the same manner by
+  #            specifying a comma seperated list of fixids, up to 40 ids are supported.
+
+outputs:
+  - { canid: 0x10, index: 0, fixid: "PITCH",  on_change: False, require_leader: False }
+  - { canid: 0xF181, index: 0, fixid: "ROLL",  on_change: False, require_leader: False }
+  - { fixid: "BARO",  canid: 0x190, index: 0, owner: False, on_change: False, require_leader: False}
+  - { fixid: "PALT",  canid: 0x191, index: 0, owner: False, on_change: False}
+  - { fixid: "WPNAME", canid: 0x480, index: 0, on_change:False, require_leader: True }
+  - {  fixid: "MAVADJ,MAVREQADJ,MAVREQTRIM,MAVREQCRUISE,MAVREQGUIDED,MAVREQAUTOTUNE,MAVWPVALID",
+         canid: 0x309,
+         index: 0,
+         owner: False,
+         on_change: False, # Send whenever set, useful for temporary communication loss or reboots
+         require_leader: False }
+  - { fixid: "WPNAME", canid: 0x480, index: 0, on_change:False, require_leader: True }
+
+# Special Input Functions
+# Each canid for encoders can support two encoders and 0 or up to 8 buttons.
+# defines the fixid as a comma seperated list with the first two being the encoders
+encoders:
+    - { fixid: "ENC1, ENC2, BTN11", canid: 0x300, index: 0 }
+    - { fixid: "ENC3, ENC4, BTN12", canid: 0x300, index: 1 }
+    - { fixid: "ENC4, ENC5, BTN13", canid: 0x301, index: 0 }
+
+# Generic Switch Inputs
+# Switches can be input by specifying the fixids as a comma seperated list.
+# switches are identified as canids 0x308 to 0x30F, each canid can handle up to 
+# a total of 40 switches
+# Any dbkey that is used with a pyEFIS touchscreen toggle button ( NOT simple or repeating )
+# Should be listed in the optional key 'toggle' as a comma seperated list same as fixid.
+# CAN devices sending toggle or simple button data should send one true message 
+# followed by one false message every one time the button is pressed.
+# see one shot mode: https://github.com/e100/mp-canfix-devices/blob/main/switches/code.py
+# CAN devices sending repeating button data should sent one true when pressed and 
+# one false when released.
+#
+# The above rules are needed because multiple buttons are sent with a single can message.
+# Without these rules and features a user pressing one button and while holding it presses another
+# button could result in the first button looking as if it was pressed twice.
+
+switches:
+    - {  fixid: "TSBTN112,TSBTN212,TSBTN113,TSBTN213,TSBTN114,TSBTN214,TSBTN115,TSBTN215,TSBTN124,TSBTN224,TSBTN125,TSBTN225,TSBTN126,TSBTN226,TSBTN127,TSBTN227",
+        toggle: "TSBTN124,TSBTN224,TSBTN125,TSBTN225,TSBTN126,TSBTN226,TSBTN127,TSBTN227",
+         canid: 0x308,
+         index: 0,
+         owner: False }
+    - {  fixid: "MAVADJ,MAVREQADJ,MAVREQTRIM,MAVREQCRUISE,MAVREQGUIDED,MAVREQAUTOTUNE,MAVWPVALID",
+         canid: 0x309,
+         index: 0,
+         owner: False,
+         nodespecific: True }
+
