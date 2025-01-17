@@ -1,7 +1,7 @@
 # Make changes to includes and enabled in this file.
 # see preferences.yaml for a list of options
 
-# IF you need a custom config file, make one anc change the filename here:
+# IF you need a custom config file, make one and change the filename here:
 includes:
   QUORUM_CONFIG: connections/quorum.yaml
 

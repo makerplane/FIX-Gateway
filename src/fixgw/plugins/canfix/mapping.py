@@ -41,19 +41,22 @@ class Mapping(object):
         self.senderrorcount = 0
         self.recvignorecount = 0
         self.recvinvalidcount = 0
+        self.ignore_fixid_missing = False
 
         # Open and parse the YAML mapping file passed to us
-        try:
-            f = open(mapfile)
-        except:
-            self.log.error("Unable to Open Mapfile - {}".format(mapfile))
-            raise
-        maps = yaml.safe_load(f)
-        f.close()
-
         if not os.path.exists(mapfile):
             raise ValueError(f"Unable to open mapfile: '{mapfile}'")
         maps, meta = cfg.from_yaml(mapfile, metadata=True)
+
+        if 'ignore_fixid_missing' in maps:
+            if isinstance(maps['ignore_fixid_missing'], bool):
+                self.ignore_fixid_missing = maps['ignore_fixid_missing']
+            else:
+                raise ValueError(
+                    cfg.message(
+                        f"ignore_fixid_missing must be true or false", meta, "ignore_fixid_missing", True
+                    )
+                )
 
         if not maps.get("meta replacements", False):
             raise ValueError(
@@ -132,6 +135,13 @@ class Mapping(object):
         try:
             dbItem = database.get_raw_item(dbKey)
         except KeyError:
+            # Need to improve this, maybe the user made a typo, they might not ever know.
+            # Currently the code has been updated to allow this because we want to
+            # keep the default config as simple as possible
+            # If you change database variable to one engine, then all the fixids for
+            # engine two are not created
+            # We have all the fixids defined for both engines and currently
+            # lack a simple mechanism to turn them on or off
             return None
 
         # The output exclusion keeps us from constantly sending updates on the
@@ -453,14 +463,19 @@ class Mapping(object):
         #print(f"###\nData:{data}\nMeta:{meta}\nIndx:{index}")
         if not isinstance(data, dict):
             raise ValueError(cfg.message("Inputs should be dictionaries", meta, index))
-        if 'canid' not in data:
-            raise ValueError(cfg.message("Key 'canid' is missing", meta, index))
-        if 'index' not in data: #  The key in data not the param
-            raise ValueError(cfg.message("Key 'index' is missing", meta, index))
+        for k in ['canid', 'index', 'fixid']:
+            if k not in data:
+                raise ValueError(cfg.message(f"Key '{k}' is missing", meta, index))
         if not self.valid_canid(data["canid"]):
             raise ValueError(
                 cfg.message(
                     self.valid_canid(data["canid"], True)[1], meta[index], "canid", True
+                )
+            )
+        if data['fixid'] not in database.listkeys() and not self.ignore_fixid_missing:
+            raise ValueError(
+                cfg.message(
+                    f"fixid '{data['fixid']}' is not a valid fixid", meta[index], "fixid", True
                 )
             )
         if not self.valid_index(data["index"]):

@@ -1,5 +1,11 @@
+#
+#        ********************* CAUTION *********************
+#  Editing this file may result in unit test failures
+
 # This file contains all of the mappings that tell the canfix plugin how
 # to talk to the FIX Gateway database.  This is a YAML file.
+
+ignore_fixid_missing: true
 
 # This is a list of replacement strings to map meta data from the CAN-FIX
 # protocol to the actual meta/auxiliary data described in the FGW database
@@ -37,7 +43,7 @@ inputs:
   - { canid: 0x200, index: 0, fixid: "TACH1", priority: 0 }
   - { canid: 0x201, index: 0, fixid: "TACH2", priority: 0 }
   - { canid: 0x202, index: 0, fixid: "PROP1", priority: 0 }
-  - [ canid: 0x203, index: 0, fixid: "PROP2", priority: 0 ]
+  - { canid: 0x203, index: 0, fixid: "PROP2", priority: 0 }
   - { canid: 0x21E, index: 0, fixid: "MAP1", priority: 0 }
   - { canid: 0x21F, index: 0, fixid: "MAP2", priority: 0 }
   - { canid: 0x220, index: 0, fixid: "OILP1", priority: 0 }
@@ -72,7 +78,7 @@ inputs:
   - { canid: 0x520, index: 0, fixid: "HOBBS1", priority: 0 }
   - { canid: 0x50E, index: 0, fixid: "VOLT", priority: 0 }
   - { canid: 0x512, index: 0, fixid: "CURRNT", priority: 0 }
-  - { canid: 0x406, index: 0, fixid: "OAT", priority: 0 }
+  - { canid: 0x7E0, index: 0, fixid: "OAT", priority: 0 }
   - { canid: 0x18B, index: 0, fixid: "ALAT", priority: 0 }
   - { canid: 0x182, index: 0, fixid: "AOA", priority: 0 }
   - { canid: 0x188, index: 0, fixid: "AGL", priority: 0 }

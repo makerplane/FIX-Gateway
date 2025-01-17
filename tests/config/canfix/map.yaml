@@ -1,5 +1,11 @@
+#
+#        ********************* CAUTION *********************
+#  Editing this file may result in unit test failures
+
 # This file contains all of the mappings that tell the canfix plugin how
 # to talk to the FIX Gateway database.  This is a YAML file.
+
+ignore_fixid_missing: true
 
 # This is a list of replacement strings to map meta data from the CAN-FIX
 # protocol to the actual meta/auxiliary data described in the FGW database

@@ -74,8 +74,41 @@ client with GUI interface:
     $ ./fixGwClient.py --gui
 
 
+Configuration
+-------------
 
-The configuration files are in the ``src/fixgw/config`` directory.
+| The configuration files are in the ``src/fixgw/config`` directory.
+| Upon excution the configuration files will be copied into:
+
+::
+
+  ~/makerplane/fixgw/config
+
+
+| When fixgateway copies the files it will set the timestamp on them to 'Feb  3  1981'
+| If the timestamp on the file is changed, because it has been edited, the file will not be overwritten, instead a file of the same name with '.dist' added to the end will be created.
+| The goal is to automatically update default configurations with important changes or bug fixes.
+| If you would like to benefit from fixes and new features without having to figure out the new options
+| then only edit thse files:
+
+::
+
+  config/preferences.yaml.custom
+  config/database/custom.yaml
+
+
+| If you wanted to edit database.yaml you can make a copy of it
+| Then edit config/preferences.yaml.custom and under includes: section add:
+
+::
+
+  includes:
+    DATABASE_CONFIG: my-custom-filename-database.yaml
+
+| Most configuration files can be changed in the same manner, 'config/preferences.yaml' contains most of the info you should need, simply copy/paste from 'config/preferences.yaml' into 'config/preferences.yaml.custom' and then make the desired change.
+| The file 'config/database/custom.yaml' will overwrite any default database settings, so if you just need to add custom fixids or alter alert thresholds and timeouts, make your changes there.
+| The final goal with configuration is to allow you to make any change you want while also making it simple to change just a few options using only config/preferences.yaml.custom
+| Currently we are missing the ability to easily change a single option in some files
 
 Testing
 ------------

@@ -191,7 +191,6 @@ Objects = namedtuple(
 def plugin():
     # Use the default database
     database.init("src/fixgw/config/database.yaml")
-
     cc = yaml.safe_load(config)
     pl = fixgw.plugins.canfix.Plugin("canfix", cc)
     pl.start()
@@ -520,13 +519,13 @@ def test_bad_parse(plugin):
     assert status["Send Error Count"] == 0
 
 
-def test_mapfile_input_canid_too_low():
+def test_mapfile_inputs_canid_too_low():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_input_canid_low.yaml",
+                "tests/config/canfix/map_bad_inputs_canid_low.yaml",
                 bad_mapfile_config,
             )
         )
@@ -537,17 +536,17 @@ def test_mapfile_input_canid_too_low():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "canid must be >= to 256 (0x100) on line 34, column 14 in file 'tests/config/canfix/map_bad_input_canid_low.yaml'"
+        == "canid must be >= to 256 (0x100) on line 70, column 14 in file 'tests/config/canfix/map_bad_inputs_canid_low.yaml'"
     )
 
 
-def test_mapfile_input_canid_too_high():
+def test_mapfile_inputs_canid_too_high():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_input_canid_high.yaml",
+                "tests/config/canfix/map_bad_inputs_canid_high.yaml",
                 bad_mapfile_config,
             )
         )
@@ -558,17 +557,17 @@ def test_mapfile_input_canid_too_high():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "canid must be <= to 2015 (0x7df) on line 34, column 14 in file 'tests/config/canfix/map_bad_input_canid_high.yaml'"
+        == "canid must be <= to 2015 (0x7df) on line 81, column 14 in file 'tests/config/canfix/map_bad_inputs_canid_high.yaml'"
     )
 
 
-def test_mapfile_input_canid_missing():
+def test_mapfile_inputs_canid_missing():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_input_canid_missing.yaml",
+                "tests/config/canfix/map_bad_inputs_canid_missing.yaml",
                 bad_mapfile_config,
             )
         )
@@ -579,17 +578,17 @@ def test_mapfile_input_canid_missing():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "Key 'canid' is missing on line 34, column 5 in file 'tests/config/canfix/map_bad_input_canid_missing.yaml'"
+        == "Key 'canid' is missing on line 65, column 5 in file 'tests/config/canfix/map_bad_inputs_canid_missing.yaml'"
     )
 
 
-def test_mapfile_input_not_dict():
+def test_mapfile_inputs_not_dict():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_input_not_dict.yaml",
+                "tests/config/canfix/map_bad_inputs_not_dict.yaml",
                 bad_mapfile_config,
             )
         )
@@ -600,16 +599,16 @@ def test_mapfile_input_not_dict():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "Inputs should be dictionaries on line 40, column 5 in file 'tests/config/canfix/map_bad_input_not_dict.yaml'"
+        == "Inputs should be dictionaries on line 71, column 5 in file 'tests/config/canfix/map_bad_inputs_not_dict.yaml'"
     )
 
-def test_mapfile_input_nodespecific_not_bool():
+def test_mapfile_inputs_nodespecific_not_bool():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_input_nodespecific_not_bool.yaml",
+                "tests/config/canfix/map_bad_inputs_nodespecific_not_bool.yaml",
                 bad_mapfile_config,
             )
         )
@@ -620,17 +619,17 @@ def test_mapfile_input_nodespecific_not_bool():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "nodespecific should be true or false without quotes on line 34, column 73 in file 'tests/config/canfix/map_bad_input_nodespecific_not_bool.yaml'"
+        == "nodespecific should be true or false without quotes on line 42, column 73 in file 'tests/config/canfix/map_bad_inputs_nodespecific_not_bool.yaml'"
     )
 
 
-def test_mapfile_input_index_high():
+def test_mapfile_inputs_index_high():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_input_index_high.yaml",
+                "tests/config/canfix/map_bad_inputs_index_high.yaml",
                 bad_mapfile_config,
             )
         )
@@ -641,16 +640,16 @@ def test_mapfile_input_index_high():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "Index should be less than 256 and greater than or equall to 0 on line 29, column 28 in file 'tests/config/canfix/map_bad_input_index_high.yaml'"
+        == "Index should be less than 256 and greater than or equall to 0 on line 51, column 28 in file 'tests/config/canfix/map_bad_inputs_index_high.yaml'"
     )
 
-def test_mapfile_input_index_low():
+def test_mapfile_inputs_index_low():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_input_index_low.yaml",
+                "tests/config/canfix/map_bad_inputs_index_low.yaml",
                 bad_mapfile_config,
             )
         )
@@ -661,16 +660,16 @@ def test_mapfile_input_index_low():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "Index should be less than 256 and greater than or equall to 0 on line 29, column 28 in file 'tests/config/canfix/map_bad_input_index_low.yaml'"
+        == "Index should be less than 256 and greater than or equall to 0 on line 69, column 28 in file 'tests/config/canfix/map_bad_inputs_index_low.yaml'"
     )
 
-def test_mapfile_input_index_missing():
+def test_mapfile_inputs_index_missing():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_input_index_missing.yaml",
+                "tests/config/canfix/map_bad_inputs_index_missing.yaml",
                 bad_mapfile_config,
             )
         )
@@ -681,8 +680,66 @@ def test_mapfile_input_index_missing():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "Key 'index' is missing on line 29, column 5 in file 'tests/config/canfix/map_bad_input_index_missing.yaml'"
+        == "Key 'index' is missing on line 50, column 5 in file 'tests/config/canfix/map_bad_inputs_index_missing.yaml'"
     )
+
+def test_mapfile_inputs_fixid_missing():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_bad_inputs_fixid_missing.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "Key 'fixid' is missing on line 47, column 5 in file 'tests/config/canfix/map_bad_inputs_fixid_missing.yaml'"
+    )
+
+def test_mapfile_inputs_fixid_invalid():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_bad_inputs_fixid_invalid.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "fixid 'alt' is not a valid fixid on line 38, column 38 in file 'tests/config/canfix/map_bad_inputs_fixid_invalid.yaml'"
+    )
+
+def test_mapfile_inputs_fixid_invalid_but_allowed():
+    try:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify no exception
+    except Exception as e:
+        pytest.fail(f"Using 'tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml' should not have caused exception: {e}")
 
 
 def test_get_status(plugin):
