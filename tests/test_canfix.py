@@ -29,7 +29,6 @@ import fixgw.plugins.canfix
 from collections import namedtuple
 from unittest.mock import MagicMock, patch
 import logging
-import warnings
 
 # canfix needs updated to support quorum so we will monkey patch it for now
 # Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
@@ -165,7 +164,7 @@ def string2data(s):
 def button_data(data_type, data_code, index, button_bits, canid, nodeid, ns):
     bytes_array = []
     for x in range(5):
-        bytes_array.append(button_bits[8 * x : 8 * (x + 1)])
+        bytes_array.append(button_bits[8 * x : 8 * (x + 1)])  # noqa: E203
     valueData = canfix.utils.setValue(data_type, bytes_array)
     data = bytearray([])
     if ns:
@@ -217,7 +216,7 @@ def test_missing_mapfile():
     with pytest.raises(Exception):
         bad_cc = yaml.safe_load(bad_mapfile_config)
         bad_pl = fixgw.plugins.canfix.Plugin("canfix", bad_cc)
-        # bad_pl.start()
+        bad_pl.start()
 
 
 def test_parameter_writes(plugin):
@@ -378,39 +377,39 @@ def test_switch_inputs(plugin):
     msg.data = bytearray(b"\x91\x00\x00\x01\x00\x00\x00\x00")
     plugin.bus.send(msg)
     time.sleep(0.03)
-    assert database.read("TSBTN112")[0] == True
+    assert database.read("TSBTN112")[0] is True
     # Set TSBTN112 False and TBTN212 True
     msg.data = bytearray(b"\x91\x00\x00\x02\x00\x00\x00\x00")
     plugin.bus.send(msg)
     time.sleep(0.03)
-    assert database.read("TSBTN112")[0] == False
-    assert database.read("TSBTN212")[0] == True
-    assert database.read("TSBTN124")[0] == False
+    assert database.read("TSBTN112")[0] is False
+    assert database.read("TSBTN212")[0] is True
+    assert database.read("TSBTN124")[0] is False
     # Set TSBTN124, a Toggle button, to True
     # All other buttons are False
     msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
     plugin.bus.send(msg)
     time.sleep(0.03)
     # TSBTN124 wss toggeled False to True
-    assert database.read("TSBTN124")[0] == True
+    assert database.read("TSBTN124")[0] is True
     # Set all buttons False
     msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
     plugin.bus.send(msg)
     time.sleep(0.03)
     # Sending false on a toggle button does not change its state
-    assert database.read("TSBTN124")[0] == True
+    assert database.read("TSBTN124")[0] is True
     # Set TSBTN124 to True
     msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
     plugin.bus.send(msg)
     time.sleep(0.03)
     # Button toggled from True to False
-    assert database.read("TSBTN124")[0] == False
+    assert database.read("TSBTN124")[0] is False
     # Set all buttons False
     msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
     plugin.bus.send(msg)
     time.sleep(0.03)
     # Sending false for toggle does not change state
-    assert database.read("TSBTN124")[0] == False
+    assert database.read("TSBTN124")[0] is False
     status = plugin.pl.get_status()
     assert status["Received Frames"] == 6
     assert status["Ignored Frames"] == 0
@@ -420,9 +419,6 @@ def test_switch_inputs(plugin):
 
 
 def test_nodespecific_switch_inputs(plugin):
-    # msg = can.Message(arbitration_id=1905, is_extended_id=False)
-    # Set MAVADJ True
-    # database.write("MAVADJ", False)
     index = 0
     canid = 0x309
     nodeid = 0x91
@@ -438,10 +434,10 @@ def test_nodespecific_switch_inputs(plugin):
     msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
     plugin.bus.send(msg)
     time.sleep(0.03)
-    assert database.read("MAVADJ")[0] == True
-    assert database.read("MAVWPVALID")[0] == True
-    assert database.read("MAVREQADJ")[0] == False
-    assert database.read("MAVREQAUTOTUNE")[0] == False
+    assert database.read("MAVADJ")[0] is True
+    assert database.read("MAVWPVALID")[0] is True
+    assert database.read("MAVREQADJ")[0] is False
+    assert database.read("MAVREQAUTOTUNE")[0] is False
 
     # Reset all buttons to False
     button_bits = [False] * 40
@@ -450,10 +446,10 @@ def test_nodespecific_switch_inputs(plugin):
     msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
     plugin.bus.send(msg)
     time.sleep(0.03)
-    assert database.read("MAVADJ")[0] == False
-    assert database.read("MAVWPVALID")[0] == False
-    assert database.read("MAVREQADJ")[0] == False
-    assert database.read("MAVREQAUTOTUNE")[0] == False
+    assert database.read("MAVADJ")[0] is False
+    assert database.read("MAVWPVALID")[0] is False
+    assert database.read("MAVREQADJ")[0] is False
+    assert database.read("MAVREQAUTOTUNE")[0] is False
     status = plugin.pl.get_status()
     assert status["Received Frames"] == 2
     assert status["Ignored Frames"] == 0
@@ -557,7 +553,7 @@ def test_mapfile_inputs_canid_too_high():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "canid must be <= to 2015 (0x7df) on line 81, column 14 in file 'tests/config/canfix/map_bad_inputs_canid_high.yaml'"
+        == "canid must be <= to 2015 (0x7df) on line 81, column 14 in file 'tests/config/canfix/map_bad_inputs_canid_high.yaml'"  # noqa: E501
     )
 
 
@@ -602,6 +598,7 @@ def test_mapfile_inputs_not_dict():
         == "Inputs should be dictionaries on line 71, column 5 in file 'tests/config/canfix/map_bad_inputs_not_dict.yaml'"
     )
 
+
 def test_mapfile_inputs_nodespecific_not_bool():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
@@ -619,7 +616,7 @@ def test_mapfile_inputs_nodespecific_not_bool():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "nodespecific should be true or false without quotes on line 42, column 73 in file 'tests/config/canfix/map_bad_inputs_nodespecific_not_bool.yaml'"
+        == "nodespecific should be true or false without quotes on line 42, column 73 in file 'tests/config/canfix/map_bad_inputs_nodespecific_not_bool.yaml'"  # noqa: E501
     )
 
 
@@ -640,8 +637,9 @@ def test_mapfile_inputs_index_high():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "Index should be less than 256 and greater than or equall to 0 on line 51, column 28 in file 'tests/config/canfix/map_bad_inputs_index_high.yaml'"
+        == "Index should be less than 256 and greater than or equall to 0 on line 51, column 28 in file 'tests/config/canfix/map_bad_inputs_index_high.yaml'"  # noqa: E501
     )
+
 
 def test_mapfile_inputs_index_low():
     with pytest.raises(ValueError) as excinfo:
@@ -660,8 +658,9 @@ def test_mapfile_inputs_index_low():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "Index should be less than 256 and greater than or equall to 0 on line 69, column 28 in file 'tests/config/canfix/map_bad_inputs_index_low.yaml'"
+        == "Index should be less than 256 and greater than or equall to 0 on line 69, column 28 in file 'tests/config/canfix/map_bad_inputs_index_low.yaml'"  # noqa: E501
     )
+
 
 def test_mapfile_inputs_index_missing():
     with pytest.raises(ValueError) as excinfo:
@@ -683,6 +682,7 @@ def test_mapfile_inputs_index_missing():
         == "Key 'index' is missing on line 50, column 5 in file 'tests/config/canfix/map_bad_inputs_index_missing.yaml'"
     )
 
+
 def test_mapfile_inputs_fixid_missing():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
@@ -703,6 +703,7 @@ def test_mapfile_inputs_fixid_missing():
         == "Key 'fixid' is missing on line 47, column 5 in file 'tests/config/canfix/map_bad_inputs_fixid_missing.yaml'"
     )
 
+
 def test_mapfile_inputs_fixid_invalid():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
@@ -720,8 +721,9 @@ def test_mapfile_inputs_fixid_invalid():
     # Verify the exception message
     assert (
         str(excinfo.value)
-        == "fixid 'alt' is not a valid fixid on line 38, column 38 in file 'tests/config/canfix/map_bad_inputs_fixid_invalid.yaml'"
+        == "fixid 'alt' is not a valid fixid on line 38, column 38 in file 'tests/config/canfix/map_bad_inputs_fixid_invalid.yaml'"  # noqa: E501
     )
+
 
 def test_mapfile_inputs_fixid_invalid_but_allowed():
     try:
@@ -739,7 +741,9 @@ def test_mapfile_inputs_fixid_invalid_but_allowed():
 
     # Verify no exception
     except Exception as e:
-        pytest.fail(f"Using 'tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml' should not have caused exception: {e}")
+        pytest.fail(
+            f"Using 'tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml' should not have caused exception: {e}"
+        )
 
 
 def test_get_status(plugin):
