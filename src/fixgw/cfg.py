@@ -58,16 +58,18 @@ class MetadataLoader(SafeLoader):
                         if isinstance(item_node, yaml.MappingNode):
                             nested_mapping, nested_metadata = self.construct_mapping_with_metadata(item_node)
                             list_metadata[index] = nested_metadata
+                            list_metadata[f".__{index}__."] = item_meta
                         else:
                             list_metadata[index] = {
                                 **item_meta,
                                 "value_meta": item_meta,
                             }
+                            #list_metadata[f".__{index}__."] = "foo"
                     mapping[key] = list_values
                     metadata_mapping[key] = list_metadata
                 else:
                     mapping[key] = value
-
+                    #metadata_mapping[f".__{key}__."] = "bar"
         self.metadata.update(metadata_mapping)
         return mapping
 
@@ -99,7 +101,7 @@ def parse_yaml_with_metadata(yaml_string, filename=None):
         stream = yaml_string.read()
 
     loader = MetadataLoader(stream, filename=filename)
-    data = loader.get_single_data()
+    data = loader.get_data()
     metadata = loader.get_metadata()
 
 #    metadata = loader._metadata_store
@@ -227,6 +229,7 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                                         #for gee in cfg_litems:
                                             #print(f"############\n{gee}\n{cfg_litems[gee]}")
                                         new_meta[key] = (cfg_litems['items'][ax])
+                                        new_meta[f".__{key}__."] = cfg_litems['items'][ax]
                             else:
                                 raise Exception(
                                     f"Error in {ifile}\nWhen including list items they need listed under 'items:' in the include file"
@@ -234,9 +237,11 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                         else:
                             new[key].append(l)
                             new_meta[key][lindex] = cfg_meta[key][lindex]
+                            new_meta[key][f".__{lindex}__."] = cfg_meta[key][f".__{lindex}__."]
                     else:
                         new[key].append(l)
-                        new_meta[key][lindex] = cfg_meta[key][lindex]    
+                        new_meta[key][lindex] = cfg_meta[key][lindex] 
+                        #new_meta[key][f".__{lindex}__."] = cfg_meta[key][f".__{lindex}__."]
             else:
                 # Save existing
                 new[key] = val
@@ -247,3 +252,11 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
         return (new, new_meta)
     else:
         return new
+
+def message(message, key, index, value=None):
+    if value:
+        return f'{message} on line {key[f".__{index}__."]["value_meta"]["line"]}, column {key[f".__{index}__."]["value_meta"]["column"]} in file \'{key[f".__{index}__."]["value_meta"]["file"]}\''
+    else:
+        return f'{message} on line {key[f".__{index}__."]["line"]}, column {key[f".__{index}__."]["column"]} in file \'{key[f".__{index}__."]["file"]}\''
+
+

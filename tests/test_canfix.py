@@ -528,7 +528,7 @@ def test_mapfile_input_canid_too_low():
         pl.shutdown()
 
     # Verify the exception message
-    assert str(excinfo.value) == "canid must be >= to 256 (0x100) on line 34 of file 'tests/config/canfix/map_bad_input_canid_low.yaml'"
+    assert str(excinfo.value) == "canid must be >= to 256 (0x100) on line 34, column 14 in file 'tests/config/canfix/map_bad_input_canid_low.yaml'"
 
 
 def test_mapfile_input_canid_too_high():
@@ -540,7 +540,18 @@ def test_mapfile_input_canid_too_high():
         pl.shutdown()
 
     # Verify the exception message
-    assert str(excinfo.value) == "canid must be <= to 2015 (0x7df) on line 34 of file 'tests/config/canfix/map_bad_input_canid_high.yaml'"
+    assert str(excinfo.value) == "canid must be <= to 2015 (0x7df) on line 34, column 14 in file 'tests/config/canfix/map_bad_input_canid_high.yaml'"
+
+def test_mapfile_input_canid_missing():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(re.sub('missing_map_file.yaml', 'tests/config/canfix/map_bad_input_canid_missing.yaml',bad_mapfile_config))
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert str(excinfo.value) == "Key 'canid' is missing on line 34, column 5 in file 'tests/config/canfix/map_bad_input_canid_missing.yaml'"
 
 def test_get_status(plugin):
     status = plugin.pl.get_status()

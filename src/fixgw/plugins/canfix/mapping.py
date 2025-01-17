@@ -92,11 +92,23 @@ class Mapping(object):
 
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
         for index, each in enumerate(maps["inputs"]):
-            # p = canfix.protocol.parameters[each["canid"]]
-            # Parameters start at 0x100 so we subtract that offset to index the array
+            #print(each.__class__)
+            if not isinstance(each, dict):
+                raise ValueError("FIXME, should report file/line where dict should be defined")
+            if not each.get('canid', False):
+                #print(f'###########\n{meta["inputs"]}\n')
+                #print(meta["inputs"][index])
+                #for pp,ppp in meta["inputs"].items():
+                #    print(pp)
+                #print(f"{meta['inputs'].keys()}")
+                #print(f"##\n{index}\n")
+                #print(meta["inputs"][f".__{index}__."])
+                raise ValueError(cfg.message("Key 'canid' is missing", meta["inputs"],index))
+                #f'Key \'canid\' is missing from file \'{meta["inputs"][f".__{index}__."]["file"]}\' on line {meta["inputs"][f".__{index}__."]["line"]}')
             if not self.valid_canid(each["canid"]):
-                #print(f"###:\n{meta}\n\n{meta['inputs'][index]}")
-                raise ValueError(f'{self.valid_canid(each["canid"],True)[1]} on line {meta["inputs"][index][".__canid__."]["line"]} of file \'{meta["inputs"][index][".__canid__."]["file"]}\'')
+                raise ValueError(cfg.message(self.valid_canid(each["canid"],True)[1], meta["inputs"][index], 'canid', True))
+                #raise ValueError(f'{self.valid_canid(each["canid"],True)[1]} on line {meta["inputs"][index][".__canid__."]["line"]} of file \'{meta["inputs"][index][".__canid__."]["file"]}\'')
+            # Parameters start at 0x100 so we subtract that offset to index the array
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:
                 self.input_mapping[ix] = [None] * 256
