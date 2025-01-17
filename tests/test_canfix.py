@@ -624,6 +624,67 @@ def test_mapfile_input_nodespecific_not_bool():
     )
 
 
+def test_mapfile_input_index_high():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_bad_input_index_high.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "Index should be less than 256 and greater than or equall to 0 on line 29, column 28 in file 'tests/config/canfix/map_bad_input_index_high.yaml'"
+    )
+
+def test_mapfile_input_index_low():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_bad_input_index_low.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "Index should be less than 256 and greater than or equall to 0 on line 29, column 28 in file 'tests/config/canfix/map_bad_input_index_low.yaml'"
+    )
+
+def test_mapfile_input_index_missing():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_bad_input_index_missing.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "Key 'index' is missing on line 29, column 5 in file 'tests/config/canfix/map_bad_input_index_missing.yaml'"
+    )
+
+
 def test_get_status(plugin):
     status = plugin.pl.get_status()
     assert status["CAN Interface"] == plugin.interface

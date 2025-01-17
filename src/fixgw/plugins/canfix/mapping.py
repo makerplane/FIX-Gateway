@@ -436,21 +436,37 @@ class Mapping(object):
             )
         return (True, None) if detailed else True
 
-    def valid_index(self, index):
-        return index > 0 and index < 256
+    def valid_index(self, index, detailed=False):
+        if index >= 0 and index < 256:
+            return (True, None) if detailed else True
+        else:
+            return (
+                (False, "Index should be less than 256 and greater than or equall to 0")
+                if detailed
+                else False
+            )
 
     def valid_fixid(self, fixid):
         return fixid in database.listkeys()
 
     def validate_mapping_inputs(self, data, meta, index):
+        #print(f"###\nData:{data}\nMeta:{meta}\nIndx:{index}")
         if not isinstance(data, dict):
             raise ValueError(cfg.message("Inputs should be dictionaries", meta, index))
-        if not data.get("canid", False):
+        if 'canid' not in data:
             raise ValueError(cfg.message("Key 'canid' is missing", meta, index))
+        if 'index' not in data: #  The key in data not the param
+            raise ValueError(cfg.message("Key 'index' is missing", meta, index))
         if not self.valid_canid(data["canid"]):
             raise ValueError(
                 cfg.message(
                     self.valid_canid(data["canid"], True)[1], meta[index], "canid", True
+                )
+            )
+        if not self.valid_index(data["index"]):
+            raise ValueError(
+                cfg.message(
+                    self.valid_index(data["index"], True)[1], meta[index], "index", True
                 )
             )
         if not isinstance(data.get("nodespecific",False), bool):
