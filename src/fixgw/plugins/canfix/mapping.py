@@ -25,6 +25,8 @@ import canfix
 import fixgw.quorum as quorum
 from fixgw import cfg
 import os
+
+
 class Mapping(object):
     def __init__(self, mapfile, log=None):
         self.meta_replacements_in = {}
@@ -40,8 +42,6 @@ class Mapping(object):
         self.recvignorecount = 0
         self.recvinvalidcount = 0
 
-
-
         # Open and parse the YAML mapping file passed to us
         try:
             f = open(mapfile)
@@ -53,10 +53,12 @@ class Mapping(object):
 
         if not os.path.exists(mapfile):
             raise ValueError(f"Unable to open mapfile: '{mapfile}'")
-        maps, meta = cfg.from_yaml(mapfile,metadata=True)
+        maps, meta = cfg.from_yaml(mapfile, metadata=True)
 
-        if not maps.get("meta replacements",False):
-            raise ValueError(f"The mapfile '{mapfile}' must provide a valid 'meta replacements' section.")
+        if not maps.get("meta replacements", False):
+            raise ValueError(
+                f"The mapfile '{mapfile}' must provide a valid 'meta replacements' section."
+            )
         # dictionaries used for converting meta data strings from db to canfix and back
         self.meta_replacements_in = maps["meta replacements"]
         self.meta_replacements_out = {
@@ -92,22 +94,7 @@ class Mapping(object):
 
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
         for index, each in enumerate(maps["inputs"]):
-            #print(each.__class__)
-            if not isinstance(each, dict):
-                raise ValueError("FIXME, should report file/line where dict should be defined")
-            if not each.get('canid', False):
-                #print(f'###########\n{meta["inputs"]}\n')
-                #print(meta["inputs"][index])
-                #for pp,ppp in meta["inputs"].items():
-                #    print(pp)
-                #print(f"{meta['inputs'].keys()}")
-                #print(f"##\n{index}\n")
-                #print(meta["inputs"][f".__{index}__."])
-                raise ValueError(cfg.message("Key 'canid' is missing", meta["inputs"],index))
-                #f'Key \'canid\' is missing from file \'{meta["inputs"][f".__{index}__."]["file"]}\' on line {meta["inputs"][f".__{index}__."]["line"]}')
-            if not self.valid_canid(each["canid"]):
-                raise ValueError(cfg.message(self.valid_canid(each["canid"],True)[1], meta["inputs"][index], 'canid', True))
-                #raise ValueError(f'{self.valid_canid(each["canid"],True)[1]} on line {meta["inputs"][index][".__canid__."]["line"]} of file \'{meta["inputs"][index][".__canid__."]["file"]}\'')
+            self.validate_mapping_inputs(each, meta["inputs"], index)
             # Parameters start at 0x100 so we subtract that offset to index the array
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:
@@ -175,7 +162,12 @@ class Mapping(object):
                         "Problem setting Aux Value for {0}".format(dbItem.key)
                     )
             else:
-                if cfpar.value is not None and cfpar.annunciate is not None and cfpar.quality is not None and cfpar.failure is not None:
+                if (
+                    cfpar.value is not None
+                    and cfpar.annunciate is not None
+                    and cfpar.quality is not None
+                    and cfpar.failure is not None
+                ):
                     dbItem.value = (
                         cfpar.value,
                         cfpar.annunciate,
@@ -184,6 +176,7 @@ class Mapping(object):
                     )
                 else:
                     self.recvinvalidcount += 1
+
         return InputFunc
 
     # Returns a closure that should be used as the callback for database item
@@ -430,19 +423,33 @@ class Mapping(object):
             if func is not None:
                 func(par)
 
-
-    def valid_canid(self,canid,detailed=False):
+    def valid_canid(self, canid, detailed=False):
         if canid < 256:
             return (False, "canid must be >= to 256 (0x100)") if detailed else False
         if canid > 2015:
             return (False, "canid must be <= to 2015 (0x7df)") if detailed else False
-        if canid in range (1536, 1759):
-            return (False, "canid must not be between 1536 (0x600) and 1759 (0x6DF)") if detailed else False
+        if canid in range(1536, 1759):
+            return (
+                (False, "canid must not be between 1536 (0x600) and 1759 (0x6DF)")
+                if detailed
+                else False
+            )
         return (True, None) if detailed else True
 
-    def valid_index(self,index):
+    def valid_index(self, index):
         return index > 0 and index < 256
 
-    def valid_fixid(self,fixid):
+    def valid_fixid(self, fixid):
         return fixid in database.listkeys()
 
+    def validate_mapping_inputs(self, data, meta, index):
+        if not isinstance(data, dict):
+            raise ValueError(cfg.message("Inputs should be dictionaries", meta, index))
+        if not data.get("canid", False):
+            raise ValueError(cfg.message("Key 'canid' is missing", meta, index))
+        if not self.valid_canid(data["canid"]):
+            raise ValueError(
+                cfg.message(
+                    self.valid_canid(data["canid"], True)[1], meta[index], "canid", True
+                )
+            )

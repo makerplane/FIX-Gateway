@@ -241,7 +241,7 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                     else:
                         new[key].append(l)
                         new_meta[key][lindex] = cfg_meta[key][lindex] 
-                        #new_meta[key][f".__{lindex}__."] = cfg_meta[key][f".__{lindex}__."]
+                        new_meta[key][f".__{lindex}__."] = cfg_meta[key][lindex]
             else:
                 # Save existing
                 new[key] = val
