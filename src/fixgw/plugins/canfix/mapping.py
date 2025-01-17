@@ -453,3 +453,5 @@ class Mapping(object):
                     self.valid_canid(data["canid"], True)[1], meta[index], "canid", True
                 )
             )
+        if not isinstance(data.get("nodespecific",False), bool):
+            raise ValueError(cfg.message("nodespecific should be true or false without quotes", meta[index], 'nodespecific', True))

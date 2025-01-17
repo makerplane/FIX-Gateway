@@ -603,6 +603,26 @@ def test_mapfile_input_not_dict():
         == "Inputs should be dictionaries on line 40, column 5 in file 'tests/config/canfix/map_bad_input_not_dict.yaml'"
     )
 
+def test_mapfile_input_nodespecific_not_bool():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_bad_input_nodespecific_not_bool.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "nodespecific should be true or false without quotes on line 34, column 73 in file 'tests/config/canfix/map_bad_input_nodespecific_not_bool.yaml'"
+    )
+
 
 def test_get_status(plugin):
     status = plugin.pl.get_status()
