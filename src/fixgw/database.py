@@ -424,7 +424,13 @@ def callback_del(name, key, function, udata):
 
 # Maintenance Functions
 def update():
+    # If database is not fully loaded do nothing to prevent
+    # exception from 'dictionary changed size during iteration'
+    if 'ZZLOADER' not in __database:
+        log.debug("tol updated attempted before database is fully loaded")
+        return
     for key in __database:
         item = __database[key]
         if item.age > item.tol and item.tol != 0:
+            log.debug(f"item.old set True for fixid {key}") 
             item.old = True
