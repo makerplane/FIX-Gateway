@@ -60,7 +60,7 @@ class Mapping(object):
 
         if not maps.get("meta replacements", False):
             raise ValueError(
-                f"The mapfile '{mapfile}' must provide a valid 'meta replacements' section."
+                f"The mapfile '{mapfile}' must provide a valid 'meta replacements' section"
             )
         # dictionaries used for converting meta data strings from db to canfix and back
         self.meta_replacements_in = maps["meta replacements"]
@@ -196,7 +196,7 @@ class Mapping(object):
             m = self.output_mapping[dbKey]
             self.log.debug(f"Output {dbKey}: {value[0]}")
             if m["require_leader"] and not quorum.leader:
-                self.log.debug(f"LEADER blocked Output {dbKey}: {value[0]}")
+                self.log.debug(f"LEADER({quorum.leader}) blocked Output {dbKey}: {value[0]}")
                 return
 
             # If the exclude flag is set we just recieved the value
@@ -209,7 +209,7 @@ class Mapping(object):
                 # This is a switch output
                 # merge value of all switches
                 val = bytearray([0x0] * 5)
-                for b, valByte in enumerate(val):
+                for b, valByte in enumerate(val):   # pragma: no cover - loop will always run
                     # Each byte of val
                     for bt in range(8):
                         # Each bit in the byte
@@ -230,7 +230,8 @@ class Mapping(object):
                 # unless on_change==False
                 r = False
                 if (
-                    m["lastOld"] != value[2]
+                    "lastOld" in m
+                    and m["lastOld"] != value[2]
                     and m["lastFlags"] == (value[1], value[3], value[4])
                     and value[0] == m["lastValue"]
                 ):
@@ -238,7 +239,8 @@ class Mapping(object):
                     r = True
 
                 if (
-                    m["on_change"]
+                    "lastValue" in m
+                    and m["on_change"]
                     and value[0] == m["lastValue"]
                     and m["lastFlags"] == (value[1], value[3], value[4])
                 ):
@@ -280,7 +282,8 @@ class Mapping(object):
                 # sending values that have not changed unless
                 # on_change==False
                 self.log.debug(f"Output {dbKey}: sending NodeSpecific")
-                if value[0] == m["lastValue"] and m["on_change"]:
+                if "lastValue" in m and value[0] == m["lastValue"] and m["on_change"]:
+                    self.log.debug(f"Output {dbKey}: not sending, not change")
                     return
 
                 m["lastValue"] = value[0]
@@ -298,6 +301,7 @@ class Mapping(object):
                 p.sendNode = node
                 try:
                     bus.send(p.msg)
+                    self.log.debug(f"Output {dbKey}: sent value: '{value[0]}'")
                 except Exception as e:
                     self.senderrorcount += 1
                     self.log.debug(f"Output {dbKey}: Send Failed {p.msg}")

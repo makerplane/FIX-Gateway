@@ -13,11 +13,11 @@ ignore_fixid_missing: true
 # and the second is what it will be replaced with when being written to
 # the database.
 
-meta replacements:
-  Low Warn: lowWarn
-  Low Alarm: lowAlarm
-  High Warn: highWarn
-  High Alarm: highAlarm
+#meta replacements:
+#  Low Warn: lowWarn
+#  Low Alarm: lowAlarm
+#  High Warn: highWarn
+#  High Alarm: highAlarm
 
 
 # Input mappings are for data that is read from the CAN-FIX bus and written into
@@ -110,6 +110,7 @@ outputs:
          owner: False,
          on_change: False, # Send whenever set, useful for temporary communication loss or reboots
          require_leader: False }
+  - { fixid: "WPNAME", canid: 0x480, index: 0, on_change:False, require_leader: True }
 
 # Special Input Functions
 # Each canid for encoders can support two encoders and 0 or up to 8 buttons.

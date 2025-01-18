@@ -106,7 +106,7 @@ class db_item(object):
                 func[1](self.key, self.value, func[2])
             except Exception as e:
                 log.error(
-                    f"Callback name: {func[0]}, udata: {func[1]} function: {func[2]} exception: {e}"
+                    f"Callback name: {func[0]}, fixid: {self.key}, udata: {func[1]} function: {func[2]} exception: {e}"
                 )
 
     # return the age of the item in milliseconds

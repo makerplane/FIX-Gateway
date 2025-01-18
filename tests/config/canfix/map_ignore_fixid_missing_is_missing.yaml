@@ -5,7 +5,7 @@
 # This file contains all of the mappings that tell the canfix plugin how
 # to talk to the FIX Gateway database.  This is a YAML file.
 
-ignore_fixid_missing: true
+#ignore_fixid_missing: "true"
 
 # This is a list of replacement strings to map meta data from the CAN-FIX
 # protocol to the actual meta/auxiliary data described in the FGW database
@@ -41,37 +41,19 @@ inputs:
   - { canid: 0x186, index: 0, fixid: "VS", priority: 0 }
   - { canid: 0x190, index: 0, fixid: "BARO", priority: 0, nodespecific: True }
   - { canid: 0x200, index: 0, fixid: "TACH1", priority: 0 }
-  - { canid: 0x201, index: 0, fixid: "TACH2", priority: 0 }
   - { canid: 0x202, index: 0, fixid: "PROP1", priority: 0 }
-  - { canid: 0x203, index: 0, fixid: "PROP2", priority: 0 }
   - { canid: 0x21E, index: 0, fixid: "MAP1", priority: 0 }
-  - { canid: 0x21F, index: 0, fixid: "MAP2", priority: 0 }
   - { canid: 0x220, index: 0, fixid: "OILP1", priority: 0 }
-  - { canid: 0x221, index: 0, fixid: "OILP2", priority: 0 }
   - { canid: 0x222, index: 0, fixid: "OILT1", priority: 0 }
-  - { canid: 0x223, index: 0, fixid: "OILT2", priority: 0 }
   - { canid: 0x500, index: 0, fixid: "CHT11", priority: 0 }
-  - { canid: 0x500, index: 1, fixid: "CHT12", priority: 0 }
   - { canid: 0x500, index: 2, fixid: "CHT13", priority: 0 }
   - { canid: 0x500, index: 3, fixid: "CHT14", priority: 0 }
-  - { canid: 0x501, index: 0, fixid: "CHT21", priority: 0 }
-  - { canid: 0x501, index: 1, fixid: "CHT22", priority: 0 }
-  - { canid: 0x501, index: 2, fixid: "CHT23", priority: 0 }
-  - { canid: 0x501, index: 3, fixid: "CHT24", priority: 0 }
   - { canid: 0x502, index: 0, fixid: "EGT11", priority: 0 }
-  - { canid: 0x502, index: 1, fixid: "EGT12", priority: 0 }
   - { canid: 0x502, index: 2, fixid: "EGT13", priority: 0 }
   - { canid: 0x502, index: 3, fixid: "EGT14", priority: 0 }
-  - { canid: 0x503, index: 0, fixid: "EGT21", priority: 0 }
-  - { canid: 0x503, index: 1, fixid: "EGT22", priority: 0 }
-  - { canid: 0x503, index: 2, fixid: "EGT23", priority: 0 }
-  - { canid: 0x503, index: 3, fixid: "EGT24", priority: 0 }
   - { canid: 0x226, index: 0, fixid: "FUELQ1", priority: 0 }
-  - { canid: 0x227, index: 0, fixid: "FUELQ2", priority: 0 }
   - { canid: 0x21A, index: 0, fixid: "FUELF1", priority: 0 }
-  - { canid: 0x21B, index: 0, fixid: "FUELF2", priority: 0 }
   - { canid: 0x21C, index: 0, fixid: "FUELP1", priority: 0 }
-  - { canid: 0x21D, index: 0, fixid: "FUELP2", priority: 0 }
   - { canid: 0x1C0, index: 0, fixid: "CDI", priority: 0 }
   - { canid: 0x1C1, index: 0, fixid: "GSI", priority: 0 }
   - { canid: 0x545, index: 0, fixid: "FTIME", priority: 0 }
@@ -110,6 +92,7 @@ outputs:
          owner: False,
          on_change: False, # Send whenever set, useful for temporary communication loss or reboots
          require_leader: False }
+  - { fixid: "WPNAME", canid: 0x480, index: 0, on_change:False, require_leader: True }
 
 # Special Input Functions
 # Each canid for encoders can support two encoders and 0 or up to 8 buttons.

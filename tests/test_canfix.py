@@ -185,11 +185,24 @@ Objects = namedtuple(
     ["bus", "pl", "interface", "channel", "node", "device", "revision", "model"],
 )
 
+def zzloader():
+    # Ensure the DB is fully loaded to avoid random 
+    # dictionary changed size during iteration
+    # errors
+    loaded = False
+    while not loaded:
+        try:
+            database.get_raw_item("ZZLOADER")
+            loaded = True
+        except:
+            time.sleep(0.01)
+
 
 @pytest.fixture
 def plugin():
     # Use the default database
     database.init("src/fixgw/config/database.yaml")
+    zzloader()
     cc = yaml.safe_load(config)
     pl = fixgw.plugins.canfix.Plugin("canfix", cc)
     pl.start()
@@ -206,7 +219,7 @@ def plugin():
         model=cc["model"],
         pl=pl,
     )
-    pl.shutdown()
+    pl.stop()
     can_bus.shutdown()
     quorum.enabled = False
     quorum.nodeid = None
@@ -252,6 +265,22 @@ def test_unowned_outputs(plugin):
     assert status["Sent Frames"] == 1
     assert status["Send Error Count"] == 0
 
+def test_block_sending_on_receive(plugin):
+    # Dont send on the bus, what we just got from the bus
+    index = 0
+    canid = 0x190
+    nodeid = 0x91
+    #code = (index // 32) + 0x0C
+    # Setup the can message as node specific
+    msg = can.Message(arbitration_id=0x6E0 + nodeid, is_extended_id=False)
+    # Set the message data
+    msg.data = bytearray([12, 0x90, 0x01, 0x0C, 0x7B])
+    plugin.bus.send(msg)
+    msg2 = plugin.bus.recv(0.3)
+    msg3 = plugin.bus.recv(0.3)
+    assert database.read("BARO")[0] == 31.50
+    assert msg2 is None
+    assert msg3 is None
 
 def test_all_frame_ids(plugin):
     """Loop through every CAN ID and every length of data with random data"""
@@ -283,7 +312,7 @@ def test_all_frame_ids(plugin):
 # TODO Add asserts above
 
 
-def test_ignore_quorum_mssages_when_diabled(plugin):
+def test_ignore_quorum_messages_when_diabled(plugin):
     for param in qtests:
         p = canfix.NodeStatus()
         p.sendNode = param[1]
@@ -329,6 +358,30 @@ def test_accept_quorum_mssages_when_enabled(plugin):
     assert status["Sent Frames"] == 0
     assert status["Send Error Count"] == 0
 
+def test_send_outputs_that_require_leader(plugin,caplog):
+    # Test that outputs with leader_required = True
+    # only send when lader is True
+    quorum.enabled = True
+    quorum.nodeid = 1
+    quorum.leader = True
+    time.sleep(0.5)
+    with caplog.at_level(logging.DEBUG):
+        database.write("WPNAME", "TEST1")
+        msg = plugin.bus.recv(0.3)
+        assert "Output WPNAME: sent value: 'TEST1'"  in caplog.text
+ 
+    quorum.leader = False
+    with caplog.at_level(logging.DEBUG):
+        database.write("WPNAME", "TEST2")
+        msg = plugin.bus.recv(0.3)
+        assert "blocked Output WPNAME: TEST2" in caplog.text
+    status = plugin.pl.get_status()
+    assert status["Received Frames"] == 0
+    assert status["Ignored Frames"] == 0
+    assert status["Invalid Frames"] == 0
+    assert status["Sent Frames"] == 1
+    assert status["Send Error Count"] == 0
+    quorum.leader = True
 
 def test_reject_invalid_quorum_mssages_when_enabled(plugin, caplog):
     quorum.enabled = True
@@ -527,7 +580,7 @@ def test_mapfile_inputs_canid_too_low():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -548,7 +601,7 @@ def test_mapfile_inputs_canid_too_high():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -569,7 +622,7 @@ def test_mapfile_inputs_canid_missing():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -590,7 +643,7 @@ def test_mapfile_inputs_not_dict():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -611,7 +664,7 @@ def test_mapfile_inputs_nodespecific_not_bool():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -632,7 +685,7 @@ def test_mapfile_inputs_index_high():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -653,7 +706,7 @@ def test_mapfile_inputs_index_low():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -674,7 +727,7 @@ def test_mapfile_inputs_index_missing():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -695,7 +748,7 @@ def test_mapfile_inputs_fixid_missing():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -716,7 +769,7 @@ def test_mapfile_inputs_fixid_invalid():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
@@ -737,7 +790,7 @@ def test_mapfile_inputs_fixid_invalid_but_allowed():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify no exception
     except Exception as e:
@@ -757,12 +810,73 @@ def test_mapfile_ignore_fixid_missing_is_invalid():
         )
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
-        pl.shutdown()
+        pl.stop()
 
     # Verify the exception message
     assert (
         str(excinfo.value)
         == "ignore_fixid_missing must be true or false on line 8, column 23 in file 'tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml'"  # noqa: E501
+    )
+
+
+def test_mapfile_ignore_fixid_missing_is_missing():
+    try:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_ignore_fixid_missing_is_missing.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        time.sleep(0.1)
+        pl.stop()
+    # Verify no exception
+    except Exception as e:
+        pytest.fail(
+            f"Using 'tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml' should not have caused exception: {e}"
+        )
+
+def test_mapfile_ignore_fixid_missing_is_invalid():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.stop()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "ignore_fixid_missing must be true or false on line 8, column 23 in file 'tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml'"  # noqa: E501
+    )
+
+def test_mapfile_no_meta_replacements():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_no_meta_replacements.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.stop()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "The mapfile 'tests/config/canfix/map_no_meta_replacements.yaml' must provide a valid 'meta replacements' section"  # noqa: E501
     )
 
 
