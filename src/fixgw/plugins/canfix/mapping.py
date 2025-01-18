@@ -48,13 +48,16 @@ class Mapping(object):
             raise ValueError(f"Unable to open mapfile: '{mapfile}'")
         maps, meta = cfg.from_yaml(mapfile, metadata=True)
 
-        if 'ignore_fixid_missing' in maps:
-            if isinstance(maps['ignore_fixid_missing'], bool):
-                self.ignore_fixid_missing = maps['ignore_fixid_missing']
+        if "ignore_fixid_missing" in maps:
+            if isinstance(maps["ignore_fixid_missing"], bool):
+                self.ignore_fixid_missing = maps["ignore_fixid_missing"]
             else:
                 raise ValueError(
                     cfg.message(
-                        f"ignore_fixid_missing must be true or false", meta, "ignore_fixid_missing", True
+                        f"ignore_fixid_missing must be true or false",
+                        meta,
+                        "ignore_fixid_missing",
+                        True,
                     )
                 )
 
@@ -196,7 +199,9 @@ class Mapping(object):
             m = self.output_mapping[dbKey]
             self.log.debug(f"Output {dbKey}: {value[0]}")
             if m["require_leader"] and not quorum.leader:
-                self.log.debug(f"LEADER({quorum.leader}) blocked Output {dbKey}: {value[0]}")
+                self.log.debug(
+                    f"LEADER({quorum.leader}) blocked Output {dbKey}: {value[0]}"
+                )
                 return
 
             # If the exclude flag is set we just recieved the value
@@ -209,7 +214,9 @@ class Mapping(object):
                 # This is a switch output
                 # merge value of all switches
                 val = bytearray([0x0] * 5)
-                for b, valByte in enumerate(val):   # pragma: no cover - loop will always run
+                for b, valByte in enumerate(
+                    val
+                ):  # pragma: no cover fmt: skip - loop will always run
                     # Each byte of val
                     for bt in range(8):
                         # Each bit in the byte
@@ -293,7 +300,7 @@ class Mapping(object):
                 # https://github.com/birkelbach/python-canfix/pull/14
                 p = canfix.ParameterSet()
                 p.parameter = m["canid"]
-                if p.multiplier == None:
+                if p.multiplier is None:
                     p.multiplier = 1.0
                 p.value = value[0]
                 # End workaround
@@ -464,10 +471,9 @@ class Mapping(object):
         return fixid in database.listkeys()
 
     def validate_mapping_inputs(self, data, meta, index):
-        #print(f"###\nData:{data}\nMeta:{meta}\nIndx:{index}")
         if not isinstance(data, dict):
             raise ValueError(cfg.message("Inputs should be dictionaries", meta, index))
-        for k in ['canid', 'index', 'fixid']:
+        for k in ["canid", "index", "fixid"]:
             if k not in data:
                 raise ValueError(cfg.message(f"Key '{k}' is missing", meta, index))
         if not self.valid_canid(data["canid"]):
@@ -476,10 +482,13 @@ class Mapping(object):
                     self.valid_canid(data["canid"], True)[1], meta[index], "canid", True
                 )
             )
-        if data['fixid'] not in database.listkeys() and not self.ignore_fixid_missing:
+        if data["fixid"] not in database.listkeys() and not self.ignore_fixid_missing:
             raise ValueError(
                 cfg.message(
-                    f"fixid '{data['fixid']}' is not a valid fixid", meta[index], "fixid", True
+                    f"fixid '{data['fixid']}' is not a valid fixid",
+                    meta[index],
+                    "fixid",
+                    True,
                 )
             )
         if not self.valid_index(data["index"]):
@@ -488,5 +497,12 @@ class Mapping(object):
                     self.valid_index(data["index"], True)[1], meta[index], "index", True
                 )
             )
-        if not isinstance(data.get("nodespecific",False), bool):
-            raise ValueError(cfg.message("nodespecific should be true or false without quotes", meta[index], 'nodespecific', True))
+        if not isinstance(data.get("nodespecific", False), bool):
+            raise ValueError(
+                cfg.message(
+                    "nodespecific should be true or false without quotes",
+                    meta[index],
+                    "nodespecific",
+                    True,
+                )
+            )

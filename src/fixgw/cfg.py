@@ -3,7 +3,9 @@ from yaml.loader import SafeLoader
 from io import StringIO
 import os
 import logging
+
 log = logging.getLogger("cfg")
+
 
 class MetadataLoader(SafeLoader):
     def __init__(self, stream, filename=None, *args, **kwargs):
@@ -39,7 +41,9 @@ class MetadataLoader(SafeLoader):
 
                 if isinstance(value_node, yaml.MappingNode):
                     # Recurse into nested structures
-                    nested_mapping, nested_metadata = self.construct_mapping_with_metadata(value_node)
+                    nested_mapping, nested_metadata = (
+                        self.construct_mapping_with_metadata(value_node)
+                    )
                     mapping[key] = nested_mapping
                     metadata_mapping[key] = nested_metadata
                 elif isinstance(value_node, yaml.SequenceNode):
@@ -58,7 +62,9 @@ class MetadataLoader(SafeLoader):
                         }
 
                         if isinstance(item_node, yaml.MappingNode):
-                            nested_mapping, nested_metadata = self.construct_mapping_with_metadata(item_node)
+                            nested_mapping, nested_metadata = (
+                                self.construct_mapping_with_metadata(item_node)
+                            )
                             list_metadata[index] = nested_metadata
                             list_metadata[f".__{index}__."] = item_meta
                         else:
@@ -66,12 +72,10 @@ class MetadataLoader(SafeLoader):
                                 **item_meta,
                                 "value_meta": item_meta,
                             }
-                            #list_metadata[f".__{index}__."] = "foo"
                     mapping[key] = list_values
                     metadata_mapping[key] = list_metadata
                 else:
                     mapping[key] = value
-                    #metadata_mapping[f".__{key}__."] = "bar"
         self.metadata.update(metadata_mapping)
         return mapping
 
@@ -106,17 +110,12 @@ def parse_yaml_with_metadata(yaml_string, filename=None):
     data = loader.get_data()
     metadata = loader.get_metadata()
 
-#    metadata = loader._metadata_store
-#    metadata['root'] = {
-#        'filename': filename
-#    }
     return data, metadata
 
 
-
-def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None, metadata=None):
-    #fname = None
-    #fpath = None
+def from_yaml(
+    fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None, metadata=None
+):
     if not cfg:
         if isinstance(fs, str):
             # Must be a string of yaml or a filename
@@ -133,18 +132,18 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                 if not bpath:
                     bpath = os.getcwd()
                 fpath = bpath
-                fname = bpath + '/<unknown>'
+                fname = bpath + "/<unknown>"
                 cfg, cfg_meta = parse_yaml_with_metadata(fs, fname)
         else:
             # should be a stream
-            if hasattr(fs, 'read'):
-                fname = getattr(fs, 'name', '<unknown>')  # Use stream name if it exists
+            if hasattr(fs, "read"):
+                fname = getattr(fs, "name", "<unknown>")  # Use stream name if it exists
                 fpath = os.path.dirname(fname)
                 if not bpath:
                     bpath = fpath
                 cfg, cfg_meta = parse_yaml_with_metadata(fs, fname)
 
-    if isinstance(fs,str):
+    if isinstance(fs, str):
         fname = fs
         fpath = os.path.dirname(fname)
 
@@ -171,9 +170,6 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                     raise Exception(f"#include in {fname} must be string or array")
                 # Process include(s)
                 for f in files:
-                    print(f)
-                    print(bpath)
-                    print(fpath)
                     log.debug(f"checking include file '{f}' from key:{key}")
                     # Check if file relative to current file
                     ifile = fpath + "/" + f
@@ -192,14 +188,24 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                                         raise Exception(f"Cannot find include: {f}")
                         else:
                             raise Exception(f"Cannot find include: {f}")
-                    sub, sub_meta = from_yaml(ifile, bpath, bc=bc, preferences=preferences, metadata=True)
+                    sub, sub_meta = from_yaml(
+                        ifile, bpath, bc=bc, preferences=preferences, metadata=True
+                    )
                     if hasattr(sub, "items"):
                         for k, v in sub.items():
                             new[k] = v
                     else:
                         raise Exception(f"Include {val} from {fname} is invalid")
             elif isinstance(val, dict):
-                new[key], new_meta[key] = from_yaml(fs=fname, bpath=bpath, cfg=val, cfg_meta=cfg_meta, bc=bc, preferences=preferences, metadata=True)
+                new[key], new_meta[key] = from_yaml(
+                    fs=fname,
+                    bpath=bpath,
+                    cfg=val,
+                    cfg_meta=cfg_meta,
+                    bc=bc,
+                    preferences=preferences,
+                    metadata=True,
+                )
             elif isinstance(val, list):
                 new[key] = []
                 new_meta[key] = {}
@@ -229,18 +235,15 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                                     raise Exception(f"Cannot find include: {f}")
                             # Need to update this for metadata
                             with open(ifile) as cf:
-                            #litems, cfg_litems = from_yaml(fs=ifile, bpath=bpath, cfg=val, cfg_meta=cfg_meta, bc=bc, preferences=preferences, metadata=True)
-                                #print("#########################")
                                 litems, cfg_litems = parse_yaml_with_metadata(cf, ifile)
                             if "items" in litems:
                                 if litems["items"] != None:
                                     for ax, a in enumerate(litems["items"]):
                                         new[key].append(a)
-                                        #print(f"#### {ax} len:{len(cfg_litems)} ####\n{a}\n{cfg_litems['items']}\n--\n{cfg_litems}\n--")
-                                        #for gee in cfg_litems:
-                                            #print(f"############\n{gee}\n{cfg_litems[gee]}")
-                                        new_meta[key] = (cfg_litems['items'][ax])
-                                        new_meta[f".__{key}__."] = cfg_litems['items'][ax]
+                                        new_meta[key] = cfg_litems["items"][ax]
+                                        new_meta[f".__{key}__."] = cfg_litems["items"][
+                                            ax
+                                        ]
                             else:
                                 raise Exception(
                                     f"Error in {ifile}\nWhen including list items they need listed under 'items:' in the include file"
@@ -248,27 +251,30 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                         else:
                             new[key].append(l)
                             new_meta[key][lindex] = cfg_meta[key][lindex]
-                            new_meta[key][f".__{lindex}__."] = cfg_meta[key][f".__{lindex}__."]
+                            new_meta[key][f".__{lindex}__."] = cfg_meta[key][
+                                f".__{lindex}__."
+                            ]
                     else:
                         new[key].append(l)
                         if lindex in cfg_meta[key]:
                             new_meta[key][lindex] = cfg_meta[key][lindex]
                             new_meta[key][f".__{lindex}__."] = cfg_meta[key][lindex]
                         elif f".__{lindex}__." in cfg_meta[key]:
-                            new_meta[key][f".__{lindex}__."] = cfg_meta[key][f".__{lindex}__."]
+                            new_meta[key][f".__{lindex}__."] = cfg_meta[key][
+                                f".__{lindex}__."
+                            ]
                         else:
                             new_meta[key][f".__{lindex}__."] = cfg_meta[key]
 
             else:
                 # Save existing
                 new[key] = val
-                #print(f"##meta:\n{cfg_meta}\nkey: {key}, val:{val}")
                 new_meta[key] = cfg_meta[f".__{key}__."]
-                #print(f"\n####### {key} #######\n{cfg_meta}[key]")
     if metadata:
         return (new, new_meta)
     else:
         return new
+
 
 def message(message, key, index, value=None):
     if value:
@@ -281,5 +287,3 @@ def message(message, key, index, value=None):
             return f'{message} on line {key[f".__{index}__."]["line"]}, column {key[f".__{index}__."]["column"]} in file \'{key[f".__{index}__."]["file"]}\''
         else:
             return f'{message} on line {key[index]["line"]}, column {key[index]["column"]} in file \'{key[index]["file"]}\''
-
-
