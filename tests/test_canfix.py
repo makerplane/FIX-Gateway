@@ -571,6 +571,7 @@ def test_bad_parse(plugin):
 def test_mapfile_inputs_canid_too_low():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -592,6 +593,7 @@ def test_mapfile_inputs_canid_too_low():
 def test_mapfile_inputs_canid_too_high():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -613,6 +615,7 @@ def test_mapfile_inputs_canid_too_high():
 def test_mapfile_inputs_canid_missing():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -634,6 +637,7 @@ def test_mapfile_inputs_canid_missing():
 def test_mapfile_inputs_not_dict():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -655,6 +659,7 @@ def test_mapfile_inputs_not_dict():
 def test_mapfile_inputs_nodespecific_not_bool():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -676,6 +681,7 @@ def test_mapfile_inputs_nodespecific_not_bool():
 def test_mapfile_inputs_index_high():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -697,6 +703,7 @@ def test_mapfile_inputs_index_high():
 def test_mapfile_inputs_index_low():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -718,6 +725,7 @@ def test_mapfile_inputs_index_low():
 def test_mapfile_inputs_index_missing():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -739,6 +747,7 @@ def test_mapfile_inputs_index_missing():
 def test_mapfile_inputs_fixid_missing():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -760,6 +769,7 @@ def test_mapfile_inputs_fixid_missing():
 def test_mapfile_inputs_fixid_invalid():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -781,6 +791,7 @@ def test_mapfile_inputs_fixid_invalid():
 def test_mapfile_inputs_fixid_invalid_but_allowed():
     try:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -791,6 +802,7 @@ def test_mapfile_inputs_fixid_invalid_but_allowed():
         pl = fixgw.plugins.canfix.Plugin("canfix", cc)
         pl.start()
         pl.stop()
+        #time.sleep(0.03)
 
     # Verify no exception
     except Exception as e:
@@ -801,6 +813,7 @@ def test_mapfile_inputs_fixid_invalid_but_allowed():
 def test_mapfile_ignore_fixid_missing_is_invalid():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -822,6 +835,7 @@ def test_mapfile_ignore_fixid_missing_is_invalid():
 def test_mapfile_ignore_fixid_missing_is_missing():
     try:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -842,6 +856,7 @@ def test_mapfile_ignore_fixid_missing_is_missing():
 def test_mapfile_ignore_fixid_missing_is_invalid():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
@@ -862,6 +877,7 @@ def test_mapfile_ignore_fixid_missing_is_invalid():
 def test_mapfile_no_meta_replacements():
     with pytest.raises(ValueError) as excinfo:
         database.init("src/fixgw/config/database.yaml")
+        zzloader()
         cc = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
