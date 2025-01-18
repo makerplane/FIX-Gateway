@@ -2,6 +2,8 @@ import yaml
 from yaml.loader import SafeLoader
 from io import StringIO
 import os
+import logging
+log = logging.getLogger("cfg")
 
 class MetadataLoader(SafeLoader):
     def __init__(self, stream, filename=None, *args, **kwargs):
@@ -113,17 +115,8 @@ def parse_yaml_with_metadata(yaml_string, filename=None):
 
 
 def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None, metadata=None):
-    fname = None
-    fpath = None
-    if bc is None:
-        bc = []
-    bc.append(fname)
-    if len(bc) > 500:
-        import pprint
-
-        raise Exception(
-            f"{pprint.pformat(bc)}\nPotential loop detected inside yaml includes, the breadcrumbs above might help detect where the issue is"
-        )
+    #fname = None
+    #fpath = None
     if not cfg:
         if isinstance(fs, str):
             # Must be a string of yaml or a filename
@@ -151,6 +144,20 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                     bpath = fpath
                 cfg, cfg_meta = parse_yaml_with_metadata(fs, fname)
 
+    if isinstance(fs,str):
+        fname = fs
+        fpath = os.path.dirname(fname)
+
+    if bc is None:
+        bc = []
+    bc.append(fname)
+    if len(bc) > 500:
+        import pprint
+
+        raise Exception(
+            f"{pprint.pformat(bc)}\nPotential loop detected inside yaml includes, the breadcrumbs above might help detect where the issue is"
+        )
+
     new_meta = {}
     new = {}
     if hasattr(cfg, "items"):
@@ -164,6 +171,10 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                     raise Exception(f"#include in {fname} must be string or array")
                 # Process include(s)
                 for f in files:
+                    print(f)
+                    print(bpath)
+                    print(fpath)
+                    log.debug(f"checking include file '{f}' from key:{key}")
                     # Check if file relative to current file
                     ifile = fpath + "/" + f
                     if not os.path.exists(ifile):
@@ -240,8 +251,10 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                             new_meta[key][f".__{lindex}__."] = cfg_meta[key][f".__{lindex}__."]
                     else:
                         new[key].append(l)
-                        new_meta[key][lindex] = cfg_meta[key][lindex] 
-                        new_meta[key][f".__{lindex}__."] = cfg_meta[key][lindex]
+                        if lindex in cfg_meta[key]:
+                            new_meta[key][lindex] = cfg_meta[key][lindex]
+                        new_meta[key][f".__{lindex}__."] = cfg_meta[key]
+
             else:
                 # Save existing
                 new[key] = val
@@ -260,6 +273,9 @@ def message(message, key, index, value=None):
         else:
             return f'{message} on line {key[index]["value_meta"]["line"]}, column {key[index]["value_meta"]["column"]} in file \'{key[index]["value_meta"]["file"]}\''
     else:
-        return f'{message} on line {key[f".__{index}__."]["line"]}, column {key[f".__{index}__."]["column"]} in file \'{key[f".__{index}__."]["file"]}\''
+        if f".__{index}__." in key:
+            return f'{message} on line {key[f".__{index}__."]["line"]}, column {key[f".__{index}__."]["column"]} in file \'{key[f".__{index}__."]["file"]}\''
+        else:
+            return f'{message} on line {key[index]["line"]}, column {key[index]["column"]} in file \'{key[index]["file"]}\''
 
 
