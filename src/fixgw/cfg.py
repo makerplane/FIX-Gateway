@@ -253,7 +253,11 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
                         new[key].append(l)
                         if lindex in cfg_meta[key]:
                             new_meta[key][lindex] = cfg_meta[key][lindex]
-                        new_meta[key][f".__{lindex}__."] = cfg_meta[key]
+                            new_meta[key][f".__{lindex}__."] = cfg_meta[key][lindex]
+                        elif f".__{lindex}__." in cfg_meta[key]:
+                            new_meta[key][f".__{lindex}__."] = cfg_meta[key][f".__{lindex}__."]
+                        else:
+                            new_meta[key][f".__{lindex}__."] = cfg_meta[key]
 
             else:
                 # Save existing
