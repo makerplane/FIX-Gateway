@@ -1,6 +1,5 @@
 import yaml
 from yaml.loader import SafeLoader
-from io import StringIO
 import os
 import logging
 
@@ -16,66 +15,65 @@ class MetadataLoader(SafeLoader):
     def construct_mapping(self, node, deep=False):
         mapping = {}
         metadata_mapping = {}
-        if isinstance(node, yaml.MappingNode):
-            for key_node, value_node in node.value:
-                key = self.construct_object(key_node, deep=True)
-                value = self.construct_object(value_node, deep=True)
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=True)
+            value = self.construct_object(value_node, deep=True)
 
-                # Store metadata for the key
-                key_meta = {
-                    "line": key_node.start_mark.line + 1,
-                    "column": key_node.start_mark.column + 1,
-                    "file": self.filename,
-                }
+            # Store metadata for the key
+            key_meta = {
+                "line": key_node.start_mark.line + 1,
+                "column": key_node.start_mark.column + 1,
+                "file": self.filename,
+            }
 
-                # Store metadata for the value
-                value_meta = {
-                    "line": value_node.start_mark.line + 1,
-                    "column": value_node.start_mark.column + 1,
-                    "file": self.filename,
-                }
+            # Store metadata for the value
+            value_meta = {
+                "line": value_node.start_mark.line + 1,
+                "column": value_node.start_mark.column + 1,
+                "file": self.filename,
+            }
 
-                # Ensure nested metadata structure
-                metadata_mapping[f".__{key}__."] = key_meta
-                metadata_mapping[f".__{key}__."]["value_meta"] = value_meta
+            # Ensure nested metadata structure
+            metadata_mapping[f".__{key}__."] = key_meta
+            metadata_mapping[f".__{key}__."]["value_meta"] = value_meta
 
-                if isinstance(value_node, yaml.MappingNode):
-                    # Recurse into nested structures
-                    nested_mapping, nested_metadata = (
-                        self.construct_mapping_with_metadata(value_node)
-                    )
-                    mapping[key] = nested_mapping
-                    metadata_mapping[key] = nested_metadata
-                elif isinstance(value_node, yaml.SequenceNode):
-                    # Handle lists explicitly
-                    list_values = []
-                    list_metadata = {}
-                    for index, item_node in enumerate(value_node.value):
-                        item_value = self.construct_object(item_node, deep=True)
-                        list_values.append(item_value)
+            if isinstance(value_node, yaml.MappingNode):
+                # Recurse into nested structures
+                nested_mapping, nested_metadata = (
+                    self.construct_mapping_with_metadata(value_node)
+                )
+                mapping[key] = nested_mapping
+                metadata_mapping[key] = nested_metadata
+            elif isinstance(value_node, yaml.SequenceNode):
+                # Handle lists explicitly
+                list_values = []
+                list_metadata = {}
+                for index, item_node in enumerate(value_node.value):
+                    item_value = self.construct_object(item_node, deep=True)
+                    list_values.append(item_value)
 
-                        # Derive metadata for list items
-                        item_meta = {
-                            "line": item_node.start_mark.line + 1,
-                            "column": item_node.start_mark.column + 1,
-                            "file": self.filename,
+                    # Derive metadata for list items
+                    item_meta = {
+                        "line": item_node.start_mark.line + 1,
+                        "column": item_node.start_mark.column + 1,
+                        "file": self.filename,
+                    }
+
+                    if isinstance(item_node, yaml.MappingNode):
+                        nested_mapping, nested_metadata = (
+                            self.construct_mapping_with_metadata(item_node)
+                        )
+                        list_metadata[index] = nested_metadata
+                        list_metadata[f".__{index}__."] = item_meta
+                    else:
+                        list_metadata[index] = {
+                            **item_meta,
+                            "value_meta": item_meta,
                         }
-
-                        if isinstance(item_node, yaml.MappingNode):
-                            nested_mapping, nested_metadata = (
-                                self.construct_mapping_with_metadata(item_node)
-                            )
-                            list_metadata[index] = nested_metadata
-                            list_metadata[f".__{index}__."] = item_meta
-                        else:
-                            list_metadata[index] = {
-                                **item_meta,
-                                "value_meta": item_meta,
-                            }
-                    mapping[key] = list_values
-                    metadata_mapping[key] = list_metadata
-                else:
-                    mapping[key] = value
+                mapping[key] = list_values
+                metadata_mapping[key] = list_metadata
+            else:
+                mapping[key] = value
         self.metadata.update(metadata_mapping)
         return mapping
 
@@ -87,10 +85,10 @@ class MetadataLoader(SafeLoader):
         self.metadata = previous_metadata
         return mapping, metadata
 
-    def construct_yaml_map(self, node):
-        data = super().construct_yaml_map(node)
-        data.update(self.construct_mapping(node))
-        return data
+#    def construct_yaml_map(self, node):
+#        data = super().construct_yaml_map(node)
+#        data.update(self.construct_mapping(node))
+#        return data
 
     def get_data(self):
         return self.construct_document(self.get_single_node())
@@ -143,7 +141,7 @@ def from_yaml(
                     bpath = fpath
                 cfg, cfg_meta = parse_yaml_with_metadata(fs, fname)
 
-    if isinstance(fs, str):
+    else:
         fname = fs
         fpath = os.path.dirname(fname)
 
@@ -237,7 +235,7 @@ def from_yaml(
                             with open(ifile) as cf:
                                 litems, cfg_litems = parse_yaml_with_metadata(cf, ifile)
                             if "items" in litems:
-                                if litems["items"] != None:
+                                if litems["items"] is not None:
                                     for ax, a in enumerate(litems["items"]):
                                         new[key].append(a)
                                         new_meta[key] = cfg_litems["items"][ax]
