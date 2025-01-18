@@ -196,7 +196,9 @@ class Plugin(plugin.PluginBase):
         self.thread.stop()
         if self.thread.is_alive():
             try:
-                self.thread.join(1.0)
+                # Must wait longer than the can bus read 
+                # in the main loop self.bus.recv(1.0)
+                self.thread.join(1.2)
             except:
                 pass
         if self.thread.is_alive():
