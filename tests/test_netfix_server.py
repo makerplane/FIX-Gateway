@@ -134,6 +134,10 @@ entries:
 - key: ACID
   description: Aircraft ID
   type: str
+- key: ZZLOADER
+  description: MUST always be the last key listed here. It is read by client applications to ensure all db items have been init before proceeding to prevent race conditions.
+  type: str
+  initial: "Loaded"
 """
 
 netfix_config = """
