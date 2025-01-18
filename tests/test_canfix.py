@@ -745,6 +745,26 @@ def test_mapfile_inputs_fixid_invalid_but_allowed():
             f"Using 'tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml' should not have caused exception: {e}"
         )
 
+def test_mapfile_ignore_fixid_missing_is_invalid():
+    with pytest.raises(ValueError) as excinfo:
+        database.init("src/fixgw/config/database.yaml")
+        cc = cfg.from_yaml(
+            re.sub(
+                "missing_map_file.yaml",
+                "tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml",
+                bad_mapfile_config,
+            )
+        )
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl.start()
+        pl.shutdown()
+
+    # Verify the exception message
+    assert (
+        str(excinfo.value)
+        == "ignore_fixid_missing must be true or false on line 8, column 23 in file 'tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml'"  # noqa: E501
+    )
+
 
 def test_get_status(plugin):
     status = plugin.pl.get_status()

@@ -108,13 +108,14 @@ class MainThread(threading.Thread):
                             else:
                                 self.parent.recvinvalidcount += 1
                         else:
-                            # We ignore out own messages
+                            # We ignore our own messages
                             self.parent.recvignorecount += 1
                         continue
                     if self.interesting[msg.arbitration_id]:
                         try:
                             cfobj = canfix.parseMessage(msg)
                         except ValueError as e:
+                            # Can we ever get here?
                             self.parent.recvinvalidcount += 1
                             self.log.warning(e)
                         else:
@@ -130,6 +131,7 @@ class MainThread(threading.Thread):
                                 self.mapping.inputMap(cfobj)
                             else:
                                 # TODO What to do with the other types
+                                # Can we ever get here?
                                 self.parent.recvignorecount += 1
                     else:
                         self.parent.recvignorecount += 1

@@ -255,7 +255,10 @@ def from_yaml(fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None
 
 def message(message, key, index, value=None):
     if value:
-        return f'{message} on line {key[f".__{index}__."]["value_meta"]["line"]}, column {key[f".__{index}__."]["value_meta"]["column"]} in file \'{key[f".__{index}__."]["value_meta"]["file"]}\''
+        if f".__{index}__." in key:
+            return f'{message} on line {key[f".__{index}__."]["value_meta"]["line"]}, column {key[f".__{index}__."]["value_meta"]["column"]} in file \'{key[f".__{index}__."]["value_meta"]["file"]}\''
+        else:
+            return f'{message} on line {key[index]["value_meta"]["line"]}, column {key[index]["value_meta"]["column"]} in file \'{key[index]["value_meta"]["file"]}\''
     else:
         return f'{message} on line {key[f".__{index}__."]["line"]}, column {key[f".__{index}__."]["column"]} in file \'{key[f".__{index}__."]["file"]}\''
 
