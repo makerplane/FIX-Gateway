@@ -85,7 +85,7 @@ class ClientThread(threading.Thread):
             self.connectedEvent.set()
         else:
             self.connectedEvent.clear()
-        if self.connectCallback != None:
+        if self.connectCallback is not None:
             self.connectCallback(connected)
 
     def handle_request(self, d):

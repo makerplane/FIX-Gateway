@@ -85,11 +85,11 @@ class Item(object):
 
     def setValue(self, value):
         # self.__value = value
-        if self.item != None:
+        if self.item is not None:
             self.item.value = value
 
     def getValue(self):
-        if self.item != None:
+        if self.item is not None:
             return self.item.value[0]
         else:
             return 0.0
@@ -118,18 +118,18 @@ def parseProtocolFile(fg_root, xml_file):
     outputs = generic.find("output")
     for chunk in outputs:
         name = chunk.find("name")
-        if name != None:
+        if name is not None:
             info = name.text.split(":")
             recv_items.append(Item(info[0].strip()))
     inputs = generic.find("input")
     for chunk in inputs:
         name = chunk.find("name")
-        if name != None:
+        if name is not None:
             info = name.text.split(":")
             i = Item(info[0].strip())
             send_items.append(i)
             format = chunk.find("format")
-            if format != None:
+            if format is not None:
                 i.format = format.text
             else:
                 i.format = "%.2f"
@@ -188,7 +188,7 @@ class Plugin(plugin.PluginBase):
         # we parse the string from FlightGear
         for each in recv_items:
             each.item = self.db_get_item(each.key)
-            if each.item == None:
+            if each.item is None:
                 self.log.warning(
                     "{0} found in protocol file but not in the database".format(
                         each.key
@@ -196,7 +196,7 @@ class Plugin(plugin.PluginBase):
                 )
         for each in send_items:
             each.item = self.db_get_item(each.key)
-            if each.item == None:
+            if each.item is None:
                 self.log.warning(
                     "{0} found in protocol file but not in the database".format(
                         each.key

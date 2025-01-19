@@ -673,7 +673,7 @@ class MainThread(threading.Thread):
                 if script_count < len(self.script):
                     for k, v in self.script[script_count].items():
                         if not isinstance(v, str):
-                            if self.script[script_count + 1].get(k, None) != None:
+                            if self.script[script_count + 1].get(k, None) is not None:
                                 val = (
                                     ((self.script[script_count + 1][k] - v) / 20)
                                     * script_when

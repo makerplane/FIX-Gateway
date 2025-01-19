@@ -41,7 +41,7 @@ class QtDB_Item(QObject):
 
     def __init__(self, key, item):
         super(QtDB_Item, self).__init__()
-        if key == None:
+        if key is None:
             raise ValueError("Trying to create a Null Item")
         self.key = key
         self._item = item

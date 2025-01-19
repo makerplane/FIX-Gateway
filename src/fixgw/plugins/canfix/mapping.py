@@ -20,7 +20,6 @@
 # This file controls mapping CAN-FIX parameter ids to FIX database keys
 
 import fixgw.database as database
-import yaml
 import canfix
 import fixgw.quorum as quorum
 from fixgw import cfg
@@ -54,7 +53,7 @@ class Mapping(object):
             else:
                 raise ValueError(
                     cfg.message(
-                        f"ignore_fixid_missing must be true or false",
+                        "ignore_fixid_missing must be true or false",
                         meta,
                         "ignore_fixid_missing",
                         True,
@@ -214,9 +213,8 @@ class Mapping(object):
                 # This is a switch output
                 # merge value of all switches
                 val = bytearray([0x0] * 5)
-                for b, valByte in enumerate(
-                    val
-                ):  # pragma: no cover fmt: skip - loop will always run
+                # Loop always runs
+                for b, valByte in enumerate(val):  # pragma: no cover # fmt: skip
                     # Each byte of val
                     for bt in range(8):
                         # Each bit in the byte
@@ -266,7 +264,7 @@ class Mapping(object):
                 p = canfix.Parameter()
                 p.identifier = m["canid"]
                 p.value = value[0]
-                p.index = index = m["index"]
+                p.index = index = m["index"]  # noqa: F841
                 p.annunciate = value[1]
                 # 2 is old
                 p.quality = value[3]

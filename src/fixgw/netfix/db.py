@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 class DB_Item(object):
     def __init__(self, client, key, dtype="float"):
         super(DB_Item, self).__init__()
-        if key == None:
+        if key is None:
             raise ValueError("Trying to create a Null Item")
         self.lock = threading.RLock()
         self.supressWrite = True  # Keeps us from writing to the server
@@ -93,12 +93,12 @@ class DB_Item(object):
         with self.lock:
             try:
                 last = self.aux[name]
-                if value == None or value == "None":
+                if value is None or value == "None":
                     self.aux[name] = None
                 else:
                     self.aux[name] = self.dtype(value)
                 if self.aux[name] != last:
-                    if self.auxChanged != None:
+                    if self.auxChanged is not None:
                         self.auxChanged(name, value)
                     if not self.supressWrite:
                         res = self.client.writeValue(
@@ -150,10 +150,10 @@ class DB_Item(object):
             return self._value  # , self.annunciate, self.old, self.bad, self.fail)
 
     def valueConvert(self, x):
-        if self.dtype == bool:
-            if type(x) == bool:
+        if self.dtype is bool:
+            if type(x) is bool:
                 y = x
-            elif type(x) == str:
+            elif type(x) is str:
                 y = True if x.lower() in ["yes", "true", "1"] else False
             else:
                 y = True if x else False
@@ -187,10 +187,10 @@ class DB_Item(object):
             self.timestamp = datetime.utcnow()
 
         if last != self._value:
-            if self.valueChanged != None:
+            if self.valueChanged is not None:
                 # Send the callback if we have a changed value
                 self.valueChanged(self._value)
-        if self.valueWrite != None:
+        if self.valueWrite is not None:
             # Send Callback everytime we write to it
             self.valueWrite(self._value)
         if not self.supressWrite:
@@ -203,7 +203,7 @@ class DB_Item(object):
             y = self.valueConvert(vals[1])
             if y != last:
                 # Resend the valueChanged callback
-                if self.valueChanged != None:
+                if self.valueChanged is not None:
                     self.valueChanged(self._value)
                 # Set the actual stored value to the different one returned
                 # from the server
@@ -293,7 +293,7 @@ class DB_Item(object):
                 log.error("Time to live should be an integer for " + self.description)
 
     def convertBool(self, x):
-        if type(x) == str:
+        if type(x) is str:
             x = x.lower()
             if x in ["0", "false", "no", "f"]:
                 return False
@@ -314,7 +314,7 @@ class DB_Item(object):
             self._annunciate = self.convertBool(x)
 
         if self._annunciate != last:
-            if self.annunciateChanged != None:
+            if self.annunciateChanged is not None:
                 self.annunciateChanged(self._annunciate)
             try:
                 if not self.supressWrite:
@@ -334,7 +334,7 @@ class DB_Item(object):
             self._old = self.convertBool(x)
 
         if self._old != last:
-            if self.oldChanged != None:
+            if self.oldChanged is not None:
                 self.oldChanged(self._old)
             try:
                 if not self.supressWrite:
@@ -354,7 +354,7 @@ class DB_Item(object):
             self._bad = self.convertBool(x)
 
         if self._bad != last:
-            if self.badChanged != None:
+            if self.badChanged is not None:
                 self.badChanged(self._bad)
             try:
                 if not self.supressWrite:
@@ -374,7 +374,7 @@ class DB_Item(object):
             self._fail = self.convertBool(x)
 
         if self._fail != last:
-            if self.failChanged != None:
+            if self.failChanged is not None:
                 self.failChanged(self._fail)
             try:
                 if not self.supressWrite:
@@ -394,7 +394,7 @@ class DB_Item(object):
             self._secFail = self.convertBool(x)
 
         if self._secFail != last:
-            if self.secFailChanged != None:
+            if self.secFailChanged is not None:
                 self.secFailChanged(self._secFail)
             try:
                 if not self.supressWrite:
@@ -461,7 +461,7 @@ class Database(object):
     def connectFunction(self, x):
         log.debug("Database Connection State - {}".format(x))
         self.connected = x
-        if self.connectCallback != None:
+        if self.connectCallback is not None:
             self.connectCallback(x)
 
     def update(self):
@@ -474,7 +474,7 @@ class Database(object):
                     self.client.unsubscribe(key)
                 except:  # We ignore errors because the server is probably down
                     pass
-                if item.destroyed != None:
+                if item.destroyed is not None:
                     item.destroyed()
             self.__items = {}
         else:
@@ -543,7 +543,7 @@ class Database(object):
         item.value = res[1]
         for each in item.aux:  # Read the Auxiliary data
             self.client.read("{0}.{1}".format(key, each))
-        if item.reportReceived != None:
+        if item.reportReceived is not None:
             item.reportReceived()
 
         # Subscribe to the point
