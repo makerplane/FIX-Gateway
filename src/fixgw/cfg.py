@@ -92,8 +92,10 @@ class MetadataLoader(SafeLoader):
 #        return data
 
     def get_data(self):
-        return self.construct_document(self.get_single_node())
-
+        try:
+            return self.construct_document(self.get_single_node())
+        except:
+            return {}
     def get_metadata(self):
         return self.metadata
 
@@ -126,7 +128,6 @@ def from_yaml(
                     bpath = fpath
                 with open(fs) as cf:
                     cfg, cfg_meta = parse_yaml_with_metadata(cf, fname)
-
 
                 if bc is None:
                     bc = []
@@ -189,7 +190,7 @@ def from_yaml(
                 elif isinstance(val, list):
                     files = val
                 else:
-                    raise Exception(f"#include in {fname} must be string or array") # TODO
+                    raise ValueError(message(f"include in {fname} must be string or array",cfg_meta,key,True))
                 # Process include(s)
                 for findex, f in enumerate(files):
                     log.debug(f"checking include file '{f}' from key:{key}")
@@ -203,10 +204,11 @@ def from_yaml(
                     if not os.path.exists(ifile):
                         log.debug(f"checking include file '{f}' from key:{key} not found at '{ifile}'")
                         # Check preferences
+                        print(preferences)
                         if preferences is not None and "includes" in preferences:
                             log.debug(f"checking include file '{f}' from key:{key} checking preferences")
                             pfile = preferences["includes"].get(f, False)
-                            if pfile:
+                            if pfile is not False:
                                 ifile = fpath + "/" + pfile
                                 if not os.path.exists(ifile):
                                     ifile = bpath + "/" + pfile
@@ -315,9 +317,11 @@ def from_yaml(
                 # Save existing
                 new[key] = val
                 new_meta[key] = cfg_meta[f".__{key}__."]
-    if metadata:
+    if metadata is True:
+        print("meta")
         return (new, new_meta)
     else:
+        print("no meta")
         return new
 
 

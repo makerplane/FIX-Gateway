@@ -118,3 +118,38 @@ def test_include_loop_detect():
         in
         str(excinfo.value)
     )
+
+def test_include_empty_file():
+    data = cfg.from_yaml('tests/config/cfg/test_include_empty_file.yaml')
+    assert data == {'line': 'one', 'test': {}}
+
+    data,meta = cfg.from_yaml('tests/config/cfg/test_include_empty_file.yaml', metadata=True)
+    assert meta == {'line': {'line': 1, 'column': 1, 'file': 'tests/config/cfg/test_include_empty_file.yaml', 'value_meta': {'line': 1, 'column': 7, 'file': 'tests/config/cfg/test_include_empty_file.yaml'}}, '.__test__.': {'line': 2, 'column': 1, 'file': 'tests/config/cfg/test_include_empty_file.yaml', 'value_meta': {'line': 3, 'column': 3, 'file': 'tests/config/cfg/test_include_empty_file.yaml'}}, 'test': {}}
+
+
+def test_comment_only_string():
+    data=cfg.from_yaml('# No yaml here!\n')
+    assert data == {}
+
+
+def test_include_is_bool():
+    with pytest.raises(ValueError) as excinfo:
+        data=cfg.from_yaml('include: true', fname='tests/config/cfg/bool.yaml')
+    assert (
+        str(excinfo.value)
+        ==
+        "include in tests/config/cfg/bool.yaml must be string or array on line 1, column 10 in file 'tests/config/cfg/bool.yaml'"
+    )
+
+def test_prefrence_undefined():
+    data=cfg.from_yaml('include: PREFER', fname='tests/config/cfg/bool.yaml', preferences={"includes":  {"FOO": "BAR"}} )
+    assert data == {}
+
+def test_preference_defined_not_found():
+    with pytest.raises(ValueError) as excinfo:
+        data=cfg.from_yaml('include: PREFER', fname='tests/config/cfg/bool.yaml', preferences={"includes":  {"PREFER": "BAR"}} )
+    assert (
+        str(excinfo.value)
+        ==
+        "Cannot find include: 'BAR' from preferences 'PREFER' on line 1, column 10 in file 'tests/config/cfg/bool.yaml'"
+    )
