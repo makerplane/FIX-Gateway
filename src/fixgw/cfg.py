@@ -219,6 +219,7 @@ def from_yaml(
                                             raise ValueError(message(f"Cannot find include: '{pfile}' from preferences '{val[findex]}'",cfg_meta['include'], findex, True))
                                     else:
                                         if not isinstance(val, str):
+                                            # May never get here
                                             bcsource = message(f"was referenced",cfg_meta['include'],findex,True)
                         else:
                             if isinstance(val, str):
@@ -307,6 +308,7 @@ def from_yaml(
                             new_meta[key][lindex] = cfg_meta[key][lindex]
                             new_meta[key][f".__{lindex}__."] = cfg_meta[key][lindex]
                         elif f".__{lindex}__." in cfg_meta[key]:
+                            # This might always happen and nver get to the lse below
                             new_meta[key][f".__{lindex}__."] = cfg_meta[key][
                                 f".__{lindex}__."
                             ]
@@ -335,4 +337,5 @@ def message(message, key, index, value=None):
         if f".__{index}__." in key:
             return f'{message} on line {key[f".__{index}__."]["line"]}, column {key[f".__{index}__."]["column"]} in file \'{key[f".__{index}__."]["file"]}\''
         else:
+            # It is possible this never happens
             return f'{message} on line {key[index]["line"]}, column {key[index]["column"]} in file \'{key[index]["file"]}\''
