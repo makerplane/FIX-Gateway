@@ -2,6 +2,7 @@ import yaml
 from yaml.loader import SafeLoader
 import os
 import logging
+import re
 
 log = logging.getLogger("cfg")
 
@@ -112,7 +113,7 @@ def parse_yaml_with_metadata(yaml_string, filename=None):
 
 
 def from_yaml(
-    fs, bpath=None, cfg=None, cfg_meta=None, bc=None, preferences=None, metadata=None
+    fs, bpath=None, fname=None, cfg=None, cfg_meta=None, bc=None, bcsource=None, preferences=None, metadata=None
 ):
     if not cfg:
         if isinstance(fs, str):
@@ -125,35 +126,58 @@ def from_yaml(
                     bpath = fpath
                 with open(fs) as cf:
                     cfg, cfg_meta = parse_yaml_with_metadata(cf, fname)
+
+
+                if bc is None:
+                    bc = []
+                if bcsource is None:
+                    bcsource='was the first file to load'
+
+                bc.append((fname, bcsource))
+                bccount = sum(1 for t in bc if t[0] == fname)
+                if bccount > 2 or len(bc) > 500:
+                    output = "Include loop detected, Breadcrumbs:\n"
+                    bold_start = "==>"
+                    bold_end = "<=="
+                    count = 0
+                    prevcount = 0
+                    for cindex,crumb in enumerate(bc):
+                        filename=crumb[0]
+                        cmessage=crumb[1]
+                        if filename == fname:
+                            filename = f"{bold_start}{crumb[0]}{bold_end}"
+                            count += 1
+                        if count > prevcount:
+                            prevcount = count
+                            if count > 1:
+                                cmessage = re.sub(
+                                    r"'(.*?)'",
+                                    rf"'{bold_start}\1{bold_end}'",
+                                    cmessage
+                                )
+                        output = output + f"{cindex:3} {filename} {cmessage}\n"
+                    raise ValueError(output)
+
             else:
                 # Must be a yaml string
-                if not bpath:
+                if bpath is None:
                     bpath = os.getcwd()
                 fpath = bpath
-                fname = bpath + "/<unknown>"
+                if fname is None:
+                    fname = bpath + "/<unknown>"
                 cfg, cfg_meta = parse_yaml_with_metadata(fs, fname)
         else:
             # should be a stream
-            if hasattr(fs, "read"):
+            if hasattr(fs, "read"):  # pragma: no cover
                 fname = getattr(fs, "name", "<unknown>")  # Use stream name if it exists
                 fpath = os.path.dirname(fname)
                 if not bpath:
                     bpath = fpath
                 cfg, cfg_meta = parse_yaml_with_metadata(fs, fname)
-
     else:
+        #when cfg is set fs is always a filename, or at least should be
         fname = fs
         fpath = os.path.dirname(fname)
-
-    if bc is None:
-        bc = []
-    bc.append(fname)
-    if len(bc) > 500:
-        import pprint
-
-        raise Exception(
-            f"{pprint.pformat(bc)}\nPotential loop detected inside yaml includes, the breadcrumbs above might help detect where the issue is"
-        )
 
     new_meta = {}
     new = {}
@@ -165,45 +189,68 @@ def from_yaml(
                 elif isinstance(val, list):
                     files = val
                 else:
-                    raise Exception(f"#include in {fname} must be string or array")
+                    raise Exception(f"#include in {fname} must be string or array") # TODO
                 # Process include(s)
-                for f in files:
+                for findex, f in enumerate(files):
                     log.debug(f"checking include file '{f}' from key:{key}")
                     # Check if file relative to current file
                     ifile = fpath + "/" + f
+                    bcsource = message(f"was referenced",cfg_meta,key,True)
                     if not os.path.exists(ifile):
+                        log.debug(f"checking include file '{f}' from key:{key} not found at '{ifile}'")
                         # Use base path
                         ifile = bpath + "/" + f
                     if not os.path.exists(ifile):
+                        log.debug(f"checking include file '{f}' from key:{key} not found at '{ifile}'")
                         # Check preferences
-                        if "includes" in preferences:
+                        if preferences is not None and "includes" in preferences:
+                            log.debug(f"checking include file '{f}' from key:{key} checking preferences")
                             pfile = preferences["includes"].get(f, False)
                             if pfile:
                                 ifile = fpath + "/" + pfile
                                 if not os.path.exists(ifile):
                                     ifile = bpath + "/" + pfile
                                     if not os.path.exists(ifile):
-                                        raise Exception(f"Cannot find include: {f}")
+                                        if isinstance(val, str):
+                                            raise ValueError(message(f"Cannot find include: '{pfile}' from preferences '{val}'",cfg_meta, key, True))
+                                        else:
+                                            raise ValueError(message(f"Cannot find include: '{pfile}' from preferences '{val[findex]}'",cfg_meta['include'], findex, True))
+                                    else:
+                                        if not isinstance(val, str):
+                                            bcsource = message(f"was referenced",cfg_meta['include'],findex,True)
                         else:
-                            raise Exception(f"Cannot find include: {f}")
+                            if isinstance(val, str):
+                                raise ValueError(message(f"Cannot find include: '{f}'", cfg_meta, key, True))
+                            else:
+                                raise ValueError(message(f"Cannot find include: '{f}'", cfg_meta['include'], findex , True))
                     sub, sub_meta = from_yaml(
-                        ifile, bpath, bc=bc, preferences=preferences, metadata=True
+                        ifile, bpath, bc=bc, bcsource=bcsource, preferences=preferences, metadata=True
                     )
                     if hasattr(sub, "items"):
+                        log.debug(f"Processing items from file '{ifile}' from key:{key}")
                         for k, v in sub.items():
                             new[k] = v
+                            new_meta[k] = sub_meta[k]
+                            if f".__{k}__." in sub_meta:
+                                new_meta[f".__{k}__."] = sub_meta[f".__{k}__."]
                     else:
                         raise Exception(f"Include {val} from {fname} is invalid")
             elif isinstance(val, dict):
+                # Here we feed the dict into from_yaml
+                # to process any includes that might be in the dict
+                
+                log.debug(f"Process include with from_yaml, key:{key} val:{val}")
+                new_meta[f".__{key}__."] = cfg_meta[f".__{key}__."]
                 new[key], new_meta[key] = from_yaml(
                     fs=fname,
                     bpath=bpath,
                     cfg=val,
-                    cfg_meta=cfg_meta,
+                    cfg_meta=cfg_meta[key],
                     bc=bc,
                     preferences=preferences,
                     metadata=True,
                 )
+                #print(new_meta[key])
             elif isinstance(val, list):
                 new[key] = []
                 new_meta[key] = {}
@@ -217,7 +264,7 @@ def from_yaml(
                                 ifile = bpath + "/" + l["include"]
                             if not os.path.exists(ifile):
                                 # Check preferences
-                                if "includes" in preferences:
+                                if preferences is not None and "includes" in preferences:
                                     pfile = preferences["includes"].get(
                                         l["include"], False
                                     )
@@ -227,10 +274,10 @@ def from_yaml(
                                             ifile = bpath + "/" + pfile
                                             if not os.path.exists(ifile):
                                                 raise Exception(
-                                                    f"Cannot find include: {f}"
+                                                    f"Cannot find include: {f}" #TODO
                                                 )
                                 else:
-                                    raise Exception(f"Cannot find include: {f}")
+                                    raise ValueError(message(f"Cannot find include: '{l['include']}'", cfg_meta, 'include', True )) # TODO
                             # Need to update this for metadata
                             with open(ifile) as cf:
                                 litems, cfg_litems = parse_yaml_with_metadata(cf, ifile)
@@ -244,7 +291,7 @@ def from_yaml(
                                         ]
                             else:
                                 raise Exception(
-                                    f"Error in {ifile}\nWhen including list items they need listed under 'items:' in the include file"
+                                    f"Error in {ifile}\nWhen including list items they need listed under 'items:' in the include file" # TODO
                                 )
                         else:
                             new[key].append(l)

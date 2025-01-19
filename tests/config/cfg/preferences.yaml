@@ -9,6 +9,8 @@
 includes:
   MISSING: missing.yaml
   MISSING_SUBFOLDER: subfolder/include_not_found_in_array.yaml
+  FOUND_ITEMS: found_items.yaml
+  FOUND_STUFF: found_stuff.yaml
   QUORUM_CONFIG: connections/quorum.yaml
   DATA_RECORDER_CONFIG: connections/data_recorder.yaml
   NETFIX_CONFIG: connections/netfix.yaml
