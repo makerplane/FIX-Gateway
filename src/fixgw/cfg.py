@@ -204,7 +204,7 @@ def from_yaml(
                     if not os.path.exists(ifile):
                         log.debug(f"checking include file '{f}' from key:{key} not found at '{ifile}'")
                         # Check preferences
-                        print(preferences)
+                        #print(preferences)
                         if preferences is not None and "includes" in preferences:
                             log.debug(f"checking include file '{f}' from key:{key} checking preferences")
                             pfile = preferences["includes"].get(f, False)
@@ -320,10 +320,10 @@ def from_yaml(
                 new[key] = val
                 new_meta[key] = cfg_meta[f".__{key}__."]
     if metadata is True:
-        print("meta")
+        #print("meta")
         return (new, new_meta)
     else:
-        print("no meta")
+        #print("no meta")
         return new
 
 

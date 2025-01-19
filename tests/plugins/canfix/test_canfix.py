@@ -22,136 +22,15 @@ import can
 import canfix
 from fixgw import cfg
 
-import fixgw.database as database
+#import fixgw.database as database
 import fixgw.quorum as quorum
 import pytest
 import fixgw.plugins.canfix
-from collections import namedtuple
 from unittest.mock import MagicMock, patch
 import logging
 
-# canfix needs updated to support quorum so we will monkey patch it for now
-# Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
-# Request to add this to the canfix specification: https://github.com/makerplane/canfix-spec/issues/4
-canfix.NodeStatus.knownTypes = (
-    ("Status", "WORD", 1),
-    ("Unit Temperature", "INT", 0.1),
-    ("Supply Voltage", "INT", 0.1),
-    ("CAN Transmit Frame Count", "UDINT", 1),
-    ("CAN Receive Frame Count", "UDINT", 1),
-    ("CAN Transmit Error Count", "UDINT", 1),
-    ("CAN Transmit Error Count", "UDINT", 1),
-    ("CAN Receive Overrun Count", "UDINT", 1),
-    ("Serial Number", "UDINT", 1),
-    ("Quorum", "UINT", 1),
-)
 
 
-config = """
-    load: yes
-    module: fixgw.plugins.canfix
-    # See the python-can documentation for the meaning of these options
-    interface: virtual
-    channel: tcan0
-
-    # Use the actual current mapfile
-    mapfile: 'tests/config/canfix/map.yaml'
-    # The following is our Node Identification Information
-    # See the CAN-FIX Protocol Specification for more information
-    node: 145     # CAN-FIX Node ID
-    device: 145   # CAN-FIX Device Type
-    revision: 0   # Software Revision Number
-    model: 0      # Model Number
-    CONFIGPATH: ''
-"""
-
-bad_mapfile_config = """
-    load: yes
-    module: fixgw.plugins.canfix
-    # See the python-can documentation for the meaning of these options
-    interface: virtual
-    channel: tcan0
-
-    # Use the actual current mapfile
-    mapfile: 'missing_map_file.yaml'
-    # The following is our Node Identification Information
-    # See the CAN-FIX Protocol Specification for more information
-    node: 145     # CAN-FIX Node ID
-    device: 145   # CAN-FIX Device Type
-    revision: 0   # Software Revision Number
-    model: 0      # Model Number
-    CONFIGPATH: ''
-"""
-
-
-# This is a list of the parameters that we are testing.  It is a list of tuples
-# that contain (FIXID, CANID, DataString, Value, Test tolerance)
-ptests = [
-    ("PITCH", 0x180, "FF0000D8DC", -90.0, 0.0),
-    ("PITCH", 0x180, "FF00002823", 90.0, 0.0),
-    ("PITCH", 0x180, "FF00000000", 0.0, 0.0),
-    ("ROLL", 0x181, "FF0000B0B9", -180.0, 0.0),
-    ("ROLL", 0x181, "FF00005046", 180.0, 0.0),
-    ("ROLL", 0x181, "FF00000000", 0.0, 0.0),
-    ("IAS", 0x183, "FF00000000", 0.0, 0.0),
-    ("IAS", 0x183, "FF0000E803", 100.0, 0.0),
-    ("IAS", 0x183, "FF0000E803", 100.0, 0.0),
-    ("IAS", 0x183, "FF00000F27", 999.9, 0.01),
-    ("IAS.Min", 0x183, "FF00100000", 0.0, 0.01),
-    ("IAS.Max", 0x183, "FF0020D007", 200.0, 0.01),
-    ("IAS.V1", 0x183, "FF00309001", 40.0, 0.01),
-    ("IAS.V2", 0x183, "FF00406202", 61.0, 0.01),
-    ("IAS.Vne", 0x183, "FF0050DC02", 73.2, 0.01),
-    ("IAS.Vfe", 0x183, "FF0060EE02", 75.0, 0.01),
-    ("IAS.Vmc", 0x183, "FF00702003", 80.0, 0.01),
-    ("IAS.Va", 0x183, "FF00802B03", 81.1, 0.01),
-    ("IAS.Vno", 0x183, "FF00908603", 90.2, 0.01),
-    ("IAS.Vs", 0x183, "FF00A0A501", 42.1, 0.01),
-    ("IAS.Vs0", 0x183, "FF00B0C401", 45.2, 0.01),
-    ("IAS.Vx", 0x183, "FF00E06203", 86.6, 0.01),
-    ("IAS.Vy", 0x183, "FF00F06D03", 87.7, 0.01),
-    ("ALT", 0x184, "FF000018FCFFFF", -1000.0, 0.01),
-    ("ALT", 0x184, "FF000000000000", 0.0, 0.01),
-    ("ALT", 0x184, "FF0000E8030000", 1000.0, 0.01),
-    ("ALT", 0x184, "FF0000D0070000", 2000.0, 0.01),
-    ("ALT", 0x184, "FF000010270000", 10000.0, 0.01),
-    ("ALT", 0x184, "FF000060EA0000", 60000.0, 0.01),
-    ("HEAD", 0x185, "FF00000000", 0.0, 0.01),
-    ("HEAD", 0x185, "FF00000807", 180.0, 0.01),
-    ("HEAD", 0x185, "FF00000F0E", 359.9, 0.01),
-    ("HEAD", 0x185, "FF0000100E", 359.9, 0.01),  # Write 360.0 get back 359.9
-    ("VS", 0x186, "FF0000D08A", -30000, 0.01),
-    ("VS", 0x186, "FF00000000", 0, 0.01),
-    ("VS", 0x186, "FF00003075", 30000, 0.01),
-    ("VS.Min", 0x186, "FF0010F0D8", -10000, 0.01),
-    ("VS.Max", 0x186, "FF00201027", 10000, 0.01),
-    ("TACH1", 0x200, "FF00000000", 0, 0.01),
-    ("TACH1", 0x200, "FF0000E803", 1000, 0.01),
-    ("TACH1", 0x200, "FF00005A0A", 2650, 0.01),
-    ("PROP1", 0x202, "FF00000000", 0, 0.01),
-    ("PROP1", 0x202, "FF0000E803", 1000, 0.01),
-    ("PROP1", 0x202, "FF00005A0A", 2650, 0.01),
-    ("MAP1", 0x21E, "FF00000000", 0.0, 0.001),
-    ("MAP1", 0x21E, "FF0000C409", 25.0, 0.001),
-    ("MAP1.Min", 0x21E, "FF00100000", 0.0, 0.001),
-    ("MAP1.Max", 0x21E, "FF0020B80B", 30.0, 0.001),
-    ("OILP1", 0x220, "FF00000000", 0.0, 0.001),
-    ("OILP1", 0x220, "FF0000A911", 45.21, 0.001),
-    ("OILP1", 0x220, "FF00005125", 95.53, 0.001),
-    ("OILP1.Min", 0x220, "FF00100000", 0.0, 0.001),
-    ("OILP1.Max", 0x220, "FF00201027", 100.0, 0.001),
-    ("OILP1.lowWarn", 0x220, "FF0040A00F", 40.0, 0.001),
-    ("OILP1.lowAlarm", 0x220, "FF0050AC0D", 35.0, 0.001),
-    ("OILP1.highWarn", 0x220, "FF0060401F", 80.0, 0.001),
-    ("OILP1.highAlarm", 0x220, "FF00701C25", 95.0, 0.001),
-    #          ("OILT1", 0x220, "FF0000", 0.0, 0.001),
-]
-
-qtests = [
-    ("QVOTE1", 1, 1),
-    ("QVOTE2", 2, 2),
-    ("QVOTE3", 3, 3),
-]
 
 
 def string2data(s):
@@ -161,79 +40,15 @@ def string2data(s):
     return b
 
 
-def button_data(data_type, data_code, index, button_bits, canid, nodeid, ns):
-    bytes_array = []
-    for x in range(5):
-        bytes_array.append(button_bits[8 * x : 8 * (x + 1)])  # noqa: E203
-    valueData = canfix.utils.setValue(data_type, bytes_array)
-    data = bytearray([])
-    if ns:
-        data.append(data_code)  # Control Code 12-19 index 1-8
-        x = (index % 32) << 11 | canid
-        data.append(x % 256)
-        data.append(x >> 8)
-    else:
-        data.append(nodeid)
-        data.append(index // 32)
-        data.append(0x00)
-    data.extend(valueData)
-    return data
-
-
-Objects = namedtuple(
-    "Objects",
-    ["bus", "pl", "interface", "channel", "node", "device", "revision", "model"],
-)
-
-def zzloader():
-    # Ensure the DB is fully loaded to avoid random 
-    # dictionary changed size during iteration
-    # errors
-    loaded = False
-    while not loaded:
-        try:
-            database.get_raw_item("ZZLOADER")
-            loaded = True
-        except:
-            time.sleep(0.01)
-
-
-@pytest.fixture
-def plugin():
-    # Use the default database
-    database.init("src/fixgw/config/database.yaml")
-    zzloader()
-    cc = yaml.safe_load(config)
-    pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-    pl.start()
-    can_bus = can.Bus(cc["channel"], interface=cc["interface"])
-    time.sleep(0.1)  # Give plugin a chance to get started
-
-    yield Objects(
-        bus=can_bus,
-        interface=cc["interface"],
-        channel=cc["channel"],
-        node=cc["node"],
-        device=cc["device"],
-        revision=cc["revision"],
-        model=cc["model"],
-        pl=pl,
-    )
-    pl.stop()
-    can_bus.shutdown()
-    quorum.enabled = False
-    quorum.nodeid = None
-
-
-def test_missing_mapfile():
+def test_missing_mapfile(bad_mapfile_config_data):
     with pytest.raises(Exception):
-        bad_cc = yaml.safe_load(bad_mapfile_config)
+        bad_cc = yaml.safe_load(bad_mapfile_config_data)
         bad_pl = fixgw.plugins.canfix.Plugin("canfix", bad_cc)
         bad_pl.start()
 
 
-def test_parameter_writes(plugin):
-    for param in ptests:
+def test_parameter_writes(plugin,ptests_data,database):
+    for param in ptests_data:
         msg = can.Message(is_extended_id=False, arbitration_id=param[1])
         msg.data = string2data(param[2])
         plugin.bus.send(msg)
@@ -246,14 +61,14 @@ def test_parameter_writes(plugin):
         assert abs(val - param[3]) <= param[4]
 
     status = plugin.pl.get_status()
-    assert status["Received Frames"] == len(ptests)
+    assert status["Received Frames"] == len(ptests_data)
     assert status["Ignored Frames"] == 0
     assert status["Invalid Frames"] == 0
     assert status["Sent Frames"] == 0
     assert status["Send Error Count"] == 0
 
 
-def test_unowned_outputs(plugin):
+def test_unowned_outputs(plugin,database):
     database.write("BARO", 30.04)
     msg = plugin.bus.recv(1.0)
     assert msg.arbitration_id == plugin.node + 1760
@@ -265,7 +80,7 @@ def test_unowned_outputs(plugin):
     assert status["Sent Frames"] == 1
     assert status["Send Error Count"] == 0
 
-def test_block_sending_on_receive(plugin):
+def test_block_sending_on_receive(plugin,database):
     # Dont send on the bus, what we just got from the bus
     index = 0
     canid = 0x190
@@ -300,7 +115,14 @@ def test_all_frame_ids(plugin):
                 msg.dlc = dsize
                 plugin.bus.send(msg)
                 count += 1
-    time.sleep(0.03)
+                time.sleep(0.0001)
+    time.sleep(0.01)
+    # Timeing issues can make this fail
+    # The receiving thread might not have processed and count the last frame
+    # before getting the status
+    # Also, plugin might send data causing sent counts to not match
+    # Maybe we could disable outputs during this test?
+    # The sleeps seem to make this pass consistent but it is not the best solution 
     status = plugin.pl.get_status()
     assert status["Received Frames"] == count
     assert status["Ignored Frames"] == 3294
@@ -312,8 +134,8 @@ def test_all_frame_ids(plugin):
 # TODO Add asserts above
 
 
-def test_ignore_quorum_messages_when_diabled(plugin):
-    for param in qtests:
+def test_ignore_quorum_messages_when_diabled(plugin,database,qtests_data):
+    for param in qtests_data:
         p = canfix.NodeStatus()
         p.sendNode = param[1]
         p.parameter = 0x09
@@ -325,20 +147,20 @@ def test_ignore_quorum_messages_when_diabled(plugin):
         assert x[0] == 0
     status = plugin.pl.get_status()
     # All received frames should be ignored
-    assert status["Received Frames"] == len(qtests)
-    assert status["Ignored Frames"] == len(qtests)
+    assert status["Received Frames"] == len(qtests_data)
+    assert status["Ignored Frames"] == len(qtests_data)
     assert status["Invalid Frames"] == 0
     assert status["Sent Frames"] == 0
     assert status["Send Error Count"] == 0
 
 
-def test_accept_quorum_mssages_when_enabled(plugin):
+def test_accept_quorum_mssages_when_enabled(plugin,database,qtests_data):
     quorum.enabled = True
     quorum.nodeid = 1
     p = canfix.NodeStatus()
     # keep track of the frames we should ignore
     ignoreframes = 0
-    for param in qtests:
+    for param in qtests_data:
         if param[1] == quorum.nodeid:
             ignoreframes += 1
         p.sendNode = param[1]
@@ -352,13 +174,13 @@ def test_accept_quorum_mssages_when_enabled(plugin):
         else:
             assert x[0] == param[2]
     status = plugin.pl.get_status()
-    assert status["Received Frames"] == len(qtests)
+    assert status["Received Frames"] == len(qtests_data)
     assert status["Ignored Frames"] == ignoreframes
     assert status["Invalid Frames"] == 0
     assert status["Sent Frames"] == 0
     assert status["Send Error Count"] == 0
 
-def test_send_outputs_that_require_leader(plugin,caplog):
+def test_send_outputs_that_require_leader(plugin,database,caplog):
     # Test that outputs with leader_required = True
     # only send when lader is True
     quorum.enabled = True
@@ -383,7 +205,7 @@ def test_send_outputs_that_require_leader(plugin,caplog):
     assert status["Send Error Count"] == 0
     quorum.leader = True
 
-def test_reject_invalid_quorum_mssages_when_enabled(plugin, caplog):
+def test_reject_invalid_quorum_mssages_when_enabled(plugin, database, caplog):
     quorum.enabled = True
     quorum.nodeid = 1
     p = canfix.NodeStatus()
@@ -422,478 +244,6 @@ def test_reject_invalid_quorum_mssages_when_enabled(plugin, caplog):
     assert status["Invalid Frames"] == invalidframes
     assert status["Sent Frames"] == 0
     assert status["Send Error Count"] == 0
-
-
-def test_switch_inputs(plugin):
-    msg = can.Message(arbitration_id=776, is_extended_id=False)
-    # Set TSBTN112 True
-    msg.data = bytearray(b"\x91\x00\x00\x01\x00\x00\x00\x00")
-    plugin.bus.send(msg)
-    time.sleep(0.03)
-    assert database.read("TSBTN112")[0] is True
-    # Set TSBTN112 False and TBTN212 True
-    msg.data = bytearray(b"\x91\x00\x00\x02\x00\x00\x00\x00")
-    plugin.bus.send(msg)
-    time.sleep(0.03)
-    assert database.read("TSBTN112")[0] is False
-    assert database.read("TSBTN212")[0] is True
-    assert database.read("TSBTN124")[0] is False
-    # Set TSBTN124, a Toggle button, to True
-    # All other buttons are False
-    msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
-    plugin.bus.send(msg)
-    time.sleep(0.03)
-    # TSBTN124 wss toggeled False to True
-    assert database.read("TSBTN124")[0] is True
-    # Set all buttons False
-    msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
-    plugin.bus.send(msg)
-    time.sleep(0.03)
-    # Sending false on a toggle button does not change its state
-    assert database.read("TSBTN124")[0] is True
-    # Set TSBTN124 to True
-    msg.data = bytearray(b"\x91\x00\x00\x00\x01\x00\x00\x00")
-    plugin.bus.send(msg)
-    time.sleep(0.03)
-    # Button toggled from True to False
-    assert database.read("TSBTN124")[0] is False
-    # Set all buttons False
-    msg.data = bytearray(b"\x91\x00\x00\x00\x00\x00\x00\x00")
-    plugin.bus.send(msg)
-    time.sleep(0.03)
-    # Sending false for toggle does not change state
-    assert database.read("TSBTN124")[0] is False
-    status = plugin.pl.get_status()
-    assert status["Received Frames"] == 6
-    assert status["Ignored Frames"] == 0
-    assert status["Invalid Frames"] == 0
-    assert status["Sent Frames"] == 0
-    assert status["Send Error Count"] == 0
-
-
-def test_nodespecific_switch_inputs(plugin):
-    index = 0
-    canid = 0x309
-    nodeid = 0x91
-    button_bits = [False] * 40
-    # Set first button true
-    button_bits[0] = True
-    # Set 7th button True
-    button_bits[6] = True
-    code = (index // 32) + 0x0C
-    # Setup the can message as node specific
-    msg = can.Message(arbitration_id=0x6E0 + nodeid, is_extended_id=False)
-    # Set the message data
-    msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
-    plugin.bus.send(msg)
-    time.sleep(0.03)
-    assert database.read("MAVADJ")[0] is True
-    assert database.read("MAVWPVALID")[0] is True
-    assert database.read("MAVREQADJ")[0] is False
-    assert database.read("MAVREQAUTOTUNE")[0] is False
-
-    # Reset all buttons to False
-    button_bits = [False] * 40
-    msg = can.Message(arbitration_id=0x6E0 + nodeid, is_extended_id=False)
-    # Set the message data
-    msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
-    plugin.bus.send(msg)
-    time.sleep(0.03)
-    assert database.read("MAVADJ")[0] is False
-    assert database.read("MAVWPVALID")[0] is False
-    assert database.read("MAVREQADJ")[0] is False
-    assert database.read("MAVREQAUTOTUNE")[0] is False
-    status = plugin.pl.get_status()
-    assert status["Received Frames"] == 2
-    assert status["Ignored Frames"] == 0
-    assert status["Invalid Frames"] == 0
-    assert status["Sent Frames"] == 0
-    assert status["Send Error Count"] == 0
-
-
-def test_nodespecific_switch_input_that_we_do_not_want(plugin):
-    index = 0
-    canid = 0x30A
-    nodeid = 0x91
-    button_bits = [False] * 40
-    # Set first button true
-    button_bits[0] = True
-    # Set 7th button True
-    button_bits[6] = True
-    code = (index // 32) + 0x0C
-    msg = can.Message(arbitration_id=0x6E0 + nodeid, is_extended_id=False)
-    with patch("canfix.parseMessage") as mock_parse:
-        # send valid message we do not want
-        mock_parse = MagicMock()
-        msg.data = button_data("BYTE[5]", code, index, button_bits, canid, nodeid, True)
-        plugin.bus.send(msg)
-        time.sleep(0.03)
-        # send invalid message to test exception branch
-        mock_parse = MagicMock()
-        msg.data = button_data("BYTE[5]", code, 9, button_bits, canid, nodeid, True)
-        plugin.bus.send(msg)
-        time.sleep(0.03)
-    # Since we do not need either of these messages they are never parsed
-    mock_parse.assert_not_called()
-    status = plugin.pl.get_status()
-    assert status["Received Frames"] == 2
-    assert status["Ignored Frames"] == 1
-    assert status["Invalid Frames"] == 1
-    assert status["Sent Frames"] == 0
-    assert status["Send Error Count"] == 0
-
-
-def test_bad_parse(plugin):
-    # Bad CAN data can cause exceptions if the code does not
-    # Ensure the data is valid before using it
-    # I found, and fixed, such a bug when writing a test
-    # This test ensures we do not have regressions
-    try:
-        # Send Parameter set for VS
-        cur_vs = database.read("VS")[0]
-        msg = can.Message(arbitration_id=0x186, is_extended_id=False)
-        # Incomplete message sent
-        msg.data = bytearray(b"\x00\x00\x00\x00")
-        plugin.bus.send(msg)
-        time.sleep(0.3)
-    except Exception as e:
-        pytest.fail(f"An unexpected exception occurred: {e}")
-    # Data should not change if bad data is sent
-    assert cur_vs == database.read("VS")[0]
-    status = plugin.pl.get_status()
-    assert status["Received Frames"] == 1
-    assert status["Ignored Frames"] == 0
-    assert status["Invalid Frames"] == 1
-    assert status["Sent Frames"] == 0
-    assert status["Send Error Count"] == 0
-
-
-def test_mapfile_inputs_canid_too_low():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_canid_low.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "canid must be >= to 256 (0x100) on line 70, column 14 in file 'tests/config/canfix/map_bad_inputs_canid_low.yaml'"
-    )
-
-
-def test_mapfile_inputs_canid_too_high():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_canid_high.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "canid must be <= to 2015 (0x7df) on line 81, column 14 in file 'tests/config/canfix/map_bad_inputs_canid_high.yaml'"  # noqa: E501
-    )
-
-
-def test_mapfile_inputs_canid_missing():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_canid_missing.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "Key 'canid' is missing on line 65, column 5 in file 'tests/config/canfix/map_bad_inputs_canid_missing.yaml'"
-    )
-
-
-def test_mapfile_inputs_not_dict():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_not_dict.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "Inputs should be dictionaries on line 71, column 5 in file 'tests/config/canfix/map_bad_inputs_not_dict.yaml'"
-    )
-
-
-def test_mapfile_inputs_nodespecific_not_bool():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_nodespecific_not_bool.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "nodespecific should be true or false without quotes on line 42, column 73 in file 'tests/config/canfix/map_bad_inputs_nodespecific_not_bool.yaml'"  # noqa: E501
-    )
-
-
-def test_mapfile_inputs_index_high():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_index_high.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "Index should be less than 256 and greater than or equall to 0 on line 51, column 28 in file 'tests/config/canfix/map_bad_inputs_index_high.yaml'"  # noqa: E501
-    )
-
-
-def test_mapfile_inputs_index_low():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_index_low.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "Index should be less than 256 and greater than or equall to 0 on line 69, column 28 in file 'tests/config/canfix/map_bad_inputs_index_low.yaml'"  # noqa: E501
-    )
-
-
-def test_mapfile_inputs_index_missing():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_index_missing.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "Key 'index' is missing on line 50, column 5 in file 'tests/config/canfix/map_bad_inputs_index_missing.yaml'"
-    )
-
-
-def test_mapfile_inputs_fixid_missing():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_fixid_missing.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "Key 'fixid' is missing on line 47, column 5 in file 'tests/config/canfix/map_bad_inputs_fixid_missing.yaml'"
-    )
-
-
-def test_mapfile_inputs_fixid_invalid():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_fixid_invalid.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "fixid 'alt' is not a valid fixid on line 38, column 38 in file 'tests/config/canfix/map_bad_inputs_fixid_invalid.yaml'"  # noqa: E501
-    )
-
-
-def test_mapfile_inputs_fixid_invalid_but_allowed():
-    try:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-        #time.sleep(0.03)
-
-    # Verify no exception
-    except Exception as e:
-        pytest.fail(
-            f"Using 'tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml' should not have caused exception: {e}"
-        )
-
-def test_mapfile_ignore_fixid_missing_is_invalid():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "ignore_fixid_missing must be true or false on line 8, column 23 in file 'tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml'"  # noqa: E501
-    )
-
-
-def test_mapfile_ignore_fixid_missing_is_missing():
-    try:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_ignore_fixid_missing_is_missing.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        time.sleep(0.1)
-        pl.stop()
-    # Verify no exception
-    except Exception as e:
-        pytest.fail(
-            f"Using 'tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml' should not have caused exception: {e}"
-        )
-
-def test_mapfile_ignore_fixid_missing_is_invalid():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "ignore_fixid_missing must be true or false on line 8, column 23 in file 'tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml'"  # noqa: E501
-    )
-
-def test_mapfile_no_meta_replacements():
-    with pytest.raises(ValueError) as excinfo:
-        database.init("src/fixgw/config/database.yaml")
-        zzloader()
-        cc = cfg.from_yaml(
-            re.sub(
-                "missing_map_file.yaml",
-                "tests/config/canfix/map_no_meta_replacements.yaml",
-                bad_mapfile_config,
-            )
-        )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
-        pl.start()
-        pl.stop()
-
-    # Verify the exception message
-    assert (
-        str(excinfo.value)
-        == "The mapfile 'tests/config/canfix/map_no_meta_replacements.yaml' must provide a valid 'meta replacements' section"  # noqa: E501
-    )
 
 
 def test_get_status(plugin):
