@@ -8,3 +8,7 @@ pymavlink
 pynmea2
 numpy
 tables
+RPi.GPIO
+rpi-lgpio
+smbus
+

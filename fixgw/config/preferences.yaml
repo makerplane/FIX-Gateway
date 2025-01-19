@@ -32,6 +32,7 @@ includes:
   IFLY_CONFIG: connections/ifly.yaml
   MEGASQUIRT_CONFIG: connections/megasquirt.yaml
   MGL_CONFIG: connections/mgl.yaml
+  X728_CONFIG: connections/X728.yaml
   DEMO_CONFIG: connections/demo.yaml
 # This section is used to turn things on or off
 enabled:
@@ -60,5 +61,6 @@ enabled:
   IFLY: false
   MEGASQUIRT: false
   MGL: false
+  X728: false
   DEMO: true
 

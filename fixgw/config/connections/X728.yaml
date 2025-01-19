@@ -1,0 +1,5 @@
+X728:
+  load: X728
+  module: fixgw.plugins.X728
+  # shutdown after minutes
+  shutdown_after: 60

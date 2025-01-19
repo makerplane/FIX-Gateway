@@ -77,5 +77,24 @@ items:
   type: str
   tol: 0
 
+- key: BAT_REMAINING
+  description: System battery remaining
+  type: int
+  min: 0
+  max: 100
+  initial: 100
+
+- key: BAT_VOLTAGE
+  description: System battery voltage
+  type: float
+  min: 0
+  max: 5
+  initial: 5
+
+- key: POWER_FAIL
+  description: System power is disconnected
+  type: bool
+  initial: false
+
 
 
