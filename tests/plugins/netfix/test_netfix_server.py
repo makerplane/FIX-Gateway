@@ -451,8 +451,17 @@ def test_unknown_command(plugin):
     assert res == "@oALT!004\n"
 
 
-    # def test_status_command(self):
-    #     pass
+def test_status_command(plugin):
+    plugin.sock.sendall("@xstatus\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    # This should be improved
+    assert '@xstatus;' in res
+    assert '{"Current Connections": 1,' in res
+
+def test_kill_command(plugin):
+    plugin.sock.sendall("@xkill\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == '@xkill\n'
 
     # def test_decimal_places(self):
     #     pass
