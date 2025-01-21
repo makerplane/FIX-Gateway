@@ -4,12 +4,10 @@
 import pytest
 import canfix
 from collections import namedtuple
-import fixgw.database as fixdatabase
 import time
 import yaml
 import fixgw.plugins.canfix
 import can
-import fixgw.quorum as quorum
 
 # canfix needs updated to support quorum so we will monkey patch it for now
 # Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
@@ -143,36 +141,6 @@ def qtests_data():
 ]
 
 
-@pytest.fixture
-def database():
-    fixdatabase.init("src/fixgw/config/database.yaml")
-    # Ensure the DB is fully loaded to avoid random 
-    # dictionary changed size during iteration
-    # errors
-    loaded = False
-    while not loaded:
-        try:
-            fixdatabase.get_raw_item("ZZLOADER")
-            loaded = True
-        except:
-            time.sleep(0.01)
-    return fixdatabase
-
-
-#@pytest.fixture
-#def zzloader():
-#    # Ensure the DB is fully loaded to avoid random 
-#    # dictionary changed size during iteration
-#    # errors
-#    loaded = False
-#    while not loaded:
-#        try:
-#            database.get_raw_item("ZZLOADER")
-#            loaded = True
-#        except:
-#            time.sleep(0.01)
-
-
 
 Objects = namedtuple(
     "Objects",
@@ -183,7 +151,6 @@ Objects = namedtuple(
 def plugin(config_data,database):
     # Use the default database
     #database.init("src/fixgw/config/database.yaml")
-    #zzloader()
     cc = yaml.safe_load(config_data)
     pl = fixgw.plugins.canfix.Plugin("canfix", cc)
     pl.start()
@@ -202,6 +169,4 @@ def plugin(config_data,database):
     )
     pl.stop()
     can_bus.shutdown()
-    quorum.enabled = False
-    quorum.nodeid = None
 

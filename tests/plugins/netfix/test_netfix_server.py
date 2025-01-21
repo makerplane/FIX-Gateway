@@ -14,509 +14,430 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import unittest
 import io
 import time
 import yaml
 import socket
-import fixgw.database as database
 
 
-db_config = """
-variables:
-  e: 1  # Engines
-  c: 6  # Cylinders
-  a: 8  # Generic Analogs
-  b: 16 # Generic Buttons
-  r: 1  # Encoders
-  t: 2  # Fuel Tanks
-
-entries:
-- key: ANLGa
-  description: Generic Analog %a
-  type: float
-  min: 0.0
-  max: 1.0
-  units: '%/100'
-  initial: 0.0
-  tol: 2000
-
-- key: BTNb
-  description: Generic Button %b
-  type: bool
-  tol: 0
-
-- key: ENCr
-  description: Generic Encoder %r
-  type: int
-  min: -32768
-  max: 32767
-  units: Pulses
-  initial: 0
-  tol: 0
-
-- key: IAS
-  description: Indicated Airspeed
-  type: float
-  min: 0.0
-  max: 1000.0
-  units: knots
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,V1,V2,Vne,Vfe,Vmc,Va,Vno,Vs,Vs0,Vx,Vy]
-
-- key: ALT
-  description: Indicated Altitude
-  type: float
-  min: -1000.0
-  max: 60000.0
-  units: ft
-  initial: 0.0
-  tol: 2000
-
-- key: BARO
-  description: Altimeter Setting
-  type: float
-  min: 0.0
-  max: 35.0
-  units: inHg
-  initial: 29.92
-  tol: 2000
-
-- key: ROLL
-  description: Roll Angle
-  type: float
-  min: -180.0
-  max: 180.0
-  units: deg
-  initial: 0.0
-  tol: 200
-
-- key: PITCH
-  description: Pitch Angle
-  type: float
-  min: -90.0
-  max: 90.0
-  units: deg
-  initial: 0.0
-  tol: 200
-
-- key: AOA
-  description: Angle of attack
-  type: float
-  min: -180.0
-  max: 180.0
-  units: deg
-  initial: 0.0
-  tol: 200
-  aux:
-  - Min
-  - Max
-  - 0g
-  - Warn
-  - Stall
-
-- key: OILPe
-  description: Oil Pressure Engine %e
-  type: float
-  min: 0.0
-  max: 200.0
-  units: psi
-  initial: 0.0
-  tol: 2000
-  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
-
-- key: TIMEZ
-  description: Zulu Time String
-  type: str
-  tol: 2000
-
-- key: ACID
-  description: Aircraft ID
-  type: str
-- key: ZZLOADER
-  description: MUST always be the last key listed here. It is read by client applications to ensure all db items have been init before proceeding to prevent race conditions.
-  type: str
-  initial: "Loaded"
-"""
-
-netfix_config = """
-type: server
-host: 0.0.0.0
-port: 34901
-buffer_size: 1024
-timeout: 1.0
-"""
 
 
-# Basically what we do with this test is set up a skeleton of the application
-# by loading and initializing the database module and loading the netfix
-# plugin.  Then we just create out own local sockets and test.
-class TestNetfixServerSimple(unittest.TestCase):
-    def setUp(self):
-        sf = io.StringIO(db_config)
-        database.init(sf)
+def test_value_write(plugin,database):
+    plugin.sock.sendall("@wALT;2500\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wALT;2500.0;00000\n"
+    x = database.read("ALT")
+    assert x == (2500.0, False, False, False, False, False)
 
-        nc = yaml.safe_load(netfix_config)
-        import fixgw.plugins.netfix
+def test_subscription(plugin,database):
+    plugin.sock.sendall("@sALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sALT\n"
+    database.write("ALT", 3000)
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;3000.0;00000\n"
 
-        self.pl = fixgw.plugins.netfix.Plugin("netfix", nc)
-        self.pl.start()
-        time.sleep(0.1)  # Give plugin a chance to get started
-        # Grab a client socket
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.settimeout(1.0)
-        self.sock.connect(("127.0.0.1", 34901))
+def test_multiple_subscription_fail(plugin,database):
+    """Test that we receive an error if we try to subscribe to the same
+    point again"""
+    plugin.sock.sendall("@sALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sALT\n"
 
-    def tearDown(self):
-        self.sock.shutdown(socket.SHUT_RDWR)
-        self.sock.close()
-        self.pl.shutdown()
+    database.write("ALT", 3100)
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;3100.0;00000\n"
 
-    def test_value_write(self):
-        self.sock.sendall("@wALT;2500\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wALT;2500.0;00000\n")
-        x = database.read("ALT")
-        self.assertEqual(x, (2500.0, False, False, False, False, False))
+    plugin.sock.sendall("@sALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sALT!002\n"
 
-    def test_subscription(self):
-        self.sock.sendall("@sALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sALT\n")
-        database.write("ALT", 3000)
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;3000.0;00000\n")
+def test_unsubscribe(plugin,database):
+    plugin.sock.sendall("@sIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sIAS\n"
+    plugin.sock.sendall("@sALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sALT\n"
 
-    def test_multiple_subscription_fail(self):
-        """Test that we receive an error if we try to subscribe to the same
-        point again"""
-        self.sock.sendall("@sALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sALT\n")
+    database.write("IAS", 120.0)
+    database.write("ALT", 3100)
+    res = plugin.sock.recv(1024).decode()
+    assert res == "IAS;120.0;00000\nALT;3100.0;00000\n"
 
-        database.write("ALT", 3100)
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;3100.0;00000\n")
+    plugin.sock.sendall("@uIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@uIAS\n"
 
-        self.sock.sendall("@sALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sALT!002\n")
+    database.write("IAS", 125.0)
+    database.write("ALT", 3200)
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;3200.0;00000\n"
 
-    def test_unsubscribe(self):
-        self.sock.sendall("@sIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sIAS\n")
-        self.sock.sendall("@sALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sALT\n")
+def test_normal_write(plugin,database):
+    plugin.sock.sendall("IAS;121.2;0000\n".encode())
+    time.sleep(0.1)
+    x = database.read("IAS")
+    assert x == (121.2, False, False, False, False, False)
 
-        database.write("IAS", 120.0)
-        database.write("ALT", 3100)
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "IAS;120.0;00000\nALT;3100.0;00000\n")
+    plugin.sock.sendall("IAS;121.3;1000\n".encode())
+    time.sleep(0.1)
+    x = database.read("IAS")
+    assert x == (121.3, True, False, False, False, False)
 
-        self.sock.sendall("@uIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@uIAS\n")
+    plugin.sock.sendall("IAS;121.4;0100\n".encode())
+    time.sleep(0.1)
+    x = database.read("IAS")
+    assert x == (121.4, False, False, True, False, False)
 
-        database.write("IAS", 125.0)
-        database.write("ALT", 3200)
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;3200.0;00000\n")
+    plugin.sock.sendall("IAS;121.5;0010\n".encode())
+    time.sleep(0.1)
+    x = database.read("IAS")
+    assert x == (121.5, False, False, False, True, False)
 
-    def test_normal_write(self):
-        self.sock.sendall("IAS;121.2;0000\n".encode())
-        time.sleep(0.1)
-        x = database.read("IAS")
-        self.assertEqual(x, (121.2, False, False, False, False, False))
+    plugin.sock.sendall("IAS;121.6;0001\n".encode())
+    time.sleep(0.1)
+    x = database.read("IAS")
+    assert x == (121.6, False, False, False, False, True)
 
-        self.sock.sendall("IAS;121.3;1000\n".encode())
-        time.sleep(0.1)
-        x = database.read("IAS")
-        self.assertEqual(x, (121.3, True, False, False, False, False))
+def test_read(plugin,database):
+    database.write("IAS", 105.4)
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;00000\n"
 
-        self.sock.sendall("IAS;121.4;0100\n".encode())
-        time.sleep(0.1)
-        x = database.read("IAS")
-        self.assertEqual(x, (121.4, False, False, True, False, False))
+    i = database.get_raw_item("IAS")
+    i.annunciate = True
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;10000\n"
 
-        self.sock.sendall("IAS;121.5;0010\n".encode())
-        time.sleep(0.1)
-        x = database.read("IAS")
-        self.assertEqual(x, (121.5, False, False, False, True, False))
+    i.bad = True
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;10100\n"
 
-        self.sock.sendall("IAS;121.6;0001\n".encode())
-        time.sleep(0.1)
-        x = database.read("IAS")
-        self.assertEqual(x, (121.6, False, False, False, False, True))
+    i.fail = True
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;10110\n"
 
-    def test_read(self):
-        database.write("IAS", 105.4)
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;00000\n")
+    i.secfail = True
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;10111\n"
 
-        i = database.get_raw_item("IAS")
-        i.annunciate = True
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;10000\n")
-        i.bad = True
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;10100\n")
-        i.fail = True
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;10110\n")
-        i.secfail = True
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;10111\n")
 
-        i.annunciate = False
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;00111\n")
-        i.bad = False
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;00011\n")
-        i.fail = False
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;00001\n")
-        i.secfail = False
-        self.sock.sendall("@rIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rIAS;105.4;00000\n")
+    i.annunciate = False
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;00111\n"
 
-    def test_read_errors(self):
-        self.sock.sendall("@rJUNKID\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rJUNKID!001\n")
-        # Try it with a good key but bad aux
-        self.sock.sendall("@rOILP1.lowWarned\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rOILP1.lowWarned!001\n")
+    i.bad = False
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;00011\n"
 
-    def test_write_errors(self):
-        self.sock.sendall("@wJUNKID;12.8\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wJUNKID!001\n")
-        # Try a gibberish value
-        self.sock.sendall("@wOILP1;43XXX\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wOILP1!003\n")
-        # Try with non existent value
-        self.sock.sendall("@wOILP1\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wOILP1!003\n")
-        # Try with almost non existent value
-        self.sock.sendall("@wOILP1;\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wOILP1!003\n")
-        # Try it with a good key but bad aux
-        self.sock.sendall("@wOILP1.lowWarned;12.0\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wOILP1.lowWarned!001\n")
+    i.fail = False
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;00001\n"
 
-    def test_value_write_with_subscription(self):
-        """Make sure we don't get a response to a value write on our subscriptions"""
-        self.sock.sendall("@sALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sALT\n")
-        self.sock.sendall("@sIAS\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sIAS\n")
-        # writing both from database should give subscription returns
-        database.write("IAS", 135.4)
-        database.write("ALT", 4300)
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "IAS;135.4;00000\nALT;4300.0;00000\n")
-        # writing over the socket should not create a callback
-        self.sock.sendall("@wALT;3200\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wALT;3200.0;00000\n")
-        database.write("IAS", 132.4)
-        res = self.sock.recv(1024).decode()
-        # we should only get the IAS one
-        self.assertEqual(res, "IAS;132.4;00000\n")
-        # using a normal write should do the same
-        self.sock.sendall("ALT;3400;000\n".encode())
-        database.write("IAS", 136.4)
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "IAS;136.4;00000\n")
+    i.secfail = False
+    plugin.sock.sendall("@rIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rIAS;105.4;00000\n"
 
-    def test_aux_write(self):
-        self.sock.sendall("@wOILP1.lowWarn;12.5\n".encode())
-        self.sock.recv(1024).decode()
-        x = database.read("OILP1.lowWarn")
-        self.assertEqual(x, 12.5)
 
-    def test_aux_subscription(self):
-        self.sock.sendall("@sOILP1\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sOILP1\n")
-        database.write("OILP1.lowWarn", 12.5)
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "OILP1.lowWarn;12.5\n")
+def test_read_errors(plugin,database):
+    plugin.sock.sendall("@rJUNKID\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rJUNKID!001\n"
 
-    def test_string_type(self):
-        self.sock.sendall("@wACID;727WB\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wACID;727WB;00000\n")
+    # Try it with a good key but bad aux
+    plugin.sock.sendall("@rOILP1.lowWarned\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rOILP1.lowWarned!001\n"
 
-    def test_none_string(self):
-        database.write("ACID", None)
-        self.sock.sendall("@rACID\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rACID;;00000\n")
 
-    def test_list(self):
-        # Get out list from the database and sort it
-        db = database.listkeys()
-        db.sort()
-        # get list from the server, convert to list and sort
-        self.sock.sendall("@l\n".encode())
-        res = self.sock.recv(1024).decode()
-        a = res.split(";")
-        list = a[2].split(",")
-        list.sort()
-        # join them back into a string and compare.  This is mostly
-        # just to make it easy to see if it fails
-        self.assertEqual(",".join(db), ",".join(db))
+def test_write_errors(plugin,database):
+    plugin.sock.sendall("@wJUNKID;12.8\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wJUNKID!001\n"
 
-    def test_tol_subscription(self):
-        start = time.time()
-        self.sock.sendall("@sROLL\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sROLL\n")
-        self.sock.sendall("@wROLL;0.5\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wROLL;0.5;00000\n")
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ROLL;0.5;01000\n")
-        elapsed = time.time() - start
-        self.assertTrue(elapsed > 0.2)
+    # Try a gibberish value
+    plugin.sock.sendall("@wOILP1;43XXX\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wOILP1!003\n"
 
-    def test_get_report(self):
-        self.sock.sendall("@qAOA\n".encode())
-        res = self.sock.recv(1024).decode()
-        i = database.get_raw_item("AOA")
-        s = "@qAOA;{};{};{};{};{};{};{}\n".format(
-            i.description,
-            i.typestring,
-            i.min,
-            i.max,
-            i.units,
-            i.tol,
-            ",".join(i.aux.keys()),
-        )
-        self.assertEqual(res, s)
+    # Try with non existent value
+    plugin.sock.sendall("@wOILP1\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wOILP1!003\n"
 
-    def test_min_max(self):
-        i = database.get_raw_item("ALT")
-        val = str(i.min - 100)
-        self.sock.sendall("@wALT;{}\n".format(val).encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wALT;{};00000\n".format(i.min))
-        i = database.get_raw_item("ALT")
-        val = str(i.max + 100)
-        self.sock.sendall("@wALT;{}\n".format(val).encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@wALT;{};00000\n".format(i.max))
+    # Try with almost non existent value
+    plugin.sock.sendall("@wOILP1;\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wOILP1!003\n"
 
-    def test_flags(self):
-        self.sock.sendall("@fALT;a;1\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@fALT;a;1\n")
-        self.sock.sendall("@rALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rALT;0.0;10000\n")
-        self.sock.sendall("@fALT;a;0\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@fALT;a;0\n")
-        self.sock.sendall("@rALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rALT;0.0;00000\n")
+    # Try it with a good key but bad aux
+    plugin.sock.sendall("@wOILP1.lowWarned;12.0\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wOILP1.lowWarned!001\n"
 
-        self.sock.sendall("@fALT;b;1\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@fALT;b;1\n")
-        self.sock.sendall("@rALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rALT;0.0;00100\n")
-        self.sock.sendall("@fALT;b;0\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@fALT;b;0\n")
-        self.sock.sendall("@rALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rALT;0.0;00000\n")
 
-        self.sock.sendall("@fALT;f;1\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@fALT;f;1\n")
-        self.sock.sendall("@rALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rALT;0.0;00010\n")
-        self.sock.sendall("@fALT;f;0\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@fALT;f;0\n")
-        self.sock.sendall("@rALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rALT;0.0;00000\n")
+def test_value_write_with_subscription(plugin,database):
+    """Make sure we don't get a response to a value write on our subscriptions"""
+    plugin.sock.sendall("@sALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sALT\n"
 
-        self.sock.sendall("@fALT;s;1\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@fALT;s;1\n")
-        self.sock.sendall("@rALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rALT;0.0;00001\n")
-        self.sock.sendall("@fALT;s;0\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@fALT;s;0\n")
-        self.sock.sendall("@rALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@rALT;0.0;00000\n")
+    plugin.sock.sendall("@sIAS\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sIAS\n"
 
-    def test_subscribe_flags(self):
-        """Test that writing just the flags will trigger a subscription response"""
-        self.sock.sendall("@sALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@sALT\n")
-        i = database.get_raw_item("ALT")
-        i.annunciate = True
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;0.0;10000\n")
-        i.annunciate = False
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;0.0;00000\n")
-        i.bad = True
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;0.0;00100\n")
-        i.bad = False
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;0.0;00000\n")
-        i.fail = True
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;0.0;00010\n")
-        i.fail = False
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;0.0;00000\n")
-        i.secfail = True
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;0.0;00001\n")
-        i.secfail = False
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "ALT;0.0;00000\n")
+    # writing both from database should give subscription returns
+    database.write("IAS", 135.4)
+    database.write("ALT", 4300)
+    res = plugin.sock.recv(1024).decode()
+    assert res == "IAS;135.4;00000\nALT;4300.0;00000\n"
 
-    def test_unknown_command(self):
-        self.sock.sendall("@oALT\n".encode())
-        res = self.sock.recv(1024).decode()
-        self.assertEqual(res, "@oALT!004\n")
+    # writing over the socket should not create a callback
+    plugin.sock.sendall("@wALT;3200\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wALT;3200.0;00000\n"
+
+    database.write("IAS", 132.4)
+    res = plugin.sock.recv(1024).decode()
+    # we should only get the IAS one
+    assert res == "IAS;132.4;00000\n"
+
+    # using a normal write should do the same
+    plugin.sock.sendall("ALT;3400;000\n".encode())
+    database.write("IAS", 136.4)
+    res = plugin.sock.recv(1024).decode()
+    assert res == "IAS;136.4;00000\n"
+
+
+def test_aux_write(plugin,database):
+    plugin.sock.sendall("@wOILP1.lowWarn;12.5\n".encode())
+    plugin.sock.recv(1024).decode()
+    x = database.read("OILP1.lowWarn")
+    assert x == 12.5
+
+
+def test_aux_subscription(plugin,database):
+    plugin.sock.sendall("@sOILP1\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sOILP1\n"
+
+    database.write("OILP1.lowWarn", 12.5)
+    res = plugin.sock.recv(1024).decode()
+    assert res == "OILP1.lowWarn;12.5\n"
+
+
+def test_string_type(plugin):
+    plugin.sock.sendall("@wACID;727WB\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wACID;727WB;00000\n"
+
+
+def test_none_string(plugin,database):
+    database.write("ACID", None)
+    plugin.sock.sendall("@rACID\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rACID;;00000\n"
+
+
+def test_list(plugin,database):
+    # Get out list from the database and sort it
+    db = database.listkeys()
+    db.sort()
+    # get list from the server, convert to list and sort
+    plugin.sock.sendall("@l\n".encode())
+    rdb = []
+    # Need to loop over multiple responses
+    # This is a hack, we should actually verify the headers
+    # since they would also inform us
+    # when to stop reading
+    done = False
+    data = ""
+    while not done:
+        try:
+            data = data + plugin.sock.recv(1024).decode()
+        except:
+            done = True
+    lines = data.split("\n")
+    for line in lines:
+        if len(line) > 4:
+            a = line.split(";")
+            rdb = rdb + a[2].split(",")
+
+    rdb.sort()
+    print(f"len(db): {len(db)} len(rdb): {len(rdb)}")
+    # join them back into a string and compare.  This is mostly
+    # just to make it easy to see if it fails
+    assert ",".join(db) == ",".join(rdb)
+
+def test_tol_subscription(plugin):
+    start = time.time()
+    plugin.sock.sendall("@sROLL\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sROLL\n"
+
+    plugin.sock.sendall("@wROLL;0.5\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wROLL;0.5;00000\n"
+
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ROLL;0.5;01000\n"
+
+    elapsed = time.time() - start
+    assert elapsed > 0.2
+
+def test_get_report(plugin,database):
+    plugin.sock.sendall("@qAOA\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    i = database.get_raw_item("AOA")
+    s = "@qAOA;{};{};{};{};{};{};{}\n".format(
+        i.description,
+        i.typestring,
+        i.min,
+        i.max,
+        i.units,
+        i.tol,
+        ",".join(i.aux.keys()),
+    )
+    assert res == s
+
+def test_min_max(plugin,database):
+    i = database.get_raw_item("ALT")
+    val = str(i.min - 100)
+    plugin.sock.sendall("@wALT;{}\n".format(val).encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wALT;{};00000\n".format(i.min)
+
+    i = database.get_raw_item("ALT")
+    val = str(i.max + 100)
+    plugin.sock.sendall("@wALT;{}\n".format(val).encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@wALT;{};00000\n".format(i.max)
+
+
+def test_flags(plugin):
+    plugin.sock.sendall("@fALT;a;1\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;a;1\n"
+
+    plugin.sock.sendall("@rALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rALT;0.0;10000\n"
+
+    plugin.sock.sendall("@fALT;a;0\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;a;0\n"
+
+    plugin.sock.sendall("@rALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res ==  "@rALT;0.0;00000\n"
+
+
+    plugin.sock.sendall("@fALT;b;1\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;b;1\n"
+
+    plugin.sock.sendall("@rALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rALT;0.0;00100\n"
+
+    plugin.sock.sendall("@fALT;b;0\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;b;0\n"
+
+    plugin.sock.sendall("@rALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rALT;0.0;00000\n"
+
+
+    plugin.sock.sendall("@fALT;f;1\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;f;1\n"
+
+    plugin.sock.sendall("@rALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rALT;0.0;00010\n"
+
+    plugin.sock.sendall("@fALT;f;0\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;f;0\n"
+
+    plugin.sock.sendall("@rALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rALT;0.0;00000\n"
+
+
+    plugin.sock.sendall("@fALT;s;1\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;s;1\n"
+
+    plugin.sock.sendall("@rALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rALT;0.0;00001\n"
+
+    plugin.sock.sendall("@fALT;s;0\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;s;0\n"
+
+    plugin.sock.sendall("@rALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@rALT;0.0;00000\n"
+
+
+def test_subscribe_flags(plugin,database):
+    """Test that writing just the flags will trigger a subscription response"""
+    plugin.sock.sendall("@sALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sALT\n"
+
+    i = database.get_raw_item("ALT")
+    i.annunciate = True
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;0.0;10000\n"
+
+    i.annunciate = False
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;0.0;00000\n"
+
+    i.bad = True
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;0.0;00100\n"
+
+    i.bad = False
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;0.0;00000\n"
+
+    i.fail = True
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;0.0;00010\n"
+
+    i.fail = False
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;0.0;00000\n"
+
+    i.secfail = True
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;0.0;00001\n"
+
+    i.secfail = False
+    res = plugin.sock.recv(1024).decode()
+    assert res == "ALT;0.0;00000\n"
+
+
+def test_unknown_command(plugin):
+    plugin.sock.sendall("@oALT\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@oALT!004\n"
+
 
     # def test_status_command(self):
     #     pass
@@ -525,8 +446,4 @@ class TestNetfixServerSimple(unittest.TestCase):
     #     pass
 
 
-if __name__ == "__main__":
-    unittest.main()
 
-
-#
