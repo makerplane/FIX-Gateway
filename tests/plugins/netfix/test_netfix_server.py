@@ -28,6 +28,12 @@ def test_value_write(plugin,database):
     assert res == "@wALT;2500.0;00000\n"
     x = database.read("ALT")
     assert x == (2500.0, False, False, False, False, False)
+    status = plugin.pl.get_status()
+    assert status['Current Connections'] == 1
+    assert status['Connection 0']['Client'][0] == '127.0.0.1'
+    assert status['Connection 0']['Messages Received'] == 1
+    assert status['Connection 0']['Messages Sent'] == 1
+
 
 def test_subscription(plugin,database):
     plugin.sock.sendall("@sALT\n".encode())
@@ -36,6 +42,12 @@ def test_subscription(plugin,database):
     database.write("ALT", 3000)
     res = plugin.sock.recv(1024).decode()
     assert res == "ALT;3000.0;00000\n"
+    status = plugin.pl.get_status()
+    assert status['Current Connections'] == 1
+    assert status['Connection 0']['Client'][0] == '127.0.0.1'
+    assert status['Connection 0']['Messages Received'] == 1
+    assert status['Connection 0']['Messages Sent'] == 2
+    assert status['Connection 0']['Subscriptions'] == 1
 
 def test_multiple_subscription_fail(plugin,database):
     """Test that we receive an error if we try to subscribe to the same
