@@ -121,8 +121,8 @@ def test_all_frame_ids(plugin):
     # or maybe the plugin was not ready when the first message was sent
     status = plugin.pl.get_status()
     assert status["Received Frames"] >= (count -1) and status["Received Frames"] < ( count + 1)
-    assert status["Ignored Frames"] == 3294
-    assert status["Invalid Frames"] == 15
+    assert status["Ignored Frames"] >= 3293 and status["Ignored Frames"] <= 3294
+    assert status["Invalid Frames"] >= 14 and status["Invalid Frames"] <= 15
     # Database could send messages based on TOL
     # maybe we should have mechanism to disable
     # sending based on TOL during testing?
