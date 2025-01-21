@@ -286,7 +286,6 @@ def test_list(plugin,database):
             rdb = rdb + a[2].split(",")
 
     rdb.sort()
-    print(f"len(db): {len(db)} len(rdb): {len(rdb)}")
     # join them back into a string and compare.  This is mostly
     # just to make it easy to see if it fails
     assert ",".join(db) == ",".join(rdb)
@@ -404,6 +403,9 @@ def test_flags(plugin):
     res = plugin.sock.recv(1024).decode()
     assert res == "@rALT;0.0;00000\n"
 
+    plugin.sock.sendall("@fALT;o;0\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fALT;o;0\n"
 
 def test_subscribe_flags(plugin,database):
     """Test that writing just the flags will trigger a subscription response"""
@@ -463,8 +465,32 @@ def test_kill_command(plugin):
     res = plugin.sock.recv(1024).decode()
     assert res == '@xkill\n'
 
+def test_bad_command(plugin):
+    plugin.sock.sendall("@xbad\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == '@xbad!001'
+
+def test_set_flag_for_bad_id(plugin):
+    plugin.sock.sendall("@fNOPE;a;1\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == '@fN!001\n'
+
+def test_flag_with_invalid_flag(plugin):
+    plugin.sock.sendall("@fALT;n;1\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fA!002\n"
+
+def test_flag_with_invalid_setting(plugin):
+    plugin.sock.sendall("@fALT;a;2\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@fA!003\n"
+
     # def test_decimal_places(self):
     #     pass
 
-
-
+def test_read_non_tuple_fixid(plugin,database):
+    database.write("IAS.Min", "20.5")
+    plugin.sock.sendall("@rIAS.Min\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    a = res.split(';')
+    assert a[1] == "20.5\n"
