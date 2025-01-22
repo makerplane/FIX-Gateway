@@ -17,10 +17,8 @@
 import logging
 import threading
 import time
-import yaml
 import copy
 from fixgw import cfg
-import os
 
 __database = {}
 
@@ -106,7 +104,7 @@ class db_item(object):
                 func[1](self.key, self.value, func[2])
             except Exception as e:
                 log.error(
-                    f"Callback name: {func[0]}, udata: {func[1]} function: {func[2]} exception: {e}"
+                    f"Callback name: {func[0]}, fixid: {self.key}, udata: {func[1]} function: {func[2]} exception: {e}"
                 )
 
     # return the age of the item in milliseconds
@@ -136,7 +134,7 @@ class db_item(object):
     @value.setter
     def value(self, x):
         with self.lock:
-            if type(x) == tuple:
+            if isinstance(x, tuple):
                 if len(x) < 4:
                     raise ValueError("Tuple too small for {}".format(self.key))
                 self._annunciate = x[1]
@@ -145,7 +143,7 @@ class db_item(object):
                 if len(x) >= 5:
                     self._secfail = x[4]
                 x = x[0]
-            if self.dtype == bool:
+            if self.dtype is bool:
                 self._value = (
                     x == True
                     or (isinstance(x, str) and x.lower() in ["yes", "true", "1"])
@@ -153,7 +151,7 @@ class db_item(object):
                 )
             else:
                 try:
-                    if self.dtype == str and x is None:
+                    if self.dtype is str and x is None:
                         self._value = ""
                     else:
                         self._value = self.dtype(x)
@@ -162,7 +160,7 @@ class db_item(object):
                         "Bad value '" + str(x) + "' given for " + self.description
                     )
                     raise
-                if self.dtype != str:
+                if self.dtype is not str:
                     # bounds check and cap
                     try:
                         if self._value < self._min:
@@ -296,17 +294,17 @@ def check_for_variables(entry):
 
 # expand the line into a list of lines based on the variables.
 def expand_entry(entry, var, count):
-    l = []
+    line = []
     for i in range(count):
         newentry = copy.deepcopy(entry)
         newentry["key"] = newentry["key"].replace(var, str(i + 1))
         newentry["description"] = newentry["description"].replace("%" + var, str(i + 1))
         ch = check_for_variables(newentry)
         if ch:
-            l.extend(expand_entry(newentry, ch, variables[ch]))
+            line.extend(expand_entry(newentry, ch, variables[ch]))
         else:
-            l.append(newentry)
-    return l
+            line.append(newentry)
+    return line
 
 
 def add_item(entry):
@@ -319,11 +317,11 @@ def add_item(entry):
         return None
 
     x = entry.get("description", "")
-    newitem.description = x if x != None else ""
+    newitem.description = x if x is not None else ""
     newitem.min = entry.get("min", None)
     newitem.max = entry.get("max", None)
     x = entry.get("units", "")
-    newitem.units = x if x != None else ""
+    newitem.units = x if x is not None else ""
     newitem.tol = entry.get("tol", 0)
     if entry["key"] == "LEADER":
         # Always set the fixid LEADER to True on startup
@@ -347,12 +345,9 @@ def init(f):
     log = logging.getLogger("database")
     log.info("Initializing Database")
 
-    state = "var"
-    # Can pass in config data or a config file
-    if isinstance(f, str) and os.path.exists(f):
-        db = cfg.from_yaml(f)
-    else:
-        db = yaml.safe_load(f)
+    # Did not seem to be used: state = "var"
+    # Load database
+    db = cfg.from_yaml(f)
     if "variables" in db:
         for key, value in db["variables"].items():
             variables[key] = int(value)
@@ -427,7 +422,13 @@ def callback_del(name, key, function, udata):
 
 # Maintenance Functions
 def update():
+    # If database is not fully loaded do nothing to prevent
+    # exception from 'dictionary changed size during iteration'
+    if 'ZZLOADER' not in __database:
+        log.debug("tol updated attempted before database is fully loaded")
+        return
     for key in __database:
         item = __database[key]
         if item.age > item.tol and item.tol != 0:
+            log.debug(f"item.old set True for fixid {key}")
             item.old = True

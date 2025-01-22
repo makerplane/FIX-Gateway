@@ -1,11 +1,10 @@
+#
+#        ********************* CAUTION *********************
+#  Editing this file may result in unit test failures
+
 # This file contains all of the mappings that tell the canfix plugin how
 # to talk to the FIX Gateway database.  This is a YAML file.
 
-# This mapping is mostly complete and it includes data for two engines.
-# When configured for a single engine, the fixids for the 2nd engine 
-# will be invalid. The following setting will ignore such errors.
-# Setting this to false will result in an exception at startup
-# if an invalid fixid is used. 
 ignore_fixid_missing: true
 
 # This is a list of replacement strings to map meta data from the CAN-FIX
@@ -38,9 +37,9 @@ inputs:
   - { canid: 0x183, index: 0, fixid: "IAS", priority: 0 }
   - { canid: 0x184, index: 0, fixid: "ALT", priority: 0 }
   - { canid: 0x18D, index: 0, fixid: "TAS", priority: 0 }
-  - { canid: 0x185, index: 0, fixid: "HEAD", priority: 0 }
+  - { canid: 0x185, index: 0, fixid: "HEAD", priority: 0, nodespecific: True }
   - { canid: 0x186, index: 0, fixid: "VS", priority: 0 }
-  - { canid: 0x190, index: 0, fixid: "BARO", priority: 0 }
+  - { canid: 0x190, index: 0, fixid: "BARO", priority: 0, nodespecific: True }
   - { canid: 0x200, index: 0, fixid: "TACH1", priority: 0 }
   - { canid: 0x201, index: 0, fixid: "TACH2", priority: 0 }
   - { canid: 0x202, index: 0, fixid: "PROP1", priority: 0 }
@@ -102,15 +101,23 @@ inputs:
   #            specifying a comma seperated list of fixids, up to 40 ids are supported.
 
 outputs:
-    - { fixid: "BARO", canid: 0x190, index: 0, owner: False }
-    - { fixid: "BTN11,BTN12,BTN13,BTN14,BTN15,BTN16", canid: 0x308, index: 0 }
+  - { fixid: "BARO",  canid: 0x190, index: 0, owner: False, on_change: False, require_leader: False}
+  - { fixid: "PALT",  canid: 0x191, index: 0, owner: False, on_change: False}
+  - { fixid: "WPNAME", canid: 0x480, index: 0, on_change:False, require_leader: True }
+  - {  fixid: "MAVADJ,MAVREQADJ,MAVREQTRIM,MAVREQCRUISE,MAVREQGUIDED,MAVREQAUTOTUNE,MAVWPVALID",
+         canid: 0x309,
+         index: 0,
+         owner: False,
+         on_change: False, # Send whenever set, useful for temporary communication loss or reboots
+         require_leader: False }
 
 # Special Input Functions
 # Each canid for encoders can support two encoders and 0 or up to 8 buttons.
 # defines the fixid as a comma seperated list with the first two being the encoders
 encoders:
     - { fixid: "ENC1, ENC2, BTN11", canid: 0x300, index: 0 }
-    - { fixid: "ENC3,ENC4,BTN12", canid: 0x301, index: 0 }
+    - { fixid: "ENC3, ENC4, BTN12", canid: 0x300, index: 1 }
+    - { fixid: "ENC4, ENC5, BTN13", canid: 0x301, index: 0 }
 
 # Generic Switch Inputs
 # Switches can be input by specifying the fixids as a comma seperated list.
@@ -129,4 +136,14 @@ encoders:
 # button could result in the first button looking as if it was pressed twice.
 
 switches:
-    - { fixid: "BTN1,BTN2,BTN3,BTN4,BTN5,BTN6", canid: 0x308, index: 0, toggle: "" }
+    - {  fixid: "TSBTN112,TSBTN212,TSBTN113,TSBTN213,TSBTN114,TSBTN214,TSBTN115,TSBTN215,TSBTN124,TSBTN224,TSBTN125,TSBTN225,TSBTN126,TSBTN226,TSBTN127,TSBTN227",
+        toggle: "TSBTN124,TSBTN224,TSBTN125,TSBTN225,TSBTN126,TSBTN226,TSBTN127,TSBTN227",
+         canid: 0x308,
+         index: 0,
+         owner: False }
+    - {  fixid: "MAVADJ,MAVREQADJ,MAVREQTRIM,MAVREQCRUISE,MAVREQGUIDED,MAVREQAUTOTUNE,MAVWPVALID",
+         canid: 0x309,
+         index: 0,
+         owner: False,
+         nodespecific: True }
+

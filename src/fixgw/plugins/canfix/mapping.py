@@ -20,9 +20,10 @@
 # This file controls mapping CAN-FIX parameter ids to FIX database keys
 
 import fixgw.database as database
-import yaml
 import canfix
 import fixgw.quorum as quorum
+from fixgw import cfg
+import os
 
 
 class Mapping(object):
@@ -36,16 +37,33 @@ class Mapping(object):
         self.output_mapping = {}
         self.log = log
         self.sendcount = 0
+        self.senderrorcount = 0
+        self.recvignorecount = 0
+        self.recvinvalidcount = 0
+        self.ignore_fixid_missing = False
 
         # Open and parse the YAML mapping file passed to us
-        try:
-            f = open(mapfile)
-        except:
-            self.log.error("Unable to Open Mapfile - {}".format(mapfile))
-            raise
-        maps = yaml.safe_load(f)
-        f.close()
+        if not os.path.exists(mapfile):
+            raise ValueError(f"Unable to open mapfile: '{mapfile}'")
+        maps, meta = cfg.from_yaml(mapfile, metadata=True)
 
+        if "ignore_fixid_missing" in maps:
+            if isinstance(maps["ignore_fixid_missing"], bool):
+                self.ignore_fixid_missing = maps["ignore_fixid_missing"]
+            else:
+                raise ValueError(
+                    cfg.message(
+                        "ignore_fixid_missing must be true or false",
+                        meta,
+                        "ignore_fixid_missing",
+                        True,
+                    )
+                )
+
+        if not maps.get("meta replacements", False):
+            raise ValueError(
+                f"The mapfile '{mapfile}' must provide a valid 'meta replacements' section"
+            )
         # dictionaries used for converting meta data strings from db to canfix and back
         self.meta_replacements_in = maps["meta replacements"]
         self.meta_replacements_out = {
@@ -80,8 +98,8 @@ class Mapping(object):
                 self.output_mapping[ea] = output
 
         # each input mapping item := [CANID, Index, FIX DB ID, Priority]
-        for each in maps["inputs"]:
-            # p = canfix.protocol.parameters[each["canid"]]
+        for index, each in enumerate(maps["inputs"]):
+            self.validate_mapping_inputs(each, meta["inputs"], index)
             # Parameters start at 0x100 so we subtract that offset to index the array
             ix = each["canid"] - 0x100
             if self.input_mapping[ix] is None:
@@ -119,6 +137,13 @@ class Mapping(object):
         try:
             dbItem = database.get_raw_item(dbKey)
         except KeyError:
+            # Need to improve this, maybe the user made a typo, they might not ever know.
+            # Currently the code has been updated to allow this because we want to
+            # keep the default config as simple as possible
+            # If you change database variable to one engine, then all the fixids for
+            # engine two are not created
+            # We have all the fixids defined for both engines and currently
+            # lack a simple mechanism to turn them on or off
             return None
 
         # The output exclusion keeps us from constantly sending updates on the
@@ -144,16 +169,25 @@ class Mapping(object):
                         m = cfpar.meta
                     dbItem.set_aux_value(m, cfpar.value)
                 except:
+                    self.recvinvalidcount += 1
                     self.log.warning(
                         "Problem setting Aux Value for {0}".format(dbItem.key)
                     )
             else:
-                dbItem.value = (
-                    cfpar.value,
-                    cfpar.annunciate,
-                    cfpar.quality,
-                    cfpar.failure,
-                )
+                if (
+                    cfpar.value is not None
+                    and cfpar.annunciate is not None
+                    and cfpar.quality is not None
+                    and cfpar.failure is not None
+                ):
+                    dbItem.value = (
+                        cfpar.value,
+                        cfpar.annunciate,
+                        cfpar.quality,
+                        cfpar.failure,
+                    )
+                else:
+                    self.recvinvalidcount += 1
 
         return InputFunc
 
@@ -164,7 +198,9 @@ class Mapping(object):
             m = self.output_mapping[dbKey]
             self.log.debug(f"Output {dbKey}: {value[0]}")
             if m["require_leader"] and not quorum.leader:
-                self.log.debug(f"LEADER blocked Output {dbKey}: {value[0]}")
+                self.log.debug(
+                    f"LEADER({quorum.leader}) blocked Output {dbKey}: {value[0]}"
+                )
                 return
 
             # If the exclude flag is set we just recieved the value
@@ -177,7 +213,8 @@ class Mapping(object):
                 # This is a switch output
                 # merge value of all switches
                 val = bytearray([0x0] * 5)
-                for b, valByte in enumerate(val):
+                # Loop always runs
+                for b, valByte in enumerate(val):  # pragma: no cover # fmt: skip
                     # Each byte of val
                     for bt in range(8):
                         # Each bit in the byte
@@ -198,7 +235,8 @@ class Mapping(object):
                 # unless on_change==False
                 r = False
                 if (
-                    m["lastOld"] != value[2]
+                    "lastOld" in m
+                    and m["lastOld"] != value[2]
                     and m["lastFlags"] == (value[1], value[3], value[4])
                     and value[0] == m["lastValue"]
                 ):
@@ -206,7 +244,8 @@ class Mapping(object):
                     r = True
 
                 if (
-                    m["on_change"]
+                    "lastValue" in m
+                    and m["on_change"]
                     and value[0] == m["lastValue"]
                     and m["lastFlags"] == (value[1], value[3], value[4])
                 ):
@@ -225,7 +264,7 @@ class Mapping(object):
                 p = canfix.Parameter()
                 p.identifier = m["canid"]
                 p.value = value[0]
-                p.index = index = m["index"]
+                p.index = index = m["index"]  # noqa: F841
                 p.annunciate = value[1]
                 # 2 is old
                 p.quality = value[3]
@@ -235,6 +274,7 @@ class Mapping(object):
                 try:
                     bus.send(p.msg)
                 except Exception as e:
+                    self.senderrorcount += 1
                     self.log.error("CAN send failure:" + str(e))
                     # This does not seem to always flush the buffer
                     # a full tx queue seems to be the most common error
@@ -247,7 +287,8 @@ class Mapping(object):
                 # sending values that have not changed unless
                 # on_change==False
                 self.log.debug(f"Output {dbKey}: sending NodeSpecific")
-                if value[0] == m["lastValue"] and m["on_change"]:
+                if "lastValue" in m and value[0] == m["lastValue"] and m["on_change"]:
+                    self.log.debug(f"Output {dbKey}: not sending, not change")
                     return
 
                 m["lastValue"] = value[0]
@@ -257,7 +298,7 @@ class Mapping(object):
                 # https://github.com/birkelbach/python-canfix/pull/14
                 p = canfix.ParameterSet()
                 p.parameter = m["canid"]
-                if p.multiplier == None:
+                if p.multiplier is None:
                     p.multiplier = 1.0
                 p.value = value[0]
                 # End workaround
@@ -265,14 +306,18 @@ class Mapping(object):
                 p.sendNode = node
                 try:
                     bus.send(p.msg)
+                    self.log.debug(f"Output {dbKey}: sent value: '{value[0]}'")
                 except Exception as e:
+                    self.senderrorcount += 1
+                    self.log.debug(f"Output {dbKey}: Send Failed {p.msg}")
                     self.log.error("CAN send failure:" + str(e))
                     # This does not seem to always flush the buffer
                     # a full tx queue seems to be the most common error
                     # when the bus is disrupted
                     bus.flush_tx_buffer()
-                self.sendcount += 1
-                self.log.debug(f"Output {dbKey}: Sent {p.msg}")
+                else:
+                    self.sendcount += 1
+                    self.log.debug(f"Output {dbKey}: Sent {p.msg}")
 
         return outputCallback
 
@@ -287,12 +332,15 @@ class Mapping(object):
             try:
                 bus.send(p.msg)
             except Exception as e:
+                self.senderrorcount += 1
+                self.log.debug(f"Output {dbKey}: Send Failed {p.msg}")
                 self.log.error("CAN send failure:" + str(e))
                 # This does not seem to always flush the buffer
                 # a full tx queue seems to be the most common error
                 # when the bus is disrupted
                 bus.flush_tx_buffer()
-            self.sendcount += 1
+            else:
+                self.sendcount += 1
 
         return outputCallback
 
@@ -393,3 +441,66 @@ class Mapping(object):
             func = im[par.index]
             if func is not None:
                 func(par)
+
+    def valid_canid(self, canid, detailed=False):
+        if canid < 256:
+            return (False, "canid must be >= to 256 (0x100)") if detailed else False
+        if canid > 2015:
+            return (False, "canid must be <= to 2015 (0x7df)") if detailed else False
+        if canid in range(1536, 1759):
+            return (
+                (False, "canid must not be between 1536 (0x600) and 1759 (0x6DF)")
+                if detailed
+                else False
+            )
+        return (True, None) if detailed else True
+
+    def valid_index(self, index, detailed=False):
+        if index >= 0 and index < 256:
+            return (True, None) if detailed else True
+        else:
+            return (
+                (False, "Index should be less than 256 and greater than or equall to 0")
+                if detailed
+                else False
+            )
+
+    def valid_fixid(self, fixid):
+        return fixid in database.listkeys()
+
+    def validate_mapping_inputs(self, data, meta, index):
+        if not isinstance(data, dict):
+            raise ValueError(cfg.message("Inputs should be dictionaries", meta, index))
+        for k in ["canid", "index", "fixid"]:
+            if k not in data:
+                raise ValueError(cfg.message(f"Key '{k}' is missing", meta, index))
+        if not self.valid_canid(data["canid"]):
+            raise ValueError(
+                cfg.message(
+                    self.valid_canid(data["canid"], True)[1], meta[index], "canid", True
+                )
+            )
+        if data["fixid"] not in database.listkeys() and not self.ignore_fixid_missing:
+            raise ValueError(
+                cfg.message(
+                    f"fixid '{data['fixid']}' is not a valid fixid",
+                    meta[index],
+                    "fixid",
+                    True,
+                )
+            )
+        if not self.valid_index(data["index"]):
+            raise ValueError(
+                cfg.message(
+                    self.valid_index(data["index"], True)[1], meta[index], "index", True
+                )
+            )
+        if not isinstance(data.get("nodespecific", False), bool):
+            raise ValueError(
+                cfg.message(
+                    "nodespecific should be true or false without quotes",
+                    meta[index],
+                    "nodespecific",
+                    True,
+                )
+            )

@@ -1,0 +1,3 @@
+line: one
+test:
+  include: test_include_empty_file2.yaml

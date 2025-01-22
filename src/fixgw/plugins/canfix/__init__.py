@@ -25,6 +25,7 @@ import can
 import canfix
 
 from . import mapping
+import fixgw.quorum as quorum
 
 
 class MainThread(threading.Thread):
@@ -80,17 +81,19 @@ class MainThread(threading.Thread):
                                 data.append(0x00)  # Function codes
                                 data.extend(msg.data[3:])
                                 msg.data = data
+                            else:
+                                self.parent.recvignorecount += 1
+                                continue
                         except:
-                            pass
-                    if (
-                        self.parent.quorum.enabled
-                        and msg.data[0] == 6
-                        and msg.data[1] == 9
-                    ) and (msg.arbitration_id > 1759 and msg.arbitration_id < 2016):
+                            self.parent.recvinvalidcount += 1
+                            continue
+                    if (quorum.enabled and msg.data[0] == 6 and msg.data[1] == 9) and (
+                        msg.arbitration_id > 1759 and msg.arbitration_id < 2016
+                    ):
                         # This is a quorum node status message
                         # We only want ones that are not our own
                         cfobj = canfix.parseMessage(msg)
-                        if cfobj.value != self.parent.quorum.nodeid:
+                        if cfobj.value != quorum.nodeid:
                             # This is not ourself
                             if cfobj.value > 0 and cfobj.value < 100:
                                 try:
@@ -98,24 +101,40 @@ class MainThread(threading.Thread):
                                         f"QVOTE{cfobj.value}", cfobj.value
                                     )
                                 except:
+                                    self.parent.recvinvalidcount += 1
                                     self.log.warning(
                                         f"Received a vote for QVOTE{cfobj.value} but this fixid does not exist"
                                     )
+                            else:
+                                self.parent.recvinvalidcount += 1
+                        else:
+                            # We ignore our own messages
+                            self.parent.recvignorecount += 1
+                        continue
                     if self.interesting[msg.arbitration_id]:
                         try:
                             cfobj = canfix.parseMessage(msg)
                         except ValueError as e:
+                            # Can we ever get here?
+                            self.parent.recvinvalidcount += 1
                             self.log.warning(e)
                         else:
                             self.log.debug(
-                                "Fix Thread parseFrame() returned, {0}".format(cfobj)
+                                # A bug in canfix lib __str__ causes exception if indexName is not defined
+                                # So changed this to output cfobj.getName instead of cfobj
+                                # when canfix bug is resolved should change this back
+                                "Fix Thread parseFrame() returned, {0}".format(
+                                    cfobj.getName
+                                )
                             )
                             if isinstance(cfobj, canfix.Parameter):
                                 self.mapping.inputMap(cfobj)
                             else:
                                 # TODO What to do with the other types
-                                pass
-                    #     # TODO increment error counter
+                                # Can we ever get here?
+                                self.parent.recvignorecount += 1
+                    else:
+                        self.parent.recvignorecount += 1
             finally:
                 if self.getout:
                     break
@@ -135,7 +154,12 @@ class Plugin(plugin.PluginBase):
         self.mapping = mapping.Mapping(mapfilename, self.log)
         self.thread = MainThread(self, config)
         self.recvcount = 0
-        self.errorcount = 0
+        self.recvignorecount = 0
+        self.recvinvalidcount = 0
+        self.mapping.sendcount = 0
+        self.mapping.senderrorcount = 0
+        self.mapping.recvignorecount = 0
+        self.mapping.recvinvalidcount = 0
 
     def run(self):
         self.bus = can.ThreadSafeBus(self.channel, interface=self.interface)
@@ -143,7 +167,7 @@ class Plugin(plugin.PluginBase):
             self.db_callback_add(
                 each, self.mapping.getOutputFunction(self.bus, each, self.node)
             )
-        if self.quorum.enabled:
+        if quorum.enabled:
             # canfix needs updated to support quorum so we will monkey patch it for now
             # Pull to fix canfix: https://github.com/birkelbach/python-canfix/pull/13
             # Request to add this to the canfix specification: https://github.com/makerplane/canfix-spec/issues/4
@@ -161,9 +185,9 @@ class Plugin(plugin.PluginBase):
             )
             # Added callback to transmit our quorum vote on the bus
             self.db_callback_add(
-                self.quorum.vote_key,
+                quorum.vote_key,
                 self.mapping.getQuorumOutputFunction(
-                    self.bus, self.quorum.vote_key, self.node
+                    self.bus, quorum.vote_key, self.node
                 ),
             )
         self.thread.start()
@@ -172,7 +196,9 @@ class Plugin(plugin.PluginBase):
         self.thread.stop()
         if self.thread.is_alive():
             try:
-                self.thread.join(1.0)
+                # Must wait longer than the can bus read
+                # in the main loop self.bus.recv(1.0)
+                self.thread.join(1.2)
             except:
                 pass
         if self.thread.is_alive():
@@ -183,8 +209,10 @@ class Plugin(plugin.PluginBase):
         x["CAN Interface"] = self.interface
         x["CAN Channel"] = self.channel
         x["Received Frames"] = self.recvcount
+        x["Ignored Frames"] = self.recvignorecount + self.mapping.recvignorecount
+        x["Invalid Frames"] = self.recvinvalidcount + self.mapping.recvinvalidcount
         x["Sent Frames"] = self.mapping.sendcount
-        x["Error Count"] = self.errorcount
+        x["Send Error Count"] = self.mapping.senderrorcount
         return x
 
 

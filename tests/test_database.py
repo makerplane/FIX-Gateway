@@ -35,11 +35,16 @@ entries:
   units: '%/100'
   initial: 0.0
   tol: 2000
+- key: ZZLOADER
+  description: MUST always be the last key listed here. It is read by client applications to ensure all db items have been init before proceeding to prevent race conditions.
+  type: str
+  initial: "Loaded"
 """
 
 minimal_list = []
 for x in range(8):
     minimal_list.append("ANLG{}".format(x + 1))
+minimal_list.append('ZZLOADER')
 
 variable_config = """
 variables:
@@ -66,6 +71,10 @@ entries:
   initial: 0.0
   tol: 2000
   aux: [Min,Max,lowWarn,lowAlarm]
+- key: ZZLOADER
+  description: MUST always be the last key listed here. It is read by client applications to ensure all db items have been init before proceeding to prevent race conditions.
+  type: str
+  initial: "Loaded"
 """
 
 variable_list = []
@@ -75,6 +84,7 @@ for e in range(4):
 for t in range(20):
     variable_list.append("FUELQ{}".format(t + 1))
 variable_list.sort()
+variable_list.append('ZZLOADER')
 
 general_config = """
 variables:
@@ -750,6 +760,12 @@ entries:
 - key: DUMMY
   description:
   type: str
+
+- key: ZZLOADER
+  description: MUST always be the last key listed here. It is read by client applications to ensure all db items have been init before proceeding to prevent race conditions.
+  type: str
+  initial: "Loaded"
+
 """
 
 
