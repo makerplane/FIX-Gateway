@@ -58,6 +58,12 @@ parts:
       sed -i 's/"PyQt6==6.8.0",//' pyproject.toml
       craftctl default
       craftctl set version=$(python3 src/fixgw/version.py)
+    build-packages:
+      - gcc
+      - g++
+      - libc6-dev
+      - libblas-dev
+      - liblapack-dev
     stage-packages:
       - libxcb-cursor0
       - libarchive13t64
@@ -74,6 +80,7 @@ parts:
       - python3-psutil
       - python3-pyqt6
       - libblas3
+      - liblapack3
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3
