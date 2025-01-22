@@ -18,7 +18,7 @@ import io
 import time
 import yaml
 import socket
-
+import logging
 
 
 
@@ -63,6 +63,16 @@ def test_multiple_subscription_fail(plugin,database):
     plugin.sock.sendall("@sALT\n".encode())
     res = plugin.sock.recv(1024).decode()
     assert res == "@sALT!002\n"
+
+def test_subscription_invalid_fixid(plugin):
+    plugin.sock.sendall("@sNOPE\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@sNOPE!001\n"
+
+def test_unsubscribe_invalid_fixid(plugin):
+    plugin.sock.sendall("@uNOPE\n".encode())
+    res = plugin.sock.recv(1024).decode()
+    assert res == "@uNOPE!001\n"
 
 def test_unsubscribe(plugin,database):
     plugin.sock.sendall("@sIAS\n".encode())
@@ -494,3 +504,19 @@ def test_read_non_tuple_fixid(plugin,database):
     res = plugin.sock.recv(1024).decode()
     a = res.split(';')
     assert a[1] == "20.5\n"
+
+def test_send_invalid_value_update(plugin,caplog):
+    with caplog.at_level(logging.DEBUG):
+        plugin.sock.sendall("IAS;10\n".encode())
+        time.sleep(0.1)
+        assert 'Bad Frame IAS;10 from 127.0.0.1' in caplog.text
+        assert 'Problem with input IAS;10: list index out of range' in caplog.text
+
+def test_send_invalid_value_update2(plugin,caplog):
+    with caplog.at_level(logging.DEBUG):
+        plugin.sock.sendall("IAS;10;10;10;10;10\n".encode())
+        time.sleep(0.1)
+        assert 'Bad Frame IAS;10;10;10;10;10 from 127.0.0.1' in caplog.text
+        assert 'Problem with input IAS;10;10;10;10;10: string index out of range' in caplog.text        
+
+
