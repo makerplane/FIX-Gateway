@@ -20,7 +20,7 @@ venv: venv.marker
 .PHONY: venv
 
 init.marker: pyproject.toml
-	source venv/bin/activate ; pip install -e .[install]
+	source venv/bin/activate ; pip install -e .
 	touch init.marker
 init: venv.marker init.marker
 .PHONY: init

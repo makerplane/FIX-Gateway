@@ -55,7 +55,7 @@ parts:
     plugin: python
     source: .
     override-build: |
-      sed -i 's/"PyQt6==6.8.0",//' pyproject.toml
+      sed -i 's/"numpy==2.2.2",//' pyproject.toml
       craftctl default
       craftctl set version=$(python3 src/fixgw/version.py)
     build-packages:
@@ -80,11 +80,10 @@ parts:
       - python3-psutil
       - python3-pyqt6
       - libblas3
-      - liblapack3
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3
-      - PIP_IGNORE_INSTALLED: ''
+#      - PIP_IGNORE_INSTALLED: ''
       - PARTS_PYTHON_VENV_ARGS: --system-site-packages
 
 apps:
@@ -98,7 +97,6 @@ apps:
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/lapack;$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas
 
   server:
     command: bin/fixgw
@@ -106,7 +104,6 @@ apps:
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/lapack;$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas
 
   client:
     command: bin/fixgwc
