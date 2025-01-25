@@ -54,8 +54,11 @@ parts:
   fixgateway:
     plugin: python
     source: .
+    python-constraints: 
+      - constraints.txt
     override-build: |
       sed -i 's/"numpy==2.2.2",//' pyproject.toml
+      python3 snap/scripts/snap_constraints.py
       craftctl default
       craftctl set version=$(python3 src/fixgw/version.py)
     build-packages:
@@ -80,6 +83,8 @@ parts:
       - python3-psutil
       - python3-pyqt6
       - libblas3
+      - python3-packaging
+
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3

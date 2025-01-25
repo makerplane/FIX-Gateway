@@ -1,8 +1,21 @@
 import pytest
 import time
 import importlib
+import sys
+from pathlib import Path
 import fixgw.quorum as quorum
 import fixgw.database as fixdatabase
+
+
+
+def pytest_configure(config):
+
+    # Include snap/scripts in sys.path
+    project_root = Path(config.rootdir)
+    snap_scripts_path = project_root / "snap/scripts"
+    print(f"Adding {snap_scripts_path} to sys.path")
+    # Add the snap/scripts directory to sys.path
+    sys.path.insert(0, str(snap_scripts_path))
 
 # Use this fixture in any test that needs fixgw.database
 # It will provide a frshly init database for each test
