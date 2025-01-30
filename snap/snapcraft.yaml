@@ -55,15 +55,8 @@ parts:
     plugin: python
     source: .
     override-build: |
-      sed -i 's/"PyQt6==6.8.0",//' pyproject.toml
       craftctl default
       craftctl set version=$(python3 src/fixgw/version.py)
-    build-packages:
-      - gcc
-      - g++
-      - libc6-dev
-      - libblas-dev
-      - liblapack-dev
     stage-packages:
       - libxcb-cursor0
       - libarchive13t64
@@ -75,19 +68,38 @@ parts:
       - python3-venv
       - python3-minimal
       - python3-pkg-resources
-      - python3-numpy
       - python3-lxml
       - python3-psutil
       - python3-pyqt6
       - libblas3
+      - libc6
       - liblapack3
+      - python3-packaging
+      - libc6-dev
+      - libblas-dev
+      - liblapack-dev
+      - libopenblas-dev
+      - python3-dev
+      - libhdf5-serial-dev
+      - python3-tables
+      - gcc
+      - g++
+      - libhdf5-dev
+      - pkg-config
+      - bzip2
+      - lzop
+      - rtl-433
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3
-      - PIP_IGNORE_INSTALLED: ''
       - PARTS_PYTHON_VENV_ARGS: --system-site-packages
-
+      - PIP_NO_UPGRADE: "1"
 apps:
+  rtl433:
+    command: /usr/bin/rtl_433
+    plugs:
+      - raw-usb
+      - network
   daemon:
     command: bin/fixgw
     daemon: simple
@@ -98,7 +110,6 @@ apps:
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/lapack;$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas
 
   server:
     command: bin/fixgw
@@ -106,7 +117,6 @@ apps:
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/lapack;$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas
 
   client:
     command: bin/fixgwc
