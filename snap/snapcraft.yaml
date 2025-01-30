@@ -96,7 +96,7 @@ parts:
       - PIP_NO_UPGRADE: "1"
 apps:
   rtl433:
-    command: /usr/bin/rtl_433
+    command: usr/bin/rtl_433
     plugs:
       - raw-usb
       - network
