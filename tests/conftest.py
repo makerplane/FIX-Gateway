@@ -1,8 +1,6 @@
 import pytest
 import time
 import importlib
-import sys
-from pathlib import Path
 import fixgw.quorum as quorum
 import fixgw.database as fixdatabase
 
