@@ -54,19 +54,9 @@ parts:
   fixgateway:
     plugin: python
     source: .
-    python-constraints: 
-      - constraints.txt
     override-build: |
-      sed -i 's/"numpy==2.2.2",//' pyproject.toml
-      python3 snap/scripts/snap_constraints.py
       craftctl default
       craftctl set version=$(python3 src/fixgw/version.py)
-    build-packages:
-      - gcc
-      - g++
-      - libc6-dev
-      - libblas-dev
-      - liblapack-dev
     stage-packages:
       - libxcb-cursor0
       - libarchive13t64
@@ -78,20 +68,38 @@ parts:
       - python3-venv
       - python3-minimal
       - python3-pkg-resources
-      - python3-numpy
       - python3-lxml
       - python3-psutil
       - python3-pyqt6
       - libblas3
+      - libc6
+      - liblapack3
       - python3-packaging
-
+      - libc6-dev
+      - libblas-dev
+      - liblapack-dev
+      - libopenblas-dev
+      - python3-dev
+      - libhdf5-serial-dev
+      - python3-tables
+      - gcc
+      - g++
+      - libhdf5-dev
+      - pkg-config
+      - bzip2
+      - lzop
+      - rtl-433
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3
-#      - PIP_IGNORE_INSTALLED: ''
       - PARTS_PYTHON_VENV_ARGS: --system-site-packages
-
+      - PIP_NO_UPGRADE: "1"
 apps:
+  rtl433:
+    command: /usr/bin/rtl_433
+    plugs:
+      - raw-usb
+      - network
   daemon:
     command: bin/fixgw
     daemon: simple
