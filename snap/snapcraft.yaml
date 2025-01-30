@@ -100,7 +100,7 @@ parts:
     override-prime: |
       set -eu
       craftctl default
-      for f in  usr/lib/arm-linux-gnueabihf/openblas-pthread/; do
+      for f in  usr/lib/arm-linux-gnueabihf/openblas-pthread/libopenblas_armv6p-r0.3.26.so; do
         if [ -f $f ]; then
           execstack -c $f
         fi
