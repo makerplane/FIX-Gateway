@@ -94,6 +94,17 @@ parts:
 #      - PIP_VERBOSE: 3
       - PARTS_PYTHON_VENV_ARGS: --system-site-packages
       - PIP_NO_UPGRADE: "1"
+    build-packages:
+      - execstack
+# Remove exec stack bit from files causing manual review
+    override-prime: |
+      set -eu
+      craftctl default
+      for f in  usr/lib/arm-linux-gnueabihf/openblas-pthread/; do
+        if [ -f $f ]; then
+          execstack -c $f
+        fi
+      done
 apps:
   rtl433:
     command: usr/bin/rtl_433
