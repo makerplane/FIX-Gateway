@@ -112,7 +112,7 @@ class Connection(object):
 
     def __server_specific(self, d):
         if d == "status":
-            s = json.dumps(self.parent.get_status())
+            s = json.dumps(status.get_dict())
             self.queue.put("@xstatus;{}\n".format(s).encode())
         elif d == "kill":
             self.queue.put("@xkill\n".encode())
