@@ -48,11 +48,35 @@ def test_data_processing(plugin, database):
     assert database.read("TIRE_PRESSURE1")[0] == pytest.approx(150 * 0.145032632, 0.1)
     assert database.read("TIRE_TEMP1")[0] == (30 - 40)  # Temperature offset applied
     assert database.read("TIRE_BATOK1")[0] == 1  # Battery voltage > 2.0 should set to 1 (OK)
-
+    plugin.rtl_queue.put(json.dumps({
+        "id": 12345,
+        "pressure_kPa": 250,
+        "temperature_C": 20,
+        "battery_V": 1.5
+    }) + "\n")
+    time.sleep(0.001)
+    assert database.read("TIRE_PRESSURE1")[0] == pytest.approx(250 * 0.145032632, 0.1)
+    assert database.read("TIRE_TEMP1")[0] == (20 - 40)  # Temperature offset applied
+    assert database.read("TIRE_BATOK1")[0] == 0  # Battery voltage > 2.0 should set to 1 (OK)
+    assert plugin.pl.get_status()["Devices Seen"][12345] == 2
 def test_plugin_shutdown(plugin):
     """Ensure that rtl_433 is properly terminated on shutdown."""
     plugin.pl.stop()
     time.sleep(0.1)  # Give time for shutdown
     assert plugin.pl.status["rtl_433 pid"] is None, "rtl_433 process did not terminate"
 
+def test_restart_rtl_433_after_failure(plugin,database):
+    
+    assert plugin.pl.get_status()["rtl_433 pid"] == 99999
+    psi = database.read("TIRE_PRESSURE1")[0]
+    plugin.fail_event.set()
+    plugin.rtl_queue.put(json.dumps({
+        "id": 12345,
+        "pressure_kPa": 200,
+        "temperature_C": 20,
+        "battery_V": 2.0
+    }) + "\n")
+
+    time.sleep(0.001)
+    assert psi != database.read("TIRE_PRESSURE1")[0]
 

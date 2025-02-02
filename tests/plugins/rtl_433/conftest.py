@@ -8,6 +8,7 @@ from unittest.mock import patch, MagicMock
 import json
 import select
 import queue
+import threading
  
 @pytest.fixture
 def rtl_433_config():
@@ -40,7 +41,7 @@ def rtl_433_config():
 
 Objects = namedtuple(
     "Objects",
-    ["pl","config","rtl_queue","mock_popen"],
+    ["pl","config","rtl_queue","mock_popen","fail_event"],
 )
 
 
@@ -55,6 +56,9 @@ def plugin(rtl_433_config,database):
 
         # Queue to control when lines are available
         rtl_queue = queue.Queue()
+
+        # Event flag to trigger process failure from a test
+        fail_event = threading.Event()
 
         # Make stdout.readline() read from the queue
         def fake_readline():
@@ -76,6 +80,12 @@ def plugin(rtl_433_config,database):
 
         mock_select.side_effect = fake_select
 
+        # `poll()` returns None (running) until test sets fail_event, then returns 1 (failed)
+        def fake_poll():
+            return 1 if fail_event.is_set() else None
+
+        mock_process.poll.side_effect = fake_poll
+
         # Make subprocess.Popen return the mock process
         mock_popen.return_value = mock_process
 
@@ -83,7 +93,8 @@ def plugin(rtl_433_config,database):
         pl.run()
         time.sleep(0.1)  # Allow the plugin time to initialize
 
-        yield Objects(pl=pl, config=config, rtl_queue=rtl_queue, mock_popen=mock_popen)
+        yield Objects(pl=pl, config=config,rtl_queue=rtl_queue, mock_popen=mock_popen, fail_event=fail_event)
 
         pl.stop()
+
 
