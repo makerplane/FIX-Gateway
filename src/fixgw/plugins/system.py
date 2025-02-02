@@ -64,7 +64,7 @@ class Plugin(plugin.PluginBase):
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join(1.0)
+            self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
 
