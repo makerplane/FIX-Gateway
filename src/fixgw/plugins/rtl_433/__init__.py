@@ -7,6 +7,7 @@ import threading
 import fixgw.plugin as plugin
 import random
 import select
+import os
 from collections import OrderedDict
 
 def convert_type(value, dtype):
@@ -66,11 +67,18 @@ def process_json(data, parent):
     except json.JSONDecodeError:
         self.parent.log.error("Error decoding JSON:", data)
 
+def get_rtl_433_path():
+    """Determine the correct path for rtl_433, checking if running inside a Snap."""
+    if "SNAP" in os.environ:
+        return os.path.join(os.environ["SNAP"], "bin", "rtl_433")
+    return "rtl_433"
+
 def start_rtl_433(simulate=False, device=0, frequency=433920000, decoders=[]):
     """Start rtl_433 process with specific SDR device, frequency, and enabled decoders."""
     if simulate:
         return None  # Indicate simulation mode
-    command = ["rtl_433", "-d", str(device), "-f", str(frequency), "-F", "json"]
+    rtl_433_path = get_rtl_433_path()
+    command = [rtl_433_path, "-d", str(device), "-f", str(frequency), "-F", "json"]
     for decoder in decoders:
         command.extend(["-R", str(decoder)])
     process = subprocess.Popen(
