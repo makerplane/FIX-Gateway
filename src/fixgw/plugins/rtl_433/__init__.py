@@ -6,6 +6,7 @@ import yaml
 import threading
 import fixgw.plugin as plugin
 import random
+import select
 from collections import OrderedDict
 
 def convert_type(value, dtype):
@@ -20,7 +21,7 @@ def convert_type(value, dtype):
         elif dtype == "string":
             return str(value)
     except ValueError:
-        print(f"Warning: Could not convert {value} to {dtype}")
+        self.parent.log.warning(f"Could not convert {value} to {dtype}")
     return value  # Return unmodified if conversion fails
 
 def apply_transform(value, transform):
@@ -63,14 +64,17 @@ def process_json(data, parent):
         parsed_data = json.loads(data)
         map_data(parsed_data, parent)
     except json.JSONDecodeError:
-        print("Error decoding JSON:", data)
+        self.parent.log.error("Error decoding JSON:", data)
 
-def start_rtl_433(simulate=False):
-    """Start rtl_433 process with JSON output, or simulate it."""
+def start_rtl_433(simulate=False, device=0, frequency=433920000, decoders=[]):
+    """Start rtl_433 process with specific SDR device, frequency, and enabled decoders."""
     if simulate:
         return None  # Indicate simulation mode
+    command = ["rtl_433", "-d", str(device), "-f", str(frequency), "-F", "json"]
+    for decoder in decoders:
+        command.extend(["-R", str(decoder)])
     process = subprocess.Popen(
-        ["rtl_433", "-F", "json"],
+        command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -97,34 +101,49 @@ class MainThread(threading.Thread):
         self.getout = False  # Indicator for when to stop
         self.parent = parent  # Parent plugin object
         self.simulate = self.parent.config.get("simulate", False)
+        self.process = None
 
     def run(self):
-        config = self.parent.config
-        process = start_rtl_433(simulate=self.simulate)
-        if process:
-            self.parent.status["rtl_433 pid"] = process.pid
-        
-        def stop_rtl_433(signum=None, frame=None):
-            print("Stopping rtl_433...")
-            if process:
-                process.terminate()
-                process.wait()
-            sys.exit(0)
-        
-        if self.simulate:
-            mock_generator = generate_mock_data(config)
-            while not self.getout:
-                process_json(next(mock_generator), self.parent)
-        else:
-            while not self.getout:
-                line = process.stdout.readline()
-                if not line:
-                    print("rtl_433 exited unexpectedly. Restarting...")
-                    process = start_rtl_433()
-                    if process:
-                        self.parent.status["rtl_433 pid"] = process.pid
-                    continue
-                process_json(line.strip(), self.parent)
+        try:
+            config = self.parent.config
+            device = config.get("rtl_device", 0)
+            frequency = config.get("frequency", 433920000)
+            decoders = list(set(sensor["decoder"] for sensor in config["sensors"]))
+            self.process = start_rtl_433(simulate=self.simulate, device=device, frequency=frequency, decoders=decoders)
+            if self.process:
+                self.parent.status["rtl_433 pid"] = self.process.pid
+                self.parent.status['rtl_433 starts'] += 1
+            
+            if self.simulate:
+                mock_generator = generate_mock_data(config)
+                while not self.getout:
+                    process_json(next(mock_generator), self.parent)
+            else:
+                while not self.getout:
+                    ready, _, _ = select.select([self.process.stdout], [], [], 1)  # 1-second timeout
+                    if ready:
+                        line = self.process.stdout.readline()
+                        if not line:
+                            self.parent.log.warning("rtl_433 exited unexpectedly. Restarting...")
+                            self.process = start_rtl_433(device=device, frequency=frequency, decoders=decoders)
+                            if self.process:
+                                self.parent.status["rtl_433 pid"] = self.process.pid
+                                self.parent.status['rtl_433 starts'] += 1
+                            continue
+                        process_json(line.strip(), self.parent)
+                    else:
+                        self.parent.log.info("Warning: rtl_433 is not producing output.")
+                self.stop_rtl_433()
+        finally:
+            self.stop_rtl_433()
+
+    def stop_rtl_433(self):
+        """Ensure rtl_433 is terminated."""
+        if self.process:
+            self.parent.log.info("Stopping rtl_433...")
+            self.process.terminate()
+            self.process.wait()
+            self.process = None
 
     def stop(self):
         self.getout = True
@@ -136,14 +155,14 @@ class Plugin(plugin.PluginBase):
         self.status = OrderedDict()
         self.status["Devices Seen"] = OrderedDict()
         self.status["rtl_433 pid"] = None
-
+        self.status['rtl_433 starts'] = 0
     def run(self):
         self.thread.start()
 
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join(1.0)
+            self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
 
