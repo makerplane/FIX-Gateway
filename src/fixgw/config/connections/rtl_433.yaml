@@ -20,5 +20,37 @@ rtl_433:
           source: "battery_V"
           threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
           type: "bool"
-
-
+    - sensor_id: 54321   # TPMS ID for front wheel
+      decoder: 234  # The decoder needed to capture this data
+      mappings:
+        TIRE_PRESSURE2:
+          source: "pressure_kPa"
+          scale: 6.89476  # Convert kPa to PSI
+          round: 1
+          type: "float"
+        TIRE_TEMP2:
+          source: "temperature_C"
+          offset: -40
+          round: 0
+          type: "float"
+        TIRE_BATOK2:
+          source: "battery_V"
+          threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
+          type: "bool"
+    - sensor_id: 11223   # TPMS ID for front wheel
+      decoder: 234  # The decoder needed to capture this data
+      mappings:
+        TIRE_PRESSURE3:
+          source: "pressure_kPa"
+          scale: 6.89476  # Convert kPa to PSI
+          round: 1
+          type: "float"
+        TIRE_TEMP3:
+          source: "temperature_C"
+          offset: -40
+          round: 0
+          type: "float"
+        TIRE_BATOK3:
+          source: "battery_V"
+          threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
+          type: "bool"
