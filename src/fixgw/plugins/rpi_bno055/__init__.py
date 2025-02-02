@@ -109,8 +109,8 @@ class Plugin(plugin.PluginBase):
     The run and stop methods of the plugin should be overridden but the
     base module functions should be called first."""
 
-    def __init__(self, name, config):
-        super(Plugin, self).__init__(name, config)
+    def __init__(self, name, config, config_meta):
+        super(Plugin, self).__init__(name, config, config_meta)
         self.thread = MainThread(self)
 
     def run(self):
