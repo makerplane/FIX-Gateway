@@ -77,7 +77,7 @@ def process_json(data, parent):
 def get_rtl_433_path():
     """Determine the correct path for rtl_433, checking if running inside a Snap."""
     if "SNAP" in os.environ:
-        return os.path.join(os.environ["SNAP"], "bin", "rtl_433")
+        return os.path.join(os.environ["SNAP"], "usr", "bin", "rtl_433")
     return "rtl_433"
 
 def start_rtl_433(parent, simulate=False, device=0, frequency=433920000, decoders=[]):
