@@ -55,7 +55,9 @@ def map_data(json_data, parent):
             for fixid, rules in mappings.items():
                 source_key = rules["source"]
                 if source_key in json_data:
+                    #print(f"## {json_data[source_key]}: {rules}")
                     value = apply_transform(json_data[source_key], rules)
+                    #print(f"## value: {value}")
                     parent.db_write(fixid, value)
             return
 
@@ -112,29 +114,37 @@ class MainThread(threading.Thread):
         self.process = None
 
     def run(self):
+        #print("main thread running")
         try:
             config = self.parent.config
+            #print(config)
             device = config.get("rtl_device", 0)
             frequency = config.get("frequency", 433920000)
             decoders = list(set(sensor["decoder"] for sensor in config["sensors"]))
             self.process = start_rtl_433(simulate=self.simulate, device=device, frequency=frequency, decoders=decoders)
             if self.process:
+                #print(f"############# pid: {self.process.pid} getout: {self.getout}")
                 self.parent.status["rtl_433 pid"] = self.process.pid
                 self.parent.status['rtl_433 starts'] += 1
-            
+                #print(self.parent.status)
             if self.simulate:
                 mock_generator = generate_mock_data(config)
                 while not self.getout:
                     process_json(next(mock_generator), self.parent)
             else:
                 while not self.getout:
+                    #print("ready")
                     ready, _, _ = select.select([self.process.stdout], [], [], 1)  # 1-second timeout
+                    #print(f"after ready {ready}")
                     if ready:
                         line = self.process.stdout.readline()
-                        if not line:
+                        #print(f"###### Lne:\n{line}")
+                        #print(f"####getout: {self.getout}")
+                        if not line and not self.getout:
                             self.parent.log.warning("rtl_433 exited unexpectedly. Restarting...")
                             self.process = start_rtl_433(device=device, frequency=frequency, decoders=decoders)
                             if self.process:
+                                #print(f"############# pid: {self.process.pid} getout: {self.getout}")
                                 self.parent.status["rtl_433 pid"] = self.process.pid
                                 self.parent.status['rtl_433 starts'] += 1
                             continue
@@ -142,7 +152,10 @@ class MainThread(threading.Thread):
                     else:
                         self.parent.log.info("Warning: rtl_433 is not producing output.")
                 self.stop_rtl_433()
+        except Exception as e:
+            print(e)
         finally:
+            #print("finally")
             self.stop_rtl_433()
 
     def stop_rtl_433(self):
@@ -152,6 +165,8 @@ class MainThread(threading.Thread):
             self.process.terminate()
             self.process.wait()
             self.process = None
+            #print("St pid None")
+            self.parent.status["rtl_433 pid"] = None
 
     def stop(self):
         self.getout = True
@@ -164,8 +179,10 @@ class Plugin(plugin.PluginBase):
         self.status["Devices Seen"] = OrderedDict()
         self.status["rtl_433 pid"] = None
         self.status['rtl_433 starts'] = 0
+
     def run(self):
         self.thread.start()
+        #print("running")
 
     def stop(self):
         self.thread.stop()

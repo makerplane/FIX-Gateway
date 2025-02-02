@@ -40,7 +40,7 @@ def rtl_433_config():
 
 Objects = namedtuple(
     "Objects",
-    ["pl","config","rtl_queue","mock_process"],
+    ["pl","config","rtl_queue","mock_popen"],
 )
 
 
@@ -48,8 +48,8 @@ Objects = namedtuple(
 def plugin(rtl_433_config,database):
     config = cfg.from_yaml(rtl_433_config)
     # Mock the start_rtl_433 function
-    with patch("fixgw.plugins.rtl_433.start_rtl_433") as mock_start_rtl_433,  patch("select.select") as mock_select:
-        # Create a mock process with a fake PID
+    with patch("subprocess.Popen") as mock_popen, patch("select.select") as mock_select:
+        # Create a mock process
         mock_process = MagicMock()
         mock_process.pid = 99999  # Fake PID
 
@@ -65,10 +65,10 @@ def plugin(rtl_433_config,database):
 
         mock_process.stdout.readline = MagicMock(side_effect=fake_readline)
 
-        # Mock fileno() to return a valid number
+        # Mock fileno() to return a valid descriptor
         mock_process.stdout.fileno = MagicMock(return_value=1)
 
-        # Control when select.select() signals readiness
+        # Control select.select() to only indicate readiness when data is available
         def fake_select(rlist, _, __, timeout):
             if not rtl_queue.empty():
                 return (rlist, [], [])  # Indicate data is ready
@@ -76,13 +76,14 @@ def plugin(rtl_433_config,database):
 
         mock_select.side_effect = fake_select
 
-        # Use the mock process
-        mock_start_rtl_433.return_value = mock_process
+        # Make subprocess.Popen return the mock process
+        mock_popen.return_value = mock_process
 
         pl = fixgw.plugins.rtl_433.Plugin("rtl_433", config)
         pl.run()
         time.sleep(0.1)  # Allow the plugin time to initialize
 
-        yield Objects(pl=pl, config=config, rtl_queue=rtl_queue, mock_process=mock_process)
+        yield Objects(pl=pl, config=config, rtl_queue=rtl_queue, mock_popen=mock_popen)
 
         pl.stop()
+

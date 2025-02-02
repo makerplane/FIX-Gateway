@@ -15,17 +15,18 @@ def test_plugin_startup(plugin):
 def test_start_rtl_called_correctly(plugin,rtl_433_config):
     """Verify that start_rtl_433 is called with correct parameters."""
 
-    # Verify start_rtl_433 was called with expected params
+    # Verify start_rtl_433 was called with expected params using default configuration
     expected_device = plugin.config["rtl_device"]
     expected_frequency = plugin.config["frequency"]
     expected_decoders = [sensor["decoder"] for sensor in plugin.config["sensors"]]
 
 
-    plugin.mock_process.assert_called_once_with(
-        simulate=False,
-        device=expected_device,
-        frequency=expected_frequency,
-        decoders=expected_decoders
+    plugin.mock_popen.assert_called_once_with(
+        ['rtl_433', '-d', '0', '-f', '433920000', '-F', 'json', '-R', '203'], 
+        stdout=-1, 
+        stderr=-1, 
+        text=True, 
+        bufsize=1
     )
 
 
