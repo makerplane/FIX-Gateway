@@ -9,6 +9,45 @@ import random
 import select
 import os
 from collections import OrderedDict
+from fixgw.cfg import message
+
+def valid_decoder(id):
+    # Needs updated when rtl_433 is updated to newer version
+    return id in range(1,267)
+
+def valid_type(data_type):
+    return data_type in ["int", "float", "string", "bool"]
+
+def validate_config(parent):
+    for i,sensor in enumerate(parent.config["sensors"]):
+        if not valid_decoder(sensor["decoder"]):
+            raise ValueError(
+                message(
+                    f"'{sensor['decoder']}' is not a valid decoder id",
+                    parent.config_meta["sensors"][i],
+                    "decoder",
+                    True
+                )
+            )
+        for fixid,data in sensor["mappings"].items():
+            if fixid not in parent.db_list():
+                raise ValueError(
+                    message(
+                        f"'{fixid}' is not a valid fixid",
+                        parent.config_meta["sensors"][i]["mappings"],
+                        fixid,
+                        True
+                    )
+                )
+            # TODO Finish validaton and write tests to ensure they work
+            if 'source' not in data:
+                pass # Must have a source
+            if 'scale' in data:
+                pass # must be numeric
+            if 'round' in data:
+                pass # must be int value 1,2,3,4
+            if 'type' in data:
+                pass # Ensure type is valid
 
 def convert_type(value, dtype):
     """Convert value to the specified data type."""
@@ -129,6 +168,7 @@ class MainThread(threading.Thread):
 
     def run(self):
         #print("main thread running")
+        
         try:
             config = self.parent.config
             #print(config)
@@ -193,14 +233,14 @@ class MainThread(threading.Thread):
         self.getout = True
 
 class Plugin(plugin.PluginBase):
-    def __init__(self, name, config):
-        super(Plugin, self).__init__(name, config)
+    def __init__(self, name, config, config_meta):
+        super(Plugin, self).__init__(name, config, config_meta)
         self.thread = MainThread(self)
         self.status = OrderedDict()
         self.status["Devices Seen"] = OrderedDict()
         self.status["rtl_433 pid"] = None
         self.status['rtl_433 starts'] = 0
-
+        validate_config(self)
     def run(self):
         self.thread.start()
         #print("running")
