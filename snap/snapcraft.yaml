@@ -88,7 +88,6 @@ parts:
       - pkg-config
       - bzip2
       - lzop
-      - rtl-433
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3
@@ -105,12 +104,32 @@ parts:
           execstack -c $f
         fi
       done
+
+  rtl-433:
+    plugin: cmake
+    source: https://github.com/merbanan/rtl_433.git
+    source-tag: '24.10'
+    source-depth: 1
+    source-type: git
+    build-packages:
+      - build-essential
+      - cmake
+      - librtlsdr-dev
+      - libusb-1.0-0-dev
+      - pkg-config
+      - git
+    stage-packages:
+      - librtlsdr2
+      - libusb-1.0-0
+    cmake-parameters:
+      - -DCMAKE_INSTALL_PREFIX=/usr
 apps:
-  rtl433:
+  rtl-433:
     command: usr/bin/rtl_433
     plugs:
-      - raw-usb
       - network
+      - network-bind
+      - raw-usb
   daemon:
     command: bin/fixgw
     daemon: simple
