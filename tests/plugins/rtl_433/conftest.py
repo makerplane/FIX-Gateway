@@ -47,7 +47,7 @@ Objects = namedtuple(
 
 @pytest.fixture
 def plugin(rtl_433_config,database):
-    config = cfg.from_yaml(rtl_433_config)
+    config,config_meta = cfg.from_yaml(rtl_433_config,metadata=True)
     # Mock the start_rtl_433 function
     with patch("subprocess.Popen") as mock_popen, patch("select.select") as mock_select:
         # Create a mock process
@@ -89,7 +89,7 @@ def plugin(rtl_433_config,database):
         # Make subprocess.Popen return the mock process
         mock_popen.return_value = mock_process
 
-        pl = fixgw.plugins.rtl_433.Plugin("rtl_433", config)
+        pl = fixgw.plugins.rtl_433.Plugin("rtl_433", config, config_meta)
         pl.run()
         time.sleep(0.1)  # Allow the plugin time to initialize
 
