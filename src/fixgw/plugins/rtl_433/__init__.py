@@ -41,14 +41,28 @@ def validate_config(parent):
                 )
             # TODO Finish validaton and write tests to ensure they work
             if 'source' not in data:
-                pass # Must have a source
+                raise ValueError(
+                    message(
+                        "'source' must be specified in mapping",
+                        parent.config_meta["sensors"][i]["mappings"],
+                        fixid,
+                        True
+                    )
+                )
             if 'scale' in data:
                 pass # must be numeric
             if 'round' in data:
                 pass # must be int value 1,2,3,4
             if 'type' in data:
-                pass # Ensure type is valid
-
+                if not valid_type(data['type']):
+                    raise ValueError(
+                        message(
+                            f"'{data['type']}' is not a valid type",
+                            parent.config_meta["sensors"][i]["mappings"][fixid],
+                            "type",
+                            True
+                        )
+                    )
 def convert_type(value, dtype):
     """Convert value to the specified data type."""
     try:
