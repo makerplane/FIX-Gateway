@@ -42,7 +42,7 @@ def test_data_processing(plugin, database):
     # Simulate processing JSON
     #plugin.mock_process.process_json(json_data, plugin.pl)
     #print(f"#1: {plugin.pl.get_status()}")
-    time.sleep(0.001)
+    time.sleep(0.01)
     #print(f"#2: {plugin.pl.get_status()} pressure: {database.read('TIRE_PRESSURE1')}")
     # Verify database updates
     assert database.read("TIRE_PRESSURE1")[0] == pytest.approx(150 * 0.145032632, 0.1)
