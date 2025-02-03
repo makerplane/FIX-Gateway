@@ -69,10 +69,10 @@ def validate_config(parent):
                             True
                         )
                     )
-                if not data['round'] in range(1,5):
+                if not data['round'] in range(0,5):
                     raise ValueError(
                         message(
-                            "'round' must be 1, 2, 3 or 4",
+                            "'round' must be 0, 1, 2, 3 or 4",
                             parent.config_meta["sensors"][i]["mappings"][fixid],
                             'round',
                             True

@@ -12,7 +12,7 @@ import re
 ('source: "pressure_kPa"', '', "'source' must be specified in mapping on line 13, column 13 in file 'test.yaml'"),
 ('scale: 0.145032632', 'scale: "0.145032632"', "'scale' must be an integer or float on line 13, column 20 in file 'test.yaml'"),
 ('round: 0', 'round: "0"', "'round' must be an integer on line 19, column 20 in file 'test.yaml'"),
-('round: 0', 'round: 5', "'round' must be 1, 2, 3 or 4 on line 19, column 20 in file 'test.yaml'"),
+('round: 0', 'round: 5', "'round' must be 0, 1, 2, 3 or 4 on line 19, column 20 in file 'test.yaml'"),
 
 ])
 def test_validate_config(rtl_433_config,replace,value,message):
