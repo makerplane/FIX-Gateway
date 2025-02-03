@@ -40,6 +40,7 @@ def test_subscription(plugin,database):
     res = plugin.sock.recv(1024).decode()
     assert res == "@sALT\n"
     database.write("ALT", 3000)
+    time.sleep(0.01)
     res = plugin.sock.recv(1024).decode()
     assert res == "ALT;3000.0;00000\n"
     status = plugin.pl.get_status()
