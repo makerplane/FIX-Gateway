@@ -9,7 +9,11 @@ import re
 ('TIRE_PRESSURE1', 'DOESNOTEXIST', "'DOESNOTEXIST' is not a valid fixid on line 12, column 13 in file 'test.yaml'"),
 ("decoder: 203", "decoder: 999999", "'999999' is not a valid decoder id on line 9, column 18 in file 'test.yaml'"),
 ('type: "float"', 'type: "flot"', "'flot' is not a valid type on line 15, column 19 in file 'test.yaml'"),
-('source: "pressure_kPa"', '', "'source' must be specified in mapping on line 13, column 13 in file 'test.yaml'")
+('source: "pressure_kPa"', '', "'source' must be specified in mapping on line 13, column 13 in file 'test.yaml'"),
+('scale: 0.145032632', 'scale: "0.145032632"', "'scale' must be an integer or float on line 13, column 20 in file 'test.yaml'"),
+('round: 0', 'round: "0"', "'round' must be an integer on line 19, column 20 in file 'test.yaml'"),
+('round: 0', 'round: 5', "'round' must be 1, 2, 3 or 4 on line 19, column 20 in file 'test.yaml'"),
+
 ])
 def test_validate_config(rtl_433_config,replace,value,message):
     with pytest.raises(ValueError) as excinfo:

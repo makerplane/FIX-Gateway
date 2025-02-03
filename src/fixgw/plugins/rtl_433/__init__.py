@@ -50,9 +50,34 @@ def validate_config(parent):
                     )
                 )
             if 'scale' in data:
-                pass # must be numeric
+                if not isinstance(data['scale'], (int, float)):
+                    raise ValueError(
+                        message(
+                            "'scale' must be an integer or float",
+                            parent.config_meta["sensors"][i]["mappings"][fixid],
+                            'scale',
+                            True
+                        )
+                    )
             if 'round' in data:
-                pass # must be int value 1,2,3,4
+                if not isinstance(data['round'], int):
+                    raise ValueError(
+                        message(
+                            "'round' must be an integer",
+                            parent.config_meta["sensors"][i]["mappings"][fixid],
+                            'round',
+                            True
+                        )
+                    )
+                if not data['round'] in range(1,5):
+                    raise ValueError(
+                        message(
+                            "'round' must be 1, 2, 3 or 4",
+                            parent.config_meta["sensors"][i]["mappings"][fixid],
+                            'round',
+                            True
+                        )
+                    )
             if 'type' in data:
                 if not valid_type(data['type']):
                     raise ValueError(
