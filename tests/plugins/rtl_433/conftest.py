@@ -9,7 +9,8 @@ import json
 import select
 import queue
 import threading
- 
+
+
 @pytest.fixture
 def rtl_433_config():
     return """
@@ -41,13 +42,13 @@ def rtl_433_config():
 
 Objects = namedtuple(
     "Objects",
-    ["pl","config","rtl_queue","mock_popen","fail_event"],
+    ["pl", "config", "rtl_queue", "mock_popen", "fail_event"],
 )
 
 
 @pytest.fixture
-def plugin(rtl_433_config,database):
-    config,config_meta = cfg.from_yaml(rtl_433_config,metadata=True)
+def plugin(rtl_433_config, database):
+    config, config_meta = cfg.from_yaml(rtl_433_config, metadata=True)
     # Mock the start_rtl_433 function
     with patch("subprocess.Popen") as mock_popen, patch("select.select") as mock_select:
         # Create a mock process
@@ -93,8 +94,12 @@ def plugin(rtl_433_config,database):
         pl.run()
         time.sleep(0.1)  # Allow the plugin time to initialize
 
-        yield Objects(pl=pl, config=config,rtl_queue=rtl_queue, mock_popen=mock_popen, fail_event=fail_event)
+        yield Objects(
+            pl=pl,
+            config=config,
+            rtl_queue=rtl_queue,
+            mock_popen=mock_popen,
+            fail_event=fail_event,
+        )
 
         pl.stop()
-
-
