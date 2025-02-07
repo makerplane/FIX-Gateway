@@ -101,6 +101,8 @@ def test_start_rtl_433(mock_popen):
             "433920000",
             "-F",
             "json",
+            "-M",
+            "protocol",
             "-R",
             "203",
             "-R",
@@ -140,7 +142,7 @@ def mock_plugin(rtl_433_config):
 def test_process_json_valid(mock_plugin):
     """Test that process_json correctly parses and maps valid JSON data."""
     json_data = json.dumps(
-        {"id": 12345, "pressure_kPa": 250, "temperature_C": 30, "battery_V": 2.5}
+        {"protocol": 203, "id": 12345, "pressure_kPa": 250, "temperature_C": 30, "battery_V": 2.5}
     )
 
     process_json(json_data, mock_plugin)
