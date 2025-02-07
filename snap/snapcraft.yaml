@@ -46,6 +46,16 @@ platforms:
 base: core24
 confinement: strict
 
+layout:
+  /usr/share/X11/locale:
+    symlink: $SNAP/gpu-2404/X11/locale
+  /usr/share/X11/xkb:
+    bind: $SNAP/usr/share/X11/xkb
+  /etc/fonts:
+    bind: $SNAP/etc/fonts
+  /usr/share/fonts:
+    bind: $SNAP/usr/share/fonts
+
 parts:
   extras:
     source: ./extras
@@ -88,6 +98,12 @@ parts:
       - pkg-config
       - bzip2
       - lzop
+      - xkb-data
+      - x11-xkb-utils
+      - locales-all
+      - libxkbcommon0
+      - fonts-dejavu-core
+      - fonts-dejavu-extra
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3
@@ -107,8 +123,10 @@ parts:
 
   rtl-433:
     plugin: cmake
-    source: https://github.com/merbanan/rtl_433.git
-    source-tag: '24.10'
+#    source: https://github.com/merbanan/rtl_433.git
+    source: https://github.com/e100/rtl_433.git
+#    source-tag: '24.10'
+    source-tag: 'gm_tpms'
     source-depth: 1
     source-type: git
     build-packages:
@@ -123,6 +141,9 @@ parts:
       - libusb-1.0-0
     cmake-parameters:
       - -DCMAKE_INSTALL_PREFIX=/usr
+    build-attributes:
+      - enable-patchelf
+
 apps:
   rtl-433:
     command: usr/bin/rtl_433
@@ -136,14 +157,14 @@ apps:
     daemon-scope: user
     # Woud be nice to also support options: https://snapcraft.io/docs/adding-snap-configuration
     restart-condition: always
-    plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
+    plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi, raw-usb]
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
 
   server:
     command: bin/fixgw
-    plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi]
+    plugs: [ home, network-bind, network, can-bus, serial-port, i2c, spi, raw-usb]
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
@@ -162,5 +183,6 @@ apps:
       PYTHONPATH: $SNAP/lib/python3.12/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       QT_PLUGIN_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/qt6/plugins/
       QT_QPA_PLATFORM: xcb
-
-
+      XKB_CONFIG_ROOT: $SNAP/usr/share/X11/xkb
+      QT_XKB_CONFIG_ROOT: $SNAP/usr/share/X11/xkb
+      QT_NO_SESSION_MANAGER: 1
