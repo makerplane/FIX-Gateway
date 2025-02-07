@@ -14,7 +14,7 @@ from fixgw.cfg import message
 
 def valid_decoder(id):
     # Needs updated when rtl_433 is updated to newer version
-    return id in range(1, 267)
+    return id in range(1, 276)
 
 
 def valid_type(data_type):
@@ -146,12 +146,16 @@ def apply_transform(value, transform):
 def map_data(json_data, parent):
     """Map rtl_433 JSON data to application fixids based on YAML config."""
     sensor_id = json_data.get("id")
-    if sensor_id not in parent.status["Devices Seen"]:
-        parent.status["Devices Seen"][sensor_id] = 1
+    protocol = json_data.get("protocol")
+    sid = f"{protocol}: {sensor_id}"
+    if sid not in parent.status["Devices Seen"]:
+        parent.status["Devices Seen"][sid] = 1
     else:
-        parent.status["Devices Seen"][sensor_id] += 1
+        parent.status["Devices Seen"][sid] += 1
     for sensor in parent.config["sensors"]:  # pragma: no branch
         if sensor["sensor_id"] == sensor_id:
+            if sensor['decoder'] != protocol:
+                continue
             mappings = sensor["mappings"]
             for fixid, rules in mappings.items():  # pragma: no branch
                 source_key = rules["source"]
@@ -182,7 +186,7 @@ def start_rtl_433(parent, simulate=False, device=0, frequency=433920000, decoder
     if simulate:
         return None  # Indicate simulation mode
     rtl_433_path = get_rtl_433_path()
-    command = [rtl_433_path, "-d", str(device), "-f", str(frequency), "-F", "json"]
+    command = [rtl_433_path, "-d", str(device), "-f", str(frequency), "-F", "json", "-M", "protocol" ]
     for decoder in decoders:
         command.extend(["-R", str(decoder)])
     process = subprocess.Popen(
@@ -196,7 +200,7 @@ def start_rtl_433(parent, simulate=False, device=0, frequency=433920000, decoder
     parent.status["rtl_433 starts"] += 1
     if process.poll() is not None:
         parent.log.warning(
-            f"rtl_433 process failed to start with exit code {process.poll()}"
+            f"rtl_433 process failed to start with exit code {process.poll()} command:{command}"
         )
         parent.status["rtl_433 pid"] = None
         parent.status["rtl_433 exit code"] = process.poll()
