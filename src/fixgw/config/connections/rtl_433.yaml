@@ -1,56 +1,53 @@
 rtl_433:
   load: RTL_433
   module: fixgw.plugins.rtl_433
-  simulate: true
+  frequency: 433920000
+  rtl_device: 0
+  #simulate: true
   sensors:
-    - sensor_id: 12345   # TPMS ID for front wheel
-      decoder: 234  # The decoder needed to capture this data
+    - sensor_id: "007847C1A7"   # TPMS ID for front wheel
+      decoder: 275  # The decoder needed to capture this data
       mappings:
-        TIRE_PRESSURE1:
+        TIREP1:
           source: "pressure_kPa"
-          scale: 6.89476  # Convert kPa to PSI
+          #scale: 6.89476  # Convert kPa to PSI
           round: 1
           type: "float"
-        TIRE_TEMP1:
+        TIRET1:
           source: "temperature_C"
-          offset: -40
+          #offset: -40
           round: 0
           type: "float"
-        TIRE_BATOK1:
-          source: "battery_V"
-          threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
+        TIREB1:
+          source: "battery_ok"
+          #threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
           type: "bool"
-    - sensor_id: 54321   # TPMS ID for front wheel
-      decoder: 234  # The decoder needed to capture this data
+    - sensor_id: "0078491766"   # TPMS ID for front wheel
+      decoder: 275  # The decoder needed to capture this data
       mappings:
-        TIRE_PRESSURE2:
+        TIREP2:
           source: "pressure_kPa"
-          scale: 6.89476  # Convert kPa to PSI
           round: 1
           type: "float"
-        TIRE_TEMP2:
+        TIRET2:
           source: "temperature_C"
-          offset: -40
           round: 0
           type: "float"
-        TIRE_BATOK2:
-          source: "battery_V"
-          threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
+        TIREB2:
+          source: "battery_ok"
           type: "bool"
-    - sensor_id: 11223   # TPMS ID for front wheel
-      decoder: 234  # The decoder needed to capture this data
+    - sensor_id: "0078473B61"   # TPMS ID for front wheel
+      decoder: 275  # The decoder needed to capture this data
       mappings:
-        TIRE_PRESSURE3:
+        TIREP3:
           source: "pressure_kPa"
-          scale: 6.89476  # Convert kPa to PSI
           round: 1
           type: "float"
-        TIRE_TEMP3:
+        TIRET3:
           source: "temperature_C"
-          offset: -40
           round: 0
           type: "float"
-        TIRE_BATOK3:
-          source: "battery_V"
-          threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
+        TIREB3:
+          source: "battery_ok"
           type: "bool"
+
