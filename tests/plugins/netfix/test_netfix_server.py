@@ -25,6 +25,7 @@ import logging
 def test_value_write(plugin,database):
     plugin.sock.sendall("@wALT;2500\n".encode())
     res = plugin.sock.recv(1024).decode()
+    time.sleep(0.01)
     assert res == "@wALT;2500.0;00000\n"
     x = database.read("ALT")
     assert x == (2500.0, False, False, False, False, False)
