@@ -147,13 +147,13 @@ def test_process_json_valid(mock_plugin):
 
     # Ensure database writes were triggered correctly
     mock_plugin.db_write.assert_any_call(
-        "TIRE_PRESSURE1", pytest.approx(250 * 0.145032632, 0.1)
+        "TIREP1", pytest.approx(250 * 0.145032632, 0.1)
     )  # PSI conversion
     mock_plugin.db_write.assert_any_call(
-        "TIRE_TEMP1", (30 - 40)
+        "TIRET1", (30 - 40)
     )  # Temperature offset applied
     mock_plugin.db_write.assert_any_call(
-        "TIRE_BATOK1", 1
+        "TIREB1", 1
     )  # Battery voltage > 2.0 should set to 1 (OK)
 
 

@@ -23,17 +23,17 @@ def rtl_433_config():
       - sensor_id: 12345   # TPMS ID for front wheel
         decoder: 203  # The decoder needed to capture this data
         mappings:
-          TIRE_PRESSURE1:
+          TIREP1:
             source: "pressure_kPa"
             scale: 0.145032632
             round: 1
             type: "float"
-          TIRE_TEMP1:
+          TIRET1:
             source: "temperature_C"
             offset: -40
             round: 0
             type: "float"
-          TIRE_BATOK1:
+          TIREB1:
             source: "battery_V"
             threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
             type: "bool"

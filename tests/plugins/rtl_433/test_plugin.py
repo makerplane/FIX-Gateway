@@ -46,12 +46,12 @@ def test_data_processing(plugin, database):
     # plugin.mock_process.process_json(json_data, plugin.pl)
     # print(f"#1: {plugin.pl.get_status()}")
     time.sleep(0.01)
-    # print(f"#2: {plugin.pl.get_status()} pressure: {database.read('TIRE_PRESSURE1')}")
+    # print(f"#2: {plugin.pl.get_status()} pressure: {database.read('TIREP1')}")
     # Verify database updates
-    assert database.read("TIRE_PRESSURE1")[0] == pytest.approx(150 * 0.145032632, 0.1)
-    assert database.read("TIRE_TEMP1")[0] == (30 - 40)  # Temperature offset applied
+    assert database.read("TIREP1")[0] == pytest.approx(150 * 0.145032632, 0.1)
+    assert database.read("TIRET1")[0] == (30 - 40)  # Temperature offset applied
     assert (
-        database.read("TIRE_BATOK1")[0] == 1
+        database.read("TIREB1")[0] == 1
     )  # Battery voltage > 2.0 should set to 1 (OK)
     plugin.rtl_queue.put(
         json.dumps(
@@ -60,10 +60,10 @@ def test_data_processing(plugin, database):
         + "\n"
     )
     time.sleep(0.001)
-    assert database.read("TIRE_PRESSURE1")[0] == pytest.approx(250 * 0.145032632, 0.1)
-    assert database.read("TIRE_TEMP1")[0] == (20 - 40)  # Temperature offset applied
+    assert database.read("TIREP1")[0] == pytest.approx(250 * 0.145032632, 0.1)
+    assert database.read("TIRET1")[0] == (20 - 40)  # Temperature offset applied
     assert (
-        database.read("TIRE_BATOK1")[0] == 0
+        database.read("TIREB1")[0] == 0
     )  # Battery voltage > 2.0 should set to 1 (OK)
     assert plugin.pl.get_status()["Devices Seen"][12345] == 2
 
@@ -78,7 +78,7 @@ def test_plugin_shutdown(plugin):
 def test_restart_rtl_433_after_failure(plugin, database):
 
     assert plugin.pl.get_status()["rtl_433 pid"] == 99999
-    psi = database.read("TIRE_PRESSURE1")[0]
+    psi = database.read("TIREP1")[0]
     plugin.fail_event.set()
     plugin.rtl_queue.put(
         json.dumps(
@@ -96,4 +96,4 @@ def test_restart_rtl_433_after_failure(plugin, database):
         + "\n"
     )
     time.sleep(0.001)
-    assert psi != database.read("TIRE_PRESSURE1")[0]
+    assert psi != database.read("TIREP1")[0]

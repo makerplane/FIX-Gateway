@@ -9,7 +9,7 @@ import re
     "replace, value, message",
     [
         (
-            "TIRE_PRESSURE1",
+            "TIREP1",
             "DOESNOTEXIST",
             "'DOESNOTEXIST' is not a valid fixid on line 12, column 13 in file 'test.yaml'",
         ),
@@ -68,7 +68,7 @@ def test_validate_config(rtl_433_config, replace, value, message):
         parent = MagicMock()
         parent.config = config
         parent.config_meta = config_meta
-        parent.db_list.return_value = ["TIRE_PRESSURE1", "TIRE_TEMP1", "TIRE_BATOK1"]
+        parent.db_list.return_value = ["TIREP1", "TIRET1", "TIREB1"]
         validate_config(parent)
 
     assert str(excinfo.value) == message
