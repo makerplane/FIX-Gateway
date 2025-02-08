@@ -67,7 +67,14 @@ parts:
     override-build: |
       craftctl default
       craftctl set version=$(python3 src/fixgw/version.py)
-      find $SNAPCRAFT_PART_INSTALL -type f -exec sh -c 'if file {} | grep -q "ELF"; then patchelf --set-rpath "/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" {}; fi' \;
+      echo "Fixing RPATH for ELF binaries..."
+      find $SNAPCRAFT_PART_INSTALL -type f \( -name "*.so*" -o -perm -111 \) -exec sh -c '
+        if file "$1" | grep -q "ELF"; then
+          echo "Patching RPATH for $1"
+          patchelf --set-rpath "$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" "$1"
+        fi
+      ' sh {} \;
+
     stage-packages:
       - patchelf
       - libxcb-cursor0
@@ -156,7 +163,13 @@ parts:
       snapcraftctl build
       # Ensure correct RPATH (use libc6 from core24)
       patchelf --set-rpath "/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $SNAPCRAFT_PART_INSTALL/usr/bin/rtl_433
-      find $SNAPCRAFT_PART_INSTALL -type f -exec sh -c 'if file {} | grep -q "ELF"; then patchelf --set-rpath "/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" {}; fi' \;
+      echo "Fixing RPATH for ELF binaries..."
+      find $SNAPCRAFT_PART_INSTALL -type f \( -name "*.so*" -o -perm -111 \) -exec sh -c '
+        if file "$1" | grep -q "ELF"; then
+          echo "Patching RPATH for $1"
+          patchelf --set-rpath "$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" "$1"
+        fi
+      ' sh {} \;
     override-prime: |
       set -eu
       craftctl default
