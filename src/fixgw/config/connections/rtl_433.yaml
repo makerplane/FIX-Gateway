@@ -5,7 +5,7 @@ rtl_433:
   rtl_device: 0
   #simulate: true
   sensors:
-    - sensor_id: "007847C1A7"   # TPMS ID for front wheel
+    - sensor_id: 2018052400   # TPMS ID for front wheel
       decoder: 275  # The decoder needed to capture this data
       mappings:
         TIREP1:
@@ -22,7 +22,7 @@ rtl_433:
           source: "battery_ok"
           #threshold: 2.0  # Battery OK if voltage > 2.0 (1 = OK, 0 = Low)
           type: "bool"
-    - sensor_id: "0078491766"   # TPMS ID for front wheel
+    - sensor_id: 2017934177   # TPMS ID for front wheel
       decoder: 275  # The decoder needed to capture this data
       mappings:
         TIREP2:
@@ -36,7 +36,7 @@ rtl_433:
         TIREB2:
           source: "battery_ok"
           type: "bool"
-    - sensor_id: "0078473B61"   # TPMS ID for front wheel
+    - sensor_id: 2017968551   # TPMS ID for front wheel
       decoder: 275  # The decoder needed to capture this data
       mappings:
         TIREP3:
