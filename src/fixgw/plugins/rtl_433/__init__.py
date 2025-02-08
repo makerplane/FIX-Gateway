@@ -147,7 +147,8 @@ def map_data(json_data, parent):
     """Map rtl_433 JSON data to application fixids based on YAML config."""
     sensor_id = json_data.get("id")
     protocol = json_data.get("protocol")
-    sid = f"{protocol}: {sensor_id}"
+    model = json_data.get("model", "unknown")
+    sid = f"{protocol}/{model}/{sensor_id}"
     if sid not in parent.status["Devices Seen"]:
         parent.status["Devices Seen"][sid] = 1
     else:
