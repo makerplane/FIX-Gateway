@@ -37,7 +37,7 @@ def test_data_processing(plugin, database):
     """Simulate rtl_433 JSON input and verify correct fixid values are written to the database."""
     plugin.rtl_queue.put(
         json.dumps(
-            {"protocol": 203,"id": 12345, "pressure_kPa": 150, "temperature_C": 30, "battery_V": 2.5}
+            {"protocol": 203, "model": "Test", "id": 12345, "pressure_kPa": 150, "temperature_C": 30, "battery_V": 2.5}
         )
         + "\n"
     )
@@ -55,7 +55,7 @@ def test_data_processing(plugin, database):
     )  # Battery voltage > 2.0 should set to 1 (OK)
     plugin.rtl_queue.put(
         json.dumps(
-            {"protocol": 203, "id": 12345, "pressure_kPa": 250, "temperature_C": 20, "battery_V": 1.5}
+            {"protocol": 203, "model": "Test", "id": 12345, "pressure_kPa": 250, "temperature_C": 20, "battery_V": 1.5}
         )
         + "\n"
     )
@@ -65,7 +65,7 @@ def test_data_processing(plugin, database):
     assert (
         database.read("TIREB1")[0] == 0
     )  # Battery voltage > 2.0 should set to 1 (OK)
-    assert plugin.pl.get_status()["Devices Seen"]["203: 12345"] == 2
+    assert plugin.pl.get_status()["Devices Seen"]["203/Test/12345"] == 2
 
 
 def test_plugin_shutdown(plugin):
