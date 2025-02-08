@@ -67,11 +67,11 @@ parts:
     override-build: |
       craftctl default
       craftctl set version=$(python3 src/fixgw/version.py)
+      find $SNAPCRAFT_PART_INSTALL -type f -exec sh -c 'if file {} | grep -q "ELF"; then patchelf --set-rpath "/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" {}; fi' \;
     stage-packages:
+      - patchelf
       - libxcb-cursor0
       - libarchive13t64
-      - cmake
-      - build-essential
       - python3.12-minimal
       - libpython3.12-minimal
       - libpython3.12-stdlib
@@ -82,19 +82,11 @@ parts:
       - python3-psutil
       - python3-pyqt6
       - libblas3
-      - libc6
       - liblapack3
       - python3-packaging
-      - libc6-dev
-      - libblas-dev
-      - liblapack-dev
-      - libopenblas-dev
-      - python3-dev
-      - libhdf5-serial-dev
       - python3-tables
       - gcc
       - g++
-      - libhdf5-dev
       - pkg-config
       - bzip2
       - lzop
@@ -104,13 +96,27 @@ parts:
       - libxkbcommon0
       - fonts-dejavu-core
       - fonts-dejavu-extra
+      - libopenblas0
+      - libhdf5-103-1t64
+#      - librtlsdr2
+#      - libusb-1.0-0
     build-environment:
       - PARTS_PYTHON_INTERPRETER: python3.12
 #      - PIP_VERBOSE: 3
       - PARTS_PYTHON_VENV_ARGS: --system-site-packages
       - PIP_NO_UPGRADE: "1"
     build-packages:
+      - file
       - execstack
+      - libc6-dev
+      - cmake
+      - build-essential
+      - libblas-dev
+      - liblapack-dev
+      - libopenblas-dev
+      - python3-dev
+      - libhdf5-dev
+
 # Remove exec stack bit from files causing manual review
     override-prime: |
       set -eu
@@ -130,20 +136,33 @@ parts:
     source-depth: 1
     source-type: git
     build-packages:
+      - file
       - build-essential
       - cmake
       - librtlsdr-dev
       - libusb-1.0-0-dev
       - pkg-config
       - git
+      - libc6-dev
     stage-packages:
       - librtlsdr2
       - libusb-1.0-0
+      - patchelf
     cmake-parameters:
       - -DCMAKE_INSTALL_PREFIX=/usr
     build-attributes:
       - enable-patchelf
-
+    override-build: |
+      snapcraftctl build
+      # Ensure correct RPATH (use libc6 from core24)
+      patchelf --set-rpath "/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $SNAPCRAFT_PART_INSTALL/usr/bin/rtl_433
+      find $SNAPCRAFT_PART_INSTALL -type f -exec sh -c 'if file {} | grep -q "ELF"; then patchelf --set-rpath "/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" {}; fi' \;
+    override-prime: |
+      set -eu
+      craftctl default
+      # Ensure libc6 is removed (use core24's libc6 instead)
+      rm -rf $SNAPCRAFT_PRIME/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libc.so.*
+      rm -rf $SNAPCRAFT_PRIME/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libc.so.*
 apps:
   rtl-433:
     command: usr/bin/rtl_433
@@ -177,6 +196,7 @@ apps:
       - desktop-legacy
       - wayland
       - x11
+      - home
 
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$SNAP/usr/local/bin:$PATH
