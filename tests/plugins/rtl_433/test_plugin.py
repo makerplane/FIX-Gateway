@@ -67,6 +67,28 @@ def test_data_processing(plugin, database):
     )  # Battery voltage > 2.0 should set to 1 (OK)
     assert plugin.pl.get_status()["Devices Seen"]["203/Test/12345"] == 2
 
+    # Verify wrong protocol is detected
+    plugin.rtl_queue.put(
+        json.dumps(
+            {"protocol": 204, "model": "Test", "id": 12345, "pressure_kPa": 270, "temperature_C": 20, "battery_V": 1.5}
+        )
+        + "\n"
+    )
+
+    time.sleep(0.001)
+    assert database.read("TIREP1")[0] == pytest.approx(250 * 0.145032632, 0.1)
+
+    # testing a branch where json does not hav pressure_kPa
+    plugin.rtl_queue.put(
+        json.dumps(
+            {"protocol": 203, "model": "Test", "id": 12345, "pressure_PSI": 200, "temperature_C": 20, "battery_V": 1.5}
+        )
+        + "\n"
+    )
+
+    time.sleep(0.001)
+    assert plugin.pl.get_status()["Devices Seen"]["203/Test/12345"] == 3
+
 
 def test_plugin_shutdown(plugin):
     """Ensure that rtl_433 is properly terminated on shutdown."""
