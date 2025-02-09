@@ -4,7 +4,7 @@ from collections import namedtuple
 import yaml
 import time
 import json
-
+import logging
 
 def test_plugin_startup(plugin):
     """Test that the plugin starts correctly and assigns a PID."""
@@ -96,18 +96,31 @@ def test_plugin_shutdown(plugin):
     time.sleep(0.1)  # Give time for shutdown
     assert plugin.pl.status["rtl_433 pid"] is None, "rtl_433 process did not terminate"
 
+def test_plugin_shutdown_failure(plugin):
+    """Ensure that rtl_433 is raises exception if it takes too long to stop."""
+    plugin.fail_event.set()
+    with pytest.raises(Exception) as excinfo:
+        plugin.pl.stop()
+        time.sleep(4)
 
-def test_restart_rtl_433_after_failure(plugin, database):
+def test_restart_rtl_433_after_failure(plugin, database,caplog):
 
     assert plugin.pl.get_status()["rtl_433 pid"] == 99999
     psi = database.read("TIREP1")[0]
-    plugin.fail_event.set()
-    plugin.rtl_queue.put(
-        json.dumps(
-            {"protocol": 203, "id": 12345, "pressure_kPa": 200, "temperature_C": 20, "battery_V": 2.0}
+
+    with caplog.at_level(logging.WARNING):
+        plugin.fail_event.set()
+        plugin.rtl_queue.put(
+            json.dumps(
+                {"protocol": 203, "id": 12345, "pressure_kPa": 200, "temperature_C": 20, "battery_V": 2.0}
+            )
+            + "\n"
         )
-        + "\n"
-    )
+        time.sleep(1)
+        assert 'fixgw.rtl_433:__init__.py:269 rtl_433 exited unexpectedly. Restarting...' in caplog.text
+
+    plugin.fail_event.clear()
+    time.sleep(1)
 
     # Send extra message for a sensor we do not care about
     # To cover a branch

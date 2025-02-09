@@ -258,8 +258,6 @@ class MainThread(threading.Thread):
                     )  # 1-second timeout
                     if ready:
                         line = self.process.stdout.readline()
-                        # Not sure how to make a test for this so it does not show on coverage
-                        # I'm not even sure if we can get here
                         if not line and not self.getout:
                             self.parent.log.warning(
                                 "rtl_433 exited unexpectedly. Restarting..."

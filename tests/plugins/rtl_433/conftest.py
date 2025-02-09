@@ -63,10 +63,12 @@ def plugin(rtl_433_config, database):
 
         # Make stdout.readline() read from the queue
         def fake_readline():
+            if fail_event.is_set():
+                return ''
             try:
                 return rtl_queue.get(timeout=1)  # Blocks if empty
             except queue.Empty:
-                return ""  # Simulates no data
+                return ''  # Simulates no data
 
         mock_process.stdout.readline = MagicMock(side_effect=fake_readline)
 
@@ -86,6 +88,15 @@ def plugin(rtl_433_config, database):
             return 1 if fail_event.is_set() else None
 
         mock_process.poll.side_effect = fake_poll
+
+        # Mock process termination
+        def fake_terminate():
+            if fail_event.is_set():
+                time.sleep(3)  # Simulate hanging for 3 seconds
+            # Simulate process terminating
+            mock_process.poll.side_effect = lambda: 1  # Now it returns 1 (exited)
+
+        mock_process.terminate = MagicMock(side_effect=fake_terminate)
 
         # Make subprocess.Popen return the mock process
         mock_popen.return_value = mock_process
