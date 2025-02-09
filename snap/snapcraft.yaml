@@ -10,7 +10,8 @@ description: |
     sudo snap set system experimental.user-daemons=true
     
     Release Notes:
-    * enabled client GUI using fixgateway.client --gui
+    * Drop support for armhf
+    * Enabled client GUI using fixgateway.client --gui
     * Updated to core24 and python 3.12
 
     Many new plugins that need your help testing:
@@ -40,7 +41,6 @@ website: https://makerplane.org/
 
 platforms:
   arm64:
-  armhf:
   amd64:
 
 base: core24
