@@ -117,7 +117,7 @@ def test_restart_rtl_433_after_failure(plugin, database,caplog):
             + "\n"
         )
         time.sleep(1)
-        assert 'fixgw.rtl_433:__init__.py:269 rtl_433 exited unexpectedly. Restarting...' in caplog.text
+        assert 'rtl_433 exited unexpectedly. Restarting...' in caplog.text
 
     plugin.fail_event.clear()
     time.sleep(1)
