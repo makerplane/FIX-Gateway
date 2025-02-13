@@ -12,9 +12,10 @@ description: |
     Release Notes:
     * Drop support for armhf
     * Enabled client GUI using fixgateway.client --gui
-    * Updated to core24 and python 3.12
+      The GUI is not stable but usable
 
     Many new plugins that need your help testing:
+    * rtl_433, collect data from wirelss sensors such as TPMS
     * dynon, collects AHRS data from Dynon D10/D100
     * gpsd, obtains GPS data from gpsd network daemon
     * mgl_serial RS-232 protocol, currently lacks custom configuration
