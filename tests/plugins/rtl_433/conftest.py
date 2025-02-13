@@ -64,11 +64,11 @@ def plugin(rtl_433_config, database):
         # Make stdout.readline() read from the queue
         def fake_readline():
             if fail_event.is_set():
-                return ''
+                return ""
             try:
                 return rtl_queue.get(timeout=1)  # Blocks if empty
             except queue.Empty:
-                return ''  # Simulates no data
+                return ""  # Simulates no data
 
         mock_process.stdout.readline = MagicMock(side_effect=fake_readline)
 

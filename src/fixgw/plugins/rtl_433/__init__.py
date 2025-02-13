@@ -155,7 +155,7 @@ def map_data(json_data, parent):
         parent.status["Devices Seen"][sid] += 1
     for sensor in parent.config["sensors"]:  # pragma: no branch
         if sensor["sensor_id"] == sensor_id:
-            if sensor['decoder'] != protocol:
+            if sensor["decoder"] != protocol:
                 continue
             mappings = sensor["mappings"]
             for fixid, rules in mappings.items():  # pragma: no branch
@@ -187,7 +187,17 @@ def start_rtl_433(parent, simulate=False, device=0, frequency=433920000, decoder
     if simulate:
         return None  # Indicate simulation mode
     rtl_433_path = get_rtl_433_path()
-    command = [rtl_433_path, "-d", str(device), "-f", str(frequency), "-F", "json", "-M", "protocol" ]
+    command = [
+        rtl_433_path,
+        "-d",
+        str(device),
+        "-f",
+        str(frequency),
+        "-F",
+        "json",
+        "-M",
+        "protocol",
+    ]
     for decoder in decoders:
         command.extend(["-R", str(decoder)])
     process = subprocess.Popen(

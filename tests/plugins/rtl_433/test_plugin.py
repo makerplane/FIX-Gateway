@@ -6,6 +6,7 @@ import time
 import json
 import logging
 
+
 def test_plugin_startup(plugin):
     """Test that the plugin starts correctly and assigns a PID."""
     status = plugin.pl.get_status()
@@ -25,7 +26,19 @@ def test_start_rtl_called_correctly(plugin, rtl_433_config):
     expected_decoders = [sensor["decoder"] for sensor in plugin.config["sensors"]]
 
     plugin.mock_popen.assert_called_once_with(
-        ["rtl_433", "-d", "0", "-f", "433920000", "-F", "json","-M","protocol","-R", "203"],
+        [
+            "rtl_433",
+            "-d",
+            "0",
+            "-f",
+            "433920000",
+            "-F",
+            "json",
+            "-M",
+            "protocol",
+            "-R",
+            "203",
+        ],
         stdout=-1,
         stderr=-1,
         text=True,
@@ -37,7 +50,14 @@ def test_data_processing(plugin, database):
     """Simulate rtl_433 JSON input and verify correct fixid values are written to the database."""
     plugin.rtl_queue.put(
         json.dumps(
-            {"protocol": 203, "model": "Test", "id": 12345, "pressure_kPa": 150, "temperature_C": 30, "battery_V": 2.5}
+            {
+                "protocol": 203,
+                "model": "Test",
+                "id": 12345,
+                "pressure_kPa": 150,
+                "temperature_C": 30,
+                "battery_V": 2.5,
+            }
         )
         + "\n"
     )
@@ -50,27 +70,37 @@ def test_data_processing(plugin, database):
     # Verify database updates
     assert database.read("TIREP1")[0] == pytest.approx(150 * 0.145032632, 0.1)
     assert database.read("TIRET1")[0] == (30 - 40)  # Temperature offset applied
-    assert (
-        database.read("TIREB1")[0] == 1
-    )  # Battery voltage > 2.0 should set to 1 (OK)
+    assert database.read("TIREB1")[0] == 1  # Battery voltage > 2.0 should set to 1 (OK)
     plugin.rtl_queue.put(
         json.dumps(
-            {"protocol": 203, "model": "Test", "id": 12345, "pressure_kPa": 250, "temperature_C": 20, "battery_V": 1.5}
+            {
+                "protocol": 203,
+                "model": "Test",
+                "id": 12345,
+                "pressure_kPa": 250,
+                "temperature_C": 20,
+                "battery_V": 1.5,
+            }
         )
         + "\n"
     )
     time.sleep(0.001)
     assert database.read("TIREP1")[0] == pytest.approx(250 * 0.145032632, 0.1)
     assert database.read("TIRET1")[0] == (20 - 40)  # Temperature offset applied
-    assert (
-        database.read("TIREB1")[0] == 0
-    )  # Battery voltage > 2.0 should set to 1 (OK)
+    assert database.read("TIREB1")[0] == 0  # Battery voltage > 2.0 should set to 1 (OK)
     assert plugin.pl.get_status()["Devices Seen"]["203/Test/12345"] == 2
 
     # Verify wrong protocol is detected
     plugin.rtl_queue.put(
         json.dumps(
-            {"protocol": 204, "model": "Test", "id": 12345, "pressure_kPa": 270, "temperature_C": 20, "battery_V": 1.5}
+            {
+                "protocol": 204,
+                "model": "Test",
+                "id": 12345,
+                "pressure_kPa": 270,
+                "temperature_C": 20,
+                "battery_V": 1.5,
+            }
         )
         + "\n"
     )
@@ -81,7 +111,14 @@ def test_data_processing(plugin, database):
     # testing a branch where json does not hav pressure_kPa
     plugin.rtl_queue.put(
         json.dumps(
-            {"protocol": 203, "model": "Test", "id": 12345, "pressure_PSI": 200, "temperature_C": 20, "battery_V": 1.5}
+            {
+                "protocol": 203,
+                "model": "Test",
+                "id": 12345,
+                "pressure_PSI": 200,
+                "temperature_C": 20,
+                "battery_V": 1.5,
+            }
         )
         + "\n"
     )
@@ -96,6 +133,7 @@ def test_plugin_shutdown(plugin):
     time.sleep(0.1)  # Give time for shutdown
     assert plugin.pl.status["rtl_433 pid"] is None, "rtl_433 process did not terminate"
 
+
 def test_plugin_shutdown_failure(plugin):
     """Ensure that rtl_433 is raises exception if it takes too long to stop."""
     plugin.fail_event.set()
@@ -103,7 +141,8 @@ def test_plugin_shutdown_failure(plugin):
         plugin.pl.stop()
         time.sleep(4)
 
-def test_restart_rtl_433_after_failure(plugin, database,caplog):
+
+def test_restart_rtl_433_after_failure(plugin, database, caplog):
 
     assert plugin.pl.get_status()["rtl_433 pid"] == 99999
     psi = database.read("TIREP1")[0]
@@ -112,12 +151,18 @@ def test_restart_rtl_433_after_failure(plugin, database,caplog):
         plugin.fail_event.set()
         plugin.rtl_queue.put(
             json.dumps(
-                {"protocol": 203, "id": 12345, "pressure_kPa": 200, "temperature_C": 20, "battery_V": 2.0}
+                {
+                    "protocol": 203,
+                    "id": 12345,
+                    "pressure_kPa": 200,
+                    "temperature_C": 20,
+                    "battery_V": 2.0,
+                }
             )
             + "\n"
         )
         time.sleep(1)
-        assert 'rtl_433 exited unexpectedly. Restarting...' in caplog.text
+        assert "rtl_433 exited unexpectedly. Restarting..." in caplog.text
 
     plugin.fail_event.clear()
     time.sleep(1)
