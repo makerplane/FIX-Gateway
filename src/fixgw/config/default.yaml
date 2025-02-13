@@ -17,6 +17,7 @@ auto start: true
 # Plugins may overwrite this data as well.
 initialization files:
    - "{CONFIG}/init_data/default.ini"
+   - "{CONFIG}/init_data/tires.ini"
   # - "{CONFIG}/init_data/airplanes/cessna/c170b.ini"
   # - "{CONFIG}/init_data/flight_gear/cessna_172.ini"
   # - "{CONFIG}/init_data/engines/aeromomentum/am13.ini"
@@ -66,7 +67,7 @@ connections:
   - STROM_PI_CONFIG
   - DYNON_CONFIG
   - DEMO_CONFIG
-
+  - RTL_433_CONFIG
 # Logging configuration - See Python logging.config module documenation
 # This is logging for system messages, not system data
 # If you want a Flight Data Recorder, see the file connections/data_recorder.yaml

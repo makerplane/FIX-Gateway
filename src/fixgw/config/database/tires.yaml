@@ -1,0 +1,26 @@
+items:
+- key: TIREPw
+  description: Tire %w Pressure
+  type: float
+  tol: 300000 # 5 minutes
+  units: psi
+  min: 0.0
+  max: 150.0
+  initial: 0.0
+  aux: [Min,Max,lowWarn,highWarn,lowAlarm,highAlarm]
+
+- key: TIRETw
+  description: Tire %w Temperature
+  type: float
+  tol: 300000 # 5 minutes
+  units: degC
+  min: -50.0
+  max: 85.0
+  initial: 0.0
+  aux: [highWarn,highAlarm]
+
+- key: TIREBw
+  description: Tire %w Battery Status
+  type: bool
+  tol: 300000 # 5 minutes
+  initial: false

@@ -40,11 +40,12 @@ class PluginFail(Exception):
 # inherit this class and override at least the run function.  See the
 # skel.py file in the plugins directory for a basic example.
 class PluginBase(object):
-    def __init__(self, name, config):
+    def __init__(self, name, config, config_meta):
         self.name = name
         self.log = logging.getLogger("fixgw." + name)
         self.log.info("Initializing")
         self.config = config
+        self.config_meta = config_meta
         self.log.debug("Config: " + str(self.config))
 
         self.running = False

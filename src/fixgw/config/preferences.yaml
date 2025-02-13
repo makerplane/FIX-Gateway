@@ -37,6 +37,7 @@ includes:
   STROM_PI_CONFIG: connections/strom_pi.yaml
   DYNON_CONFIG: connections/dynon.yaml
   DEMO_CONFIG: connections/demo.yaml
+  RTL_433_CONFIG: connections/rtl_433.yaml
 # This section is used to turn things on or off
 enabled:
   QUORUM: false
@@ -69,4 +70,4 @@ enabled:
   STROM_PI: false
   DYNON: false
   DEMO: true
-
+  RTL_433: false

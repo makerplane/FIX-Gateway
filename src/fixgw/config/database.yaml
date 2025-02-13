@@ -17,6 +17,7 @@ entries:
 - include: database/system.yaml
 - include: database/control.yaml
 - include: database/misc.yaml
+- include: database/tires.yaml
 #################################################
 # If you want to modify or add new items place do so in the file
 # database/custom.yaml

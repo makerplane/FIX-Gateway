@@ -112,7 +112,7 @@ class Connection(object):
 
     def __server_specific(self, d):
         if d == "status":
-            s = json.dumps(self.parent.get_status())
+            s = json.dumps(status.get_dict())
             self.queue.put("@xstatus;{}\n".format(s).encode())
         elif d == "kill":
             self.queue.put("@xkill\n".encode())
@@ -550,8 +550,8 @@ class ClientThread(threading.Thread):
 
 
 class Plugin(plugin.PluginBase):
-    def __init__(self, name, config):
-        super(Plugin, self).__init__(name, config)
+    def __init__(self, name, config, config_meta):
+        super(Plugin, self).__init__(name, config, config_meta)
         if config["type"] in ["server", "both"]:
             self.thread = ServerThread(self)
         if config["type"] in ["client", "both"]:

@@ -35,7 +35,7 @@ class CheckButton(QPushButton):
 class DataTable(QTableWidget):
     def __init__(self, parent=None):
         super(DataTable, self).__init__(parent)
-        cols = ["Value", "A", "O", "B", "F", "S", "Description"]
+        cols = ["Value", "Annun", "Old", "Bad", "Fail", "SFail", "Description"]
         self.setColumnCount(len(cols))
         self.setHorizontalHeaderLabels(cols)
         self.horizontalHeader().setSectionResizeMode(

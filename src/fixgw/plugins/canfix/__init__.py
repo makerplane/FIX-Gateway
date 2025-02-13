@@ -144,8 +144,8 @@ class MainThread(threading.Thread):
 
 
 class Plugin(plugin.PluginBase):
-    def __init__(self, name, config):
-        super(Plugin, self).__init__(name, config)
+    def __init__(self, name, config, config_meta):
+        super(Plugin, self).__init__(name, config, config_meta)
         self.interface = config["interface"]
         self.channel = config["channel"]
         self.device = int(config["device"])

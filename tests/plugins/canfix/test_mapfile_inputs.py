@@ -173,14 +173,14 @@ def test_bad_parse(plugin,database):
 
 def test_mapfile_inputs_canid_too_low(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc,cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_canid_low.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -193,14 +193,14 @@ def test_mapfile_inputs_canid_too_low(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_canid_too_high(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc,cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_canid_high.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -213,14 +213,14 @@ def test_mapfile_inputs_canid_too_high(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_canid_missing(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc,cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_canid_missing.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -233,14 +233,14 @@ def test_mapfile_inputs_canid_missing(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_not_dict(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_not_dict.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -252,14 +252,14 @@ def test_mapfile_inputs_not_dict(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_nodespecific_not_bool(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_nodespecific_not_bool.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -272,14 +272,14 @@ def test_mapfile_inputs_nodespecific_not_bool(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_index_high(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_index_high.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -292,14 +292,14 @@ def test_mapfile_inputs_index_high(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_index_low(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_index_low.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -312,14 +312,14 @@ def test_mapfile_inputs_index_low(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_index_missing(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_index_missing.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -332,14 +332,14 @@ def test_mapfile_inputs_index_missing(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_fixid_missing(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_fixid_missing.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -352,14 +352,14 @@ def test_mapfile_inputs_fixid_missing(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_fixid_invalid(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_fixid_invalid.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -372,14 +372,14 @@ def test_mapfile_inputs_fixid_invalid(bad_mapfile_config_data,database):
 
 def test_mapfile_inputs_fixid_invalid_but_allowed(bad_mapfile_config_data,database):
     try:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_bad_inputs_fixid_invalid_but_allowed.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
         #time.sleep(0.03)
@@ -394,14 +394,14 @@ def test_mapfile_inputs_fixid_invalid_but_allowed(bad_mapfile_config_data,databa
 
 def test_mapfile_ignore_fixid_missing_is_invalid(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -414,14 +414,14 @@ def test_mapfile_ignore_fixid_missing_is_invalid(bad_mapfile_config_data,databas
 
 def test_mapfile_ignore_fixid_missing_is_missing(bad_mapfile_config_data,database):
     try:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_ignore_fixid_missing_is_missing.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         time.sleep(0.1)
         pl.stop()
@@ -434,14 +434,14 @@ def test_mapfile_ignore_fixid_missing_is_missing(bad_mapfile_config_data,databas
 
 def test_mapfile_ignore_fixid_missing_is_invalid(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_ignore_fixid_missing_is_invalid.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 
@@ -453,14 +453,14 @@ def test_mapfile_ignore_fixid_missing_is_invalid(bad_mapfile_config_data,databas
 
 def test_mapfile_no_meta_replacements(bad_mapfile_config_data,database):
     with pytest.raises(ValueError) as excinfo:
-        cc = cfg.from_yaml(
+        cc, cc_meta = cfg.from_yaml(
             re.sub(
                 "missing_map_file.yaml",
                 "tests/config/canfix/map_no_meta_replacements.yaml",
                 bad_mapfile_config_data,
-            )
+            ), metadata=True
         )
-        pl = fixgw.plugins.canfix.Plugin("canfix", cc)
+        pl = fixgw.plugins.canfix.Plugin("canfix", cc, cc_meta)
         pl.start()
         pl.stop()
 

@@ -4,7 +4,7 @@ from collections import namedtuple
 import yaml
 import time
 import socket
-
+from fixgw import cfg
 @pytest.fixture
 def db_config():
     return """
@@ -146,9 +146,9 @@ Objects = namedtuple(
 @pytest.fixture
 def plugin(netfix_config,database):
 
-    nc = yaml.safe_load(netfix_config)
+    nc,nc_meta = cfg.from_yaml(netfix_config,metadata=True)
 
-    pl = fixgw.plugins.netfix.Plugin("netfix", nc)
+    pl = fixgw.plugins.netfix.Plugin("netfix", nc, nc_meta)
     pl.start()
     time.sleep(0.1)  # Give plugin a chance to get started
     # Grab a client socket

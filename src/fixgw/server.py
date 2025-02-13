@@ -62,7 +62,7 @@ plugins = {}
 log = None
 
 
-def load_plugin(name, module, config):
+def load_plugin(name, module, config, config_meta):
     plugin_mods[name] = importlib.import_module(module)
     # remove these options from the config before it is
     # sent to the plugin.
@@ -70,7 +70,7 @@ def load_plugin(name, module, config):
         del config[each]
     # Add some global information to the config
     config["CONFIGPATH"] = config_path
-    plugins[name] = plugin_mods[name].Plugin(name, config)
+    plugins[name] = plugin_mods[name].Plugin(name, config, config_meta)
 
 
 # This function recursively walks the given directory in the installed
@@ -199,7 +199,7 @@ def main_setup():
             custom = yaml.safe_load(cf)
         merge_dict(preferences, custom)
 
-    config = cfg.from_yaml(config_file, preferences=preferences)
+    config,config_meta = cfg.from_yaml(config_file, preferences=preferences, metadata=True)
 
     # If running under systemd
     if environ.get("INVOCATION_ID", False):
@@ -354,7 +354,7 @@ def main_setup():
             if load:
                 module = config["connections"][each]["module"]
                 try:
-                    load_plugin(each, module, config["connections"][each])
+                    load_plugin(each, module, config["connections"][each], config_meta["connections"][each])
                 except Exception as e:
                     logging.critical(
                         "Unable to load module - " + module + ": " + str(e)

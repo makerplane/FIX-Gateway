@@ -30,7 +30,6 @@ __status = None
 class Status:
     def __init__(self, plugins, config_status):
         self.plugins = plugins
-        print(database)
         self.db_item_count = len(database.listkeys())
         self.config_status = config_status
 

@@ -49,8 +49,8 @@ class MainThread(threading.Thread):
 
 
 class Plugin(plugin.PluginBase):
-    def __init__(self, name, config):
-        super(Plugin, self).__init__(name, config)
+    def __init__(self, name, config, config_meta):
+        super(Plugin, self).__init__(name, config, config_meta)
         self.thread = MainThread(self)
         self.status = OrderedDict()
 
@@ -64,7 +64,7 @@ class Plugin(plugin.PluginBase):
     def stop(self):
         self.thread.stop()
         if self.thread.is_alive():
-            self.thread.join(1.0)
+            self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
 

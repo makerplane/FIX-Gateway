@@ -65,8 +65,8 @@ class MainThread(threading.Thread):
 
 
 class Plugin(plugin.PluginBase):
-    def __init__(self, name, config):
-        super(Plugin, self).__init__(name, config)
+    def __init__(self, name, config, config_meta):
+        super(Plugin, self).__init__(name, config, config_meta)
         if not config["rais_directory"] in sys.path:
             sys.path.append(config["rais_directory"])
         self.thread = MainThread(self)

@@ -19,7 +19,7 @@ import io
 import time
 import yaml
 import fixgw.database as database
-
+from fixgw import cfg
 
 db_config = """
 variables:
@@ -214,10 +214,10 @@ class TestComputePlugin(unittest.TestCase):
         sf = io.StringIO(db_config)
         database.init(sf)
 
-        cc = yaml.safe_load(config)
+        cc, cc_meta = cfg.from_yaml(config, metadata=True)
         import fixgw.plugins.compute
 
-        self.pl = fixgw.plugins.compute.Plugin("compute", cc)
+        self.pl = fixgw.plugins.compute.Plugin("compute", cc, cc_meta)
         self.pl.start()
         time.sleep(0.1)  # Give plugin a chance to get started
 
