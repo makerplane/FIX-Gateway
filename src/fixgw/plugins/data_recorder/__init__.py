@@ -31,14 +31,18 @@ class MainThread(threading.Thread):
             # If writing is stalled, continue on
             if (start - time.monotonic()) > 0.125:
                 break
-        self.data[key] = [
-            value[0],
-            int(value[1]),
-            int(value[2]),
-            int(value[3]),
-            int(value[4]),
-            int(value[5]),
-        ]
+        # Setting aux data can land us here
+        # Playback does not support playing back aux data
+        # So for now we ignore aux data changes
+        if isinstance(value, tuple):
+            self.data[key] = [
+                value[0],
+                int(value[1]),
+                int(value[2]),
+                int(value[3]),
+                int(value[4]),
+                int(value[5]),
+            ]
 
     def get_all_data(self, callbacks=False):
         # Create callbacks for defined keys
