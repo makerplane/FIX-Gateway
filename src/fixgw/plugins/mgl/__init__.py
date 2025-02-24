@@ -78,7 +78,7 @@ class Plugin(plugin.PluginBase):
         x["CAN Channel"] = self.channel
         x["Received Frames"] = self.recvcount
         x["Wanted Frames"] = self.wantcount
-        x["Sent Frames"] = self.mapping.sendcount
+        #x["Sent Frames"] = self.mapping.sendcount
         x["Error Count"] = self.errorcount
         return x
 
