@@ -41,10 +41,10 @@
 | src/fixgw/plugins/ifly/\_\_init\_\_.py                           |       64 |       64 |       24 |        0 |      0% |    18-136 |
 | src/fixgw/plugins/mavlink/Mav.py                                 |      310 |      310 |      160 |        0 |      0% |    18-639 |
 | src/fixgw/plugins/mavlink/\_\_init\_\_.py                        |       84 |       84 |       12 |        0 |      0% |    28-138 |
-| src/fixgw/plugins/megasquirt/\_\_init\_\_.py                     |       36 |       36 |        6 |        0 |      0% |     20-72 |
+| src/fixgw/plugins/megasquirt/\_\_init\_\_.py                     |       35 |       35 |        6 |        0 |      0% |     20-72 |
 | src/fixgw/plugins/megasquirt/megasquirt.py                       |       49 |       49 |       18 |        0 |      0% |      2-73 |
 | src/fixgw/plugins/megasquirt/tables.py                           |        1 |        1 |        0 |        0 |      0% |         1 |
-| src/fixgw/plugins/mgl/\_\_init\_\_.py                            |       40 |       40 |       18 |        0 |      0% |     20-83 |
+| src/fixgw/plugins/mgl/\_\_init\_\_.py                            |       39 |       39 |       18 |        0 |      0% |     20-83 |
 | src/fixgw/plugins/mgl/rdac.py                                    |      134 |      134 |       64 |        0 |      0% |     2-245 |
 | src/fixgw/plugins/mgl/tables.py                                  |        1 |        1 |        0 |        0 |      0% |         1 |
 | src/fixgw/plugins/mgl\_serial/\_\_init\_\_.py                    |       89 |       89 |       28 |        0 |      0% |    21-134 |
@@ -78,7 +78,7 @@
 | src/fixgw/server.py                                              |      267 |      224 |      108 |        1 |     13% |23-24, 66-73, 80-124, 128, 143-371, 375-402, 406-455, 460-461 |
 | src/fixgw/status.py                                              |       63 |        0 |       14 |        0 |    100% |           |
 | src/fixgw/version.py                                             |        2 |        0 |        0 |        0 |    100% |           |
-|                                                        **TOTAL** | **7303** | **5451** | **2252** |   **93** | **26%** |           |
+|                                                        **TOTAL** | **7301** | **5449** | **2252** |   **93** | **26%** |           |
 
 
 ## Setup coverage badge
