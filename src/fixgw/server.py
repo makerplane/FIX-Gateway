@@ -327,6 +327,8 @@ def main_setup():
                             "port": "3490",
                             "buffer_size": 1024,
                         },
+                        # TODO Need actual config_meta
+                        {},
                     )
                     load_plugin(
                         "data_playback",
@@ -337,6 +339,9 @@ def main_setup():
                             "files": file_list,
                             "start_time": args.playback_start_time,
                         },
+                        # TODO Need actual config_meta here once
+                        # the playback plugin starts using it
+                        {},
                     )
 
                 except Exception as e:
