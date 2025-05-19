@@ -7,6 +7,9 @@
 doc/_*
 .ropeproject/*
 .directory
+config/
+init.marker
+venv.marker
 
 ### Python template
 # Byte-compiled / optimized / DLL files
@@ -21,9 +24,18 @@ __pycache__/
 # C extensions
 *.so
 
+# Virtual environments
+env/
+venv/
+.venv/
+ENV/
+
+# VS Code settings
+.vscode/
+.code-workspace
+
 # Distribution / packaging
 .Python
-env/
 build/
 develop-eggs/
 dist/
