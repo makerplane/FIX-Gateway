@@ -48,13 +48,16 @@ dependencies = [
     "numpy>=1.26.4",
     "tables>=3.9.2",
     "py-gpsd2==0.1.0",
-    "PyQt6>=6.6.1",
+    # "PyQt6>=6.6.1",
     "psutil>=5.9.8"
 ]
 
 [project.optional-dependencies]
 build = [
     "build==1.2.1",
+]
+qt = [
+    "PyQt6>=6.6.1",
 ]
 
 [project.scripts]
