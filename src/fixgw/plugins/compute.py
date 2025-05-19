@@ -38,7 +38,6 @@ def altPressure(inputs, output, require_leader):
     def func(key, value, parent):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
-        nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
         if type(value) != tuple:
@@ -92,7 +91,6 @@ def altDensity(inputs, output, require_leader):
     def func(key, value, parent):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
-        nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
         if type(value) != tuple:
@@ -144,7 +142,6 @@ def averageFunction(inputs, output, require_leader):
     def func(key, value, parent):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
-        nonlocal vals
         o = parent.db_get_item(output)
         # This is to set the aux data in the output to one of the inputs
         if type(value) != tuple:
@@ -193,9 +190,6 @@ def encoderFunction(inputs, output, multiplier, require_leader):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
 
-        nonlocal output
-        nonlocal multiplier
-
         o = parent.db_get_item(output)
         try:
             total = (value[0] * multiplier) + o.value[0]
@@ -215,8 +209,6 @@ def setFunction(inputs, output, val, require_leader):
             return  # This might be a meta data update
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
-        nonlocal output
-        nonlocal val
         if value[0]:
             o = parent.db_get_item(output)
             o.value = val
@@ -236,8 +228,6 @@ def sumFunction(inputs, output, require_leader):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
 
-        nonlocal vals
-        nonlocal output
         vals[key] = value
         arrsum = 0
         flag_old = False
@@ -281,7 +271,6 @@ def maxFunction(inputs, output, require_leader):
     def func(key, value, parent):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
-        nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
         if type(value) != tuple:
@@ -333,7 +322,6 @@ def minFunction(inputs, output, require_leader):
     def func(key, value, parent):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
-        nonlocal vals
         # This is to set the aux data in the output to one of the inputs
         o = parent.db_get_item(output)
         if type(value) != tuple:
@@ -386,7 +374,6 @@ def spanFunction(inputs, output, require_leader):
     def func(key, value, parent):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
-        nonlocal vals
         if type(value) != tuple:
             return  # This might be a meta data update
         vals[key] = value
@@ -457,8 +444,8 @@ def AOAFunction(inputs, output, require_leader):
     def func(key, value, parent):
         if not quorum.leader and require_leader:
             return  # Only the leader can do calculations
-        global AOA_pitch_history, AOA_ias_history, AOA_lift_constant, AOA_acc_history, AOA_vs_history, AOA_heading_history
-        nonlocal vals, AOA_pitch_root, AOA_smooth_min_len, AOA_hist_count
+        global AOA_lift_constant
+        nonlocal AOA_hist_count
         if not isinstance(key, str):
             return
         # This is to set the aux data in the output to one of the inputs

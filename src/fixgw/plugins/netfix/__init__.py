@@ -42,7 +42,6 @@ client_block = defaultdict(set)
 
 # This holds the data and functions that are needed by both connection threads.
 class Connection(object):
-    global client_block
 
     def __init__(self, parent, conn, addr):
         self.parent = parent  # This should point to the plugin object
@@ -473,7 +472,6 @@ class ServerThread(threading.Thread):
 
 
 class ClientThread(threading.Thread):
-    global client_block
 
     def __init__(self, parent):
         super(ClientThread, self).__init__()
