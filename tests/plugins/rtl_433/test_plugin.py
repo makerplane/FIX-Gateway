@@ -84,7 +84,7 @@ def test_data_processing(plugin, database):
         )
         + "\n"
     )
-    time.sleep(0.001)
+    time.sleep(0.01)
     assert database.read("TIREP1")[0] == pytest.approx(250 * 0.145032632, 0.1)
     assert database.read("TIRET1")[0] == (20 - 40)  # Temperature offset applied
     assert database.read("TIREB1")[0] == 0  # Battery voltage > 2.0 should set to 1 (OK)
@@ -105,7 +105,7 @@ def test_data_processing(plugin, database):
         + "\n"
     )
 
-    time.sleep(0.001)
+    time.sleep(0.01)
     assert database.read("TIREP1")[0] == pytest.approx(250 * 0.145032632, 0.1)
 
     # testing a branch where json does not hav pressure_kPa
@@ -123,7 +123,7 @@ def test_data_processing(plugin, database):
         + "\n"
     )
 
-    time.sleep(0.001)
+    time.sleep(0.01)
     assert plugin.pl.get_status()["Devices Seen"]["203/Test/12345"] == 3
 
 
