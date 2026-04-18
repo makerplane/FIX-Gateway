@@ -205,9 +205,9 @@ items:
   tol: 2000
 
 - key: XTRACK
-  description: Cross Track Error
+  description: Signed Cross Track Error (left/right of desired course)
   type: float
-  min: 0.0
+  min: -100.0
   max: 100.0
   units: nM
   initial: 0.0

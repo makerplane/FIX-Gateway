@@ -166,6 +166,60 @@ entries:
   initial: 0.0
   tol: 200
 
+- key: LAT
+  description: Latitude
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: LONG
+  description: Longitude
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: WPLAT
+  description: Waypoint Latitude
+  type: float
+  min: -90.0
+  max: 90.0
+  units: deg
+  initial: 0.0
+  tol: 50000
+
+- key: WPLON
+  description: Waypoint Longitude
+  type: float
+  min: -180.0
+  max: 180.0
+  units: deg
+  initial: 0.0
+  tol: 50000
+
+- key: COURSE
+  description: Selected Course
+  type: float
+  min: 0.0
+  max: 359.9
+  units: deg
+  initial: 0.0
+  tol: 2000
+
+- key: XTRACK
+  description: Cross Track Error
+  type: float
+  min: -100.0
+  max: 100.0
+  units: nM
+  initial: 0.0
+  tol: 2000
+
 """
 
 config = """
@@ -203,6 +257,9 @@ functions:
     #   AOA_max_heading_trend: The maximum difference between the starting samples and ending samples of heading before it's considered 'not straight flight'
     #   AOA_max_pitch_dev: The maximum single sample deviation from the average to be considered 'level flight'
     #   AOA_max_pitch_trend: The maximum difference between the starting samples and ending samples of pitch before it's considered 'not level flight'
+  - function: xte
+    inputs: ["LAT", "LONG", "WPLAT", "WPLON", "COURSE"]
+    output: XTRACK
 """
 
 
@@ -401,6 +458,41 @@ class TestComputePlugin(unittest.TestCase):
         y, a, o, b, f, s = x
         x = (round(y, 2), a, o, b, f, s)
         self.assertEqual(x, (2.59, False, False, False, False, False))
+
+    def test_compute_xte(self):
+        database.write("WPLAT", 0.0)
+        database.write("WPLON", 0.0)
+        database.write("COURSE", 90.0)
+
+        # On-course should produce approximately zero cross-track error.
+        database.write("LAT", 0.0)
+        database.write("LONG", 1.0)
+        x = database.read("XTRACK")
+        self.assertAlmostEqual(x[0], 0.0, places=3)
+        self.assertEqual(x[1:], (False, False, False, False, False))
+
+        # North of an eastbound course should be negative.
+        database.write("LAT", 0.1)
+        database.write("LONG", 1.0)
+        x = database.read("XTRACK")
+        self.assertLess(x[0], 0.0)
+        self.assertAlmostEqual(abs(x[0]), 6.0, delta=0.25)
+
+        # South of an eastbound course should be positive.
+        database.write("LAT", -0.1)
+        database.write("LONG", 1.0)
+        x = database.read("XTRACK")
+        self.assertGreater(x[0], 0.0)
+        self.assertAlmostEqual(abs(x[0]), 6.0, delta=0.25)
+
+    def test_compute_xte_fail(self):
+        database.write("WPLAT", 0.0)
+        database.write("WPLON", 0.0)
+        database.write("LAT", 0.0)
+        database.write("LONG", 1.0)
+        database.write("COURSE", (90.0, False, False, True, False))
+        x = database.read("XTRACK")
+        self.assertEqual(x, (0.0, False, False, False, True, False))
 
 
 if __name__ == "__main__":
