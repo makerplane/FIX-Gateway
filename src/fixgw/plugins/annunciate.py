@@ -104,8 +104,7 @@ class AnnunciateItem(object):
                     )
                 )
             self.cond_value = self.cond_item.dtype(tokens[2])
-        if self.start_bypass is not None:
-            self.start_bypass_latch = True
+        self.start_bypass_latch = self.start_bypass is not None
         self.low_latch = False
         self.high_latch = False
 
@@ -131,7 +130,7 @@ class AnnunciateItem(object):
             b = False
         # We are bypassed
         if b or self.start_bypass_latch:
-            self.item.annunicate = False
+            self.item.annunciate = False
         else:
             if self.low_set_point:
                 lp = self.plugin.db_read(self.low_set_point)
@@ -180,7 +179,8 @@ class Plugin(plugin.PluginBase):
             self.items.append(i)
 
     def stop(self):
-        pass
+        for item in self.items:
+            self.db_callback_del(item.key, item.evaluate)
 
     def get_status(self):
         """The get_status method should return a dict or OrderedDict that
@@ -189,5 +189,3 @@ class Plugin(plugin.PluginBase):
 
 
 # TODO: Add a check for Warns and alarms and annunciate appropriatly
-# TODO: Add tests for this plugin
-# TODO: write stop function to remove all the callbacks
