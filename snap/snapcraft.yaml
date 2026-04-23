@@ -10,7 +10,8 @@ description: |
     sudo snap set system experimental.user-daemons=true
     
     Release Notes:
-    * Drop support for armhf
+    * Bug fixes
+    * Added support for Garmin GNX 375
     * Enabled client GUI using fixgateway.client --gui
       The GUI is not stable but usable
 
@@ -22,6 +23,7 @@ description: |
     * shadin protocol, only supports fuel related messagse from FC-10 fuel computr
     * strom_pi UPS monitoring
     * Flight Data Recoder
+    * Garmin GNX 375
     * Replay FDR data from point in time
     * Mavlink plugin for AHRS/GPS data
     * Megasquirt ECU Plugin
@@ -92,7 +94,6 @@ parts:
       - libblas3
       - liblapack3
       - python3-packaging
-      - python3-tables
       - gcc
       - g++
       - pkg-config
