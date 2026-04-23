@@ -3,21 +3,21 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Coverage for src/fixgw/plugins/rpi_bno055/__init__.py: 0%</title>
-    <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
-    <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
-    <script src="coverage_html_cb_6fb7b396.js" defer></script>
+    <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
+    <link rel="stylesheet" href="style_cb_9ff733b0.css" type="text/css">
+    <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
 </head>
 <body class="pyfile">
 <header>
     <div class="content">
         <h1>
-            <span class="text">Coverage for </span><b>src/fixgw/plugins/rpi_bno055/__init__.py</b>:
+            <span class="text">Coverage for </span><b>src&#8201;/&#8201;fixgw&#8201;/&#8201;plugins&#8201;/&#8201;rpi_bno055&#8201;/&#8201;__init__.py</b>:
             <span class="pc_cov">0%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
             <label for="help_panel_state">
-                <img id="keyboard_icon" src="keybd_closed_cb_ce680311.png" alt="Show/hide keyboard shortcuts">
+                <img id="keyboard_icon" src="keybd_closed_cb_900cfef5.png" alt="Show/hide keyboard shortcuts">
             </label>
             <div id="help_panel">
                 <p class="legend">Shortcuts on this page</p>
@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_4056ccb530ce7cd3___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-19 23:31 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-04-23 14:55 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -126,8 +126,8 @@
     <p class="mis show_mis"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">bno</span> <span class="op">=</span> <span class="nam">BNO055</span><span class="op">.</span><span class="nam">BNO055</span><span class="op">(</span><span class="nam">serial_port</span><span class="op">=</span><span class="str">"/dev/ttyAMA0"</span><span class="op">,</span> <span class="nam">rst</span><span class="op">=</span><span class="num">18</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">self</span><span class="op">.</span><span class="nam">bno</span><span class="op">.</span><span class="nam">begin</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">parent</span><span class="op">.</span><span class="nam">db_write</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">                <span class="str">"ORISYSW"</span><span class="op">,</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">            <span class="op">)</span>  <span class="com"># TODO put 0 to orientation system status but a fail flag are need here.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">                <span class="str">"ORISYSW"</span><span class="op">,</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">            <span class="op">)</span>  <span class="com"># TODO put 0 to orientation system status but a fail flag are need here.</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">            <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span><span class="str">"Failed to initialize BNO055! Is the sensor connected?"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">    <span class="key">def</span> <span class="nam">run</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -173,8 +173,8 @@
     <p class="mis show_mis"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">parent</span><span class="op">.</span><span class="nam">db_write</span><span class="op">(</span><span class="str">"ALONG"</span><span class="op">,</span> <span class="nam">z</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">            <span class="nam">time</span><span class="op">.</span><span class="nam">sleep</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">sleep_time</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">            <span class="nam">sys</span><span class="op">,</span> <span class="nam">gyro</span><span class="op">,</span> <span class="nam">accel</span><span class="op">,</span> <span class="nam">mag</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">bno</span><span class="op">.</span><span class="nam">get_calibration_status</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">            <span class="op">)</span>  <span class="com"># 0 to 3 calibration status, 3 is full calibrated</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">bno</span><span class="op">.</span><span class="nam">get_calibration_status</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">            <span class="op">)</span>  <span class="com"># 0 to 3 calibration status, 3 is full calibrated</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">parent</span><span class="op">.</span><span class="nam">db_write</span><span class="op">(</span><span class="str">"ORISYSW"</span><span class="op">,</span> <span class="nam">sys</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">parent</span><span class="op">.</span><span class="nam">db_write</span><span class="op">(</span><span class="str">"GYROW"</span><span class="op">,</span> <span class="nam">gyro</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">parent</span><span class="op">.</span><span class="nam">db_write</span><span class="op">(</span><span class="str">"ACCELW"</span><span class="op">,</span> <span class="nam">accel</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -228,8 +228,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_4056ccb530ce7cd3___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-19 23:31 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-04-23 14:55 +0000
         </p>
     </div>
 </footer>
