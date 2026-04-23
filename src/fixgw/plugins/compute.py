@@ -24,6 +24,7 @@
 import fixgw.plugin as plugin
 from fixgw.database import read
 import fixgw.quorum as quorum
+import math
 
 # Determine pressure altitude
 # inputs: BARO, ALTMSL
@@ -653,6 +654,112 @@ def abs_wrap(x, mean, wrap):
     return abs(diff)
 
 
+def _radians(degrees):
+    return math.radians(degrees)
+
+
+def _initial_bearing_rad(lat1_deg, lon1_deg, lat2_deg, lon2_deg):
+    lat1 = _radians(lat1_deg)
+    lon1 = _radians(lon1_deg)
+    lat2 = _radians(lat2_deg)
+    lon2 = _radians(lon2_deg)
+    dlon = lon2 - lon1
+    y = math.sin(dlon) * math.cos(lat2)
+    x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(
+        dlon
+    )
+    return math.atan2(y, x)
+
+
+def _great_circle_distance_rad(lat1_deg, lon1_deg, lat2_deg, lon2_deg):
+    lat1 = _radians(lat1_deg)
+    lon1 = _radians(lon1_deg)
+    lat2 = _radians(lat2_deg)
+    lon2 = _radians(lon2_deg)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+    )
+    return 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _normalize_angle_rad(angle):
+    # Normalize to [-pi, pi] for stable trig sign behavior.
+    return (angle + math.pi) % (2 * math.pi) - math.pi
+
+
+def xteFunction(inputs, output, require_leader):
+    """Computes signed cross-track error in nautical miles.
+
+    inputs order:
+      [aircraft_lat, aircraft_lon, waypoint_lat, waypoint_lon, desired_course]
+    desired_course is expected in degrees true.
+    """
+
+    vals = {}
+    for each in inputs:
+        vals[each] = None
+
+    def func(key, value, parent):
+        if type(value) != tuple:
+            return  # This might be a meta data update
+        if not quorum.leader and require_leader:
+            return  # Only the leader can do calculations
+
+        vals[key] = value
+        flag_old = False
+        flag_bad = False
+        flag_fail = False
+        flag_secfail = False
+        for each in vals:
+            if vals[each] is None:
+                return  # We don't have one of each yet
+            if vals[each][2]:
+                flag_old = True
+            if vals[each][3]:
+                flag_bad = True
+            if vals[each][4]:
+                flag_fail = True
+            if vals[each][5]:
+                flag_secfail = True
+
+        o = parent.db_get_item(output)
+        if flag_fail:
+            o.value = 0.0
+            o.fail = True
+            o.bad = flag_bad
+            o.old = flag_old
+            o.secfail = flag_secfail
+            return
+
+        own_lat = vals[inputs[0]][0]
+        own_lon = vals[inputs[1]][0]
+        wp_lat = vals[inputs[2]][0]
+        wp_lon = vals[inputs[3]][0]
+        desired_course_deg = vals[inputs[4]][0]
+
+        if own_lat == wp_lat and own_lon == wp_lon:
+            xte_nm = 0.0
+        else:
+            theta13 = _initial_bearing_rad(wp_lat, wp_lon, own_lat, own_lon)
+            theta12 = _radians(desired_course_deg)
+            delta13 = _great_circle_distance_rad(wp_lat, wp_lon, own_lat, own_lon)
+            angle = _normalize_angle_rad(theta13 - theta12)
+            xte_rad = math.asin(math.sin(delta13) * math.sin(angle))
+            earth_radius_nm = 3440.065
+            xte_nm = xte_rad * earth_radius_nm
+
+        o.value = xte_nm
+        o.fail = False
+        o.bad = flag_bad
+        o.old = flag_old
+        o.secfail = flag_secfail
+
+    return func
+
+
 class Plugin(plugin.PluginBase):
     # def __init__(self, name, config):
     #     super(Plugin, self).__init__(name, config)
@@ -666,6 +773,7 @@ class Plugin(plugin.PluginBase):
             "max": maxFunction,
             "min": minFunction,
             "span": spanFunction,
+            "xte": xteFunction,
             "aoa": AOAFunction,
             "altp": altPressure,
             "altd": altDensity,

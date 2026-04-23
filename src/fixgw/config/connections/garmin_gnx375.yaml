@@ -1,0 +1,11 @@
+garmin_gnx375:
+  load: GARMIN_GNX375
+  module: fixgw.plugins.garmin_gnx375
+  # Serial port connected to GNX 375 RS-232 Out (Aviation Output 1, 9600 8N1)
+  # Raspberry Pi USB-serial adapter: /dev/ttyUSB0
+  # Direct UART on RPi GPIO: /dev/ttyAMA0
+  port: /dev/ttyUSB0
+  baud: 9600
+  # CDI full-scale deflection in nautical miles.
+  # Use 5.0 for en-route GPS, 0.3 for GPS approach.
+  cdi_full_scale_nm: 5.0

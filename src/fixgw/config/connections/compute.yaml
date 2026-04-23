@@ -24,6 +24,9 @@ compute:
     - function: altd
       inputs: ["PALT","TALT","OAT"]
       output: DALT
+    - function: xte
+      inputs: ["LAT", "LONG", "WPLAT", "WPLON", "COURSE"]
+      output: XTRACK
     #   inputs: []
     #   output: x
     # - function: span
