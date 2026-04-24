@@ -96,6 +96,16 @@ Run the debug client:
 ./fixGwClient.py        # console
 ./fixGwClient.py --gui  # GUI client
 ```
+Run tests:
+```bash
+make test
+```
+
+Cleanup to remove the virtual environment and test output:
+```bash
+make clean
+```
+
 
 ## Configuration
 
