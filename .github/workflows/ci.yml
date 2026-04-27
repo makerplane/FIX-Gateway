@@ -18,14 +18,14 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         # This is optional since by default it's to true. The git
         # operations in python-coverage-comment-action utilize the token
         # stored by actions/checkout.
         persist-credentials: true
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
         cache: 'pip'
@@ -53,7 +53,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
         
     - name: Store Pull Request comment to be posted
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
       with:
         # If you use a different name, update COMMENT_ARTIFACT_NAME accordingly
