@@ -21,18 +21,39 @@ import copy
 from fixgw import cfg
 
 __database = {}
+_update_thread = None
+_update_thread_stop = None
 
 
 class UpdateThread(threading.Thread):
-    def __init__(self, func, delay):
+    def __init__(self, func, delay, stop_event=None):
         super(UpdateThread, self).__init__()
         self.delay = delay
         self.func = func
+        self.stop_event = stop_event or threading.Event()
 
     def run(self):
-        while True:
-            time.sleep(self.delay)
+        while not self.stop_event.wait(self.delay):
             self.func()
+
+
+def _stop_update_thread():
+    global _update_thread
+    global _update_thread_stop
+    if _update_thread and _update_thread.is_alive():
+        _update_thread_stop.set()
+        _update_thread.join(timeout=_update_thread.delay + 1.0)
+    _update_thread = None
+    _update_thread_stop = None
+
+
+def _start_update_thread():
+    global _update_thread
+    global _update_thread_stop
+    _update_thread_stop = threading.Event()
+    _update_thread = UpdateThread(update, 1.0, _update_thread_stop)
+    _update_thread.daemon = True
+    _update_thread.start()
 
 
 class db_item(object):
@@ -340,6 +361,7 @@ def init(f):
     global log
     global __database
     global variables
+    _stop_update_thread()
     __database = {}
     variables = {}
     log = logging.getLogger("database")
@@ -363,9 +385,7 @@ def init(f):
         else:
             add_item(entry)
 
-    t = UpdateThread(update, 1.0)
-    t.daemon = True
-    t.start()
+    _start_update_thread()
 
 
 # These are the public functions for interacting with the database
@@ -422,11 +442,6 @@ def callback_del(name, key, function, udata):
 
 # Maintenance Functions
 def update():
-    # If database is not fully loaded do nothing to prevent
-    # exception from 'dictionary changed size during iteration'
-    if 'ZZLOADER' not in __database:
-        log.debug("tol updated attempted before database is fully loaded")
-        return
     for key in __database:
         item = __database[key]
         if item.age > item.tol and item.tol != 0:

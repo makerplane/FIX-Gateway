@@ -87,9 +87,9 @@ addopts = """
 
 [tool.coverage.run]
 relative_files = true
+patch = ["subprocess"]
 
 [tool.coverage.paths]
 source = [
     "src/"
 ]
-

@@ -19,6 +19,7 @@ import unittest
 # import string
 # import io
 import subprocess
+import sys
 
 # import fixgw
 # import fixgw.server
@@ -34,7 +35,7 @@ class TestProcess(unittest.TestCase):
         """Minimal Process start/stop test"""
         p = subprocess.Popen(
             [
-                "python3",
+                sys.executable,
                 "fixGw.py",
                 "--debug",
                 "--config-file",

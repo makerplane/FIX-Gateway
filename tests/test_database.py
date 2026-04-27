@@ -18,6 +18,9 @@ import unittest
 import io
 import time
 import fixgw.database as database
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 # This is a poorly formatted example of a database configuration file.
@@ -1019,3 +1022,276 @@ if __name__ == "__main__":
 
 # TODO: Test that a blank in TOL will result in no timeout.
 # TODO: Test that we can set the "OLD" flag if the timeout is zero
+
+
+def test_db_item_rejects_unknown_datatype():
+    database.log = MagicMock()
+
+    with pytest.raises(KeyError):
+        database.db_item("BAD", "nonsense")
+
+    database.log.error.assert_called_once_with("Unknown datatype - nonsense")
+
+
+def test_set_aux_value_handles_none_and_invalid_values():
+    item = database.db_item("TEST", "float")
+    item.description = "Test Item"
+    item.init_aux(["Min"])
+    item.min = 0
+    item.max = 10
+    callback = MagicMock()
+    item.callbacks.append(("cb", callback, "udata"))
+    database.log = MagicMock()
+
+    item.set_aux_value("Min", "None")
+    assert item.get_aux_value("Min") is None
+    callback.assert_called_once_with("TEST.Min", None, "udata")
+
+    with pytest.raises(ValueError):
+        item.set_aux_value("Min", "bad-value")
+
+    database.log.error.assert_any_call("Bad Value for aux Min bad-value")
+
+
+def test_send_callbacks_logs_callback_exceptions():
+    item = database.db_item("TEST", "float")
+    item.description = "Test Item"
+    database.log = MagicMock()
+
+    def bad_callback(*_args):
+        raise RuntimeError("boom")
+
+    item.callbacks.append(("bad", bad_callback, "udata"))
+
+    item.send_callbacks()
+
+    database.log.error.assert_called_once()
+    assert "exception: boom" in database.log.error.call_args[0][0]
+
+
+def test_value_tuple_requires_quality_flags():
+    item = database.db_item("TEST", "float")
+
+    with pytest.raises(ValueError, match="Tuple too small for TEST"):
+        item.value = (1.0, True, False)
+
+
+def test_value_without_bounds_hits_min_max_fallback_paths():
+    item = database.db_item("TEST", "float")
+    item.value = 12.5
+    assert item.value == (12.5, False, False, False, False, False)
+
+
+def test_min_max_and_tol_invalid_values_are_logged():
+    item = database.db_item("TEST", "float")
+    item.description = "Test Item"
+    database.log = MagicMock()
+
+    item.min = "bad-min"
+    item.max = "bad-max"
+    item.tol = ""
+    assert item.tol == 0
+    item.tol = "bad-tol"
+
+    database.log.error.assert_any_call("Bad minimum value 'bad-min' given for Test Item")
+    database.log.error.assert_any_call("Bad maximum value 'bad-max' given for Test Item")
+    database.log.error.assert_any_call("Time to live should be an integer for Test Item")
+
+
+def test_old_bad_and_secfail_properties_and_str():
+    item = database.db_item("TEST", "float")
+    item.value = 1.5
+
+    assert item.old is False
+    item.old = True
+    assert item.old is True
+    assert item.bad is False
+    item.bad = True
+    assert item.bad is True
+    item.secfail = True
+    assert item.secfail is False
+    assert item.fail is False
+    assert item.min is None
+    assert item.max is None
+    assert str(item) == "TEST = (1.5, False, False, True, False, True)"
+
+
+def test_add_item_returns_none_for_invalid_entry_type():
+    database.log = MagicMock()
+
+    item = database.add_item({"key": "BAD", "type": "not-a-type"})
+
+    assert item is None
+    database.log.error.assert_any_call("Failure to add entry - BAD")
+
+
+def test_init_without_variables_section_and_missing_variable_logs_error():
+    cfg_text = """
+entries:
+- key: EGTx
+  description: Exhaust Gas Temp %x
+  type: float
+  initial: 0
+- key: ZZLOADER
+  description: Loader
+  type: str
+  initial: Loaded
+"""
+    fake_thread = MagicMock()
+    fake_thread_instance = MagicMock()
+    fake_thread.return_value = fake_thread_instance
+
+    with patch("fixgw.database.cfg.from_yaml", return_value={"entries": [{"key": "EGTx", "description": "Exhaust Gas Temp %x", "type": "float", "initial": 0}, {"key": "ZZLOADER", "description": "Loader", "type": "str", "initial": "Loaded"}]}), patch(
+        "fixgw.database.logging.getLogger", return_value=MagicMock()
+    ) as get_logger, patch("fixgw.database.UpdateThread", fake_thread):
+        database.init(io.StringIO(cfg_text))
+
+    log = get_logger.return_value
+    log.error.assert_called_once_with("Variable x not set for EGTx")
+    fake_thread.assert_called_once()
+    assert fake_thread.call_args[0][0:2] == (database.update, 1.0)
+    assert fake_thread_instance.daemon is True
+    fake_thread_instance.start.assert_called_once()
+
+
+def test_callback_del_logs_when_specific_callback_missing(database):
+    callback = MagicMock()
+
+    database.callback_del("missing", "PITCH", callback, None)
+
+
+def test_missing_aux_value_operations_log_and_raise():
+    item = database.db_item("TEST", "float")
+    item.description = "Test Item"
+    item.init_aux(["Min"])
+    database.log = MagicMock()
+
+    with pytest.raises(KeyError, match="Aux name Max not found for item TEST"):
+        item.set_aux_value("Max", 5)
+
+    with pytest.raises(KeyError):
+        item.get_aux_value("Max")
+
+    database.log.error.assert_any_call("No aux Max for Test Item")
+    database.log.error.assert_any_call("TEST contains aux keys ['Min']")
+
+
+def test_value_tuple_with_secfail_and_invalid_value_logging():
+    item = database.db_item("TEST", "float")
+    item.description = "Test Item"
+    item.value = (2.5, True, False, True, True)
+    assert item.value == (2.5, True, False, False, True, True)
+    item.value = (3.5, False, True, False)
+    assert item.value == (3.5, False, False, True, False, True)
+
+    with pytest.raises(ValueError):
+        item.value = "bad-value"
+
+    database.log.error.assert_called_with("Bad value 'bad-value' given for Test Item")
+
+
+def test_flag_setters_only_callback_on_change():
+    item = database.db_item("TEST", "float")
+    cb = MagicMock()
+    item.callbacks.append(("cb", cb, None))
+    assert item.annunciate is False
+    item.annunciate = False
+    item.old = False
+    item.bad = False
+    item.fail = False
+    item.secfail = False
+    cb.assert_not_called()
+
+    item.annunciate = True
+    item.old = True
+    item.bad = True
+    item.fail = True
+    item.secfail = True
+    assert cb.call_count == 5
+
+
+def test_callback_delete_wildcard_removes_registered_callbacks(database):
+    callback = MagicMock()
+    database.callback_add("cb", "PITCH", callback, None)
+    database.callback_add("cb", "ROLL", callback, None)
+
+    database.callback_del("cb", "*", callback, None)
+
+    assert database.get_raw_item("PITCH").callbacks == []
+    assert database.get_raw_item("ROLL").callbacks == []
+
+
+def test_init_adds_entries_without_variables_section_and_starts_thread():
+    cfg_data = {
+        "entries": [
+            {
+                "key": "ITEM",
+                "description": "Item",
+                "type": "float",
+                "min": 0.0,
+                "max": 10.0,
+                "tol": 1000,
+                "initial": 1.0,
+            },
+            {"key": "ZZLOADER", "description": "Loader", "type": "str", "initial": "Loaded"},
+        ]
+    }
+    fake_thread = MagicMock()
+    fake_thread_instance = MagicMock()
+    fake_thread.return_value = fake_thread_instance
+
+    with patch("fixgw.database.cfg.from_yaml", return_value=cfg_data), patch(
+        "fixgw.database.logging.getLogger", return_value=MagicMock()
+    ), patch("fixgw.database.UpdateThread", fake_thread):
+        database.init(io.StringIO("entries: []"))
+
+    assert "ITEM" in database.listkeys()
+    fake_thread.assert_called_once()
+    assert fake_thread.call_args[0][0:2] == (database.update, 1.0)
+
+
+def test_init_stops_existing_update_thread_before_reinit():
+    old_stop = MagicMock()
+    old_thread = MagicMock()
+    old_thread.is_alive.return_value = True
+    old_thread.delay = 1.0
+    database._update_thread = old_thread
+    database._update_thread_stop = old_stop
+
+    fake_thread = MagicMock()
+    fake_thread_instance = MagicMock()
+    fake_thread.return_value = fake_thread_instance
+    cfg_data = {
+        "entries": [
+            {
+                "key": "ITEM",
+                "description": "Item",
+                "type": "float",
+                "min": 0.0,
+                "max": 10.0,
+                "tol": 1000,
+                "initial": 1.0,
+            },
+            {"key": "ZZLOADER", "description": "Loader", "type": "str", "initial": "Loaded"},
+        ]
+    }
+
+    with patch("fixgw.database.cfg.from_yaml", return_value=cfg_data), patch(
+        "fixgw.database.logging.getLogger", return_value=MagicMock()
+    ), patch("fixgw.database.UpdateThread", fake_thread):
+        database.init(io.StringIO("entries: []"))
+
+    old_stop.set.assert_called_once()
+    old_thread.join.assert_called_once_with(timeout=2.0)
+
+
+def test_getters_and_setters_for_quality_flags(database):
+    item = database.get_raw_item("PITCH")
+    item.fail = True
+    assert item.fail is True
+    item.fail = False
+    assert item.fail is False
+    item.bad = True
+    assert item.bad is True
+    item.old = True
+    assert item.old is True

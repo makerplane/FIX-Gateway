@@ -28,7 +28,7 @@ venv.marker:
 	venv/bin/pip install pytest
 	venv/bin/pip install pytest-qt
 	venv/bin/pip install pytest-env
-	venv/bin/pip install pytest-cov
+	venv/bin/pip install "pytest-cov>=7.0" "coverage[toml]>=7.10.6"
 	touch venv.marker
 	echo -e "\nRun:\nsource venv/bin/activate (you may also need to add '; export DISPLAY=:0' if display errors are encountered)"
 venv: venv.marker
@@ -68,12 +68,17 @@ wheel: init-build
 test: init
 	source venv/bin/activate ; flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
 	source venv/bin/activate ; flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-	venv/bin/pytest
+	venv/bin/python -m pytest
+	@if compgen -G ".coverage.*" > /dev/null; then \
+		venv/bin/python -m coverage combine; \
+	fi
 
 .PHONY: test
 
 clean:
 	rm -rf venv
+	rm -f .coverage .coverage.*
+	rm -rf htmlcov
 	rm -f extras/extras/test_results/*.html
 	rm -f extras/extras/test_results/*.png
 	rm -rf extras/extras/test_results/htmlcov/
