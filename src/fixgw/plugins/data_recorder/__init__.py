@@ -17,25 +17,17 @@ class MainThread(threading.Thread):
         self.config = parent.config
 
         self.data = dict()
-        self.collect = True
+        self.data_lock = threading.Lock()
         self.starttime = time.monotonic()
         self.get_all_data(callbacks=True)
 
     # callback
     def persist(self, key, value, udata=None):
-        # Pause collection while writing and clearing
-        # to ensure data is not lost
-        start = time.monotonic()
-        while not self.collect:
-            time.sleep(0.005)
-            # If writing is stalled, continue on
-            if (start - time.monotonic()) > 0.125:
-                break
         # Setting aux data can land us here
         # Playback does not support playing back aux data
         # So for now we ignore aux data changes
         if isinstance(value, tuple):
-            self.data[key] = [
+            data = [
                 value[0],
                 int(value[1]),
                 int(value[2]),
@@ -43,17 +35,19 @@ class MainThread(threading.Thread):
                 int(value[4]),
                 int(value[5]),
             ]
+            with self.data_lock:
+                self.data[key] = data
 
     def get_all_data(self, callbacks=False):
         # Create callbacks for defined keys
         for key in database.listkeys():
-            if isinstance(self.config["key_prefixes"], str):
+            if self.config["key_prefixes"] == "all":
                 if callbacks:
                     self.parent.db_callback_add(key, self.persist)
                 else:
                     # Get and save data as of now
                     key_data = self.parent.db_read(key)
-                    self.data[key] = [
+                    data = [
                         key_data[0],
                         int(key_data[1]),
                         int(key_data[2]),
@@ -61,7 +55,9 @@ class MainThread(threading.Thread):
                         int(key_data[4]),
                         int(key_data[5]),
                     ]
-            else:
+                    with self.data_lock:
+                        self.data[key] = data
+            elif isinstance(self.config["key_prefixes"], list):
                 for sw in self.config["key_prefixes"]:
                     if key.startswith(sw):
                         if callbacks:
@@ -69,7 +65,7 @@ class MainThread(threading.Thread):
                         else:
                             # Get and save data as of now
                             key_data = self.parent.db_read(key)
-                            self.data[key] = [
+                            data = [
                                 key_data[0],
                                 int(key_data[1]),
                                 int(key_data[2]),
@@ -77,6 +73,8 @@ class MainThread(threading.Thread):
                                 int(key_data[4]),
                                 int(key_data[5]),
                             ]
+                            with self.data_lock:
+                                self.data[key] = data
                         break
         if callbacks:
             self.starttime = time.monotonic()
@@ -116,32 +114,29 @@ class MainThread(threading.Thread):
                             )
                             + "\n"
                         )
-                except:
+                except Exception:
                     # Only log message every 5 minutes, no sense spamming the logs
                     if (freq_loop_time - freq_time) > 300:
                         freq_time = freq_loop_time
-                        self.log.warning(
+                        self.log.exception(
                             f"Unable to write frequency to the file: {filepath}"
                         )
                     # Reset and try to write this on the next loop
                     hour = -1
                 # Get all data for first log entry
                 self.get_all_data(callbacks=False)
-            # Lock collection
-            self.collect = False
+            # Swap buffers so new incoming callbacks belong to the next interval.
+            with self.data_lock:
+                data = self.data
+                self.data = dict()
             try:
                 with open(filepath, "a") as f:
-                    f.write(f"{json.dumps(self.data, separators=(',', ':'))}\n")
-            except:
+                    f.write(f"{json.dumps(data, separators=(',', ':'))}\n")
+            except Exception:
                 # Only log message every 5 minutes, no sense spamming the logs
                 if (log_loop_time - log_time) > 300:
                     log_time = log_loop_time
-                    self.log.warning(f"Unable to write data to the file: {filepath}")
-
-            # Clear data
-            self.data = dict()
-            # Unlock collection
-            self.collect = True
+                    self.log.exception(f"Unable to write data to the file: {filepath}")
             # Wait for remainder of frequency interval
             time.sleep(
                 (self.config["frequency"] / 1000)
