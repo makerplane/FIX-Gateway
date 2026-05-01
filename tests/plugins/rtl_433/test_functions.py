@@ -73,8 +73,9 @@ def test_get_rtl_433_path_snap():
 
 
 @patch("subprocess.Popen")
-def test_start_rtl_433(mock_popen):
+def test_start_rtl_433(mock_popen, monkeypatch):
     """Test that start_rtl_433 calls subprocess.Popen with the correct arguments."""
+    monkeypatch.delenv("SNAP", raising=False)
     mock_process = MagicMock()
     mock_process.pid = 12345  # Fake process ID
     mock_popen.return_value = mock_process

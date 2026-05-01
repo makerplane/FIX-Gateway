@@ -47,7 +47,8 @@ Objects = namedtuple(
 
 
 @pytest.fixture
-def plugin(rtl_433_config, database):
+def plugin(rtl_433_config, database, monkeypatch):
+    monkeypatch.delenv("SNAP", raising=False)
     config, config_meta = cfg.from_yaml(rtl_433_config, metadata=True)
     # Mock the start_rtl_433 function
     with patch("subprocess.Popen") as mock_popen, patch("select.select") as mock_select:
