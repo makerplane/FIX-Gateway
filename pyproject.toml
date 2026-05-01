@@ -87,6 +87,7 @@ addopts = """
 
 [tool.coverage.run]
 relative_files = true
+source = ["fixgw"]
 patch = ["subprocess"]
 
 [tool.coverage.paths]
