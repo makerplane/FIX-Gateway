@@ -34,7 +34,7 @@ jobs:
         sudo apt update
         sudo apt install -y libegl1
         python -m pip install --upgrade pip
-        pip install flake8 pytest pytest-qt pytest-env "pytest-cov>=7.0" "coverage[toml]>=7.10.6"
+        pip install flake8 pytest pytest-qt pytest-env pytest-cov
         pip install -e .[qt]
     - name: Lint with flake8
       run: |
@@ -44,12 +44,7 @@ jobs:
         flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        python -m pytest
-        if compgen -G ".coverage.*" > /dev/null; then
-          python -m coverage combine
-        fi
-        python -m coverage debug data
-        test -f .coverage
+        pytest
 
     - name: Coverage comment
       id: coverage_comment
