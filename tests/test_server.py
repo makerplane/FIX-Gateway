@@ -12,7 +12,7 @@ import fixgw.server as server
 
 
 @pytest.fixture(autouse=True)
-def reset_server_globals():
+def reset_server_globals(monkeypatch):
     old_config_path = server.config_path
     old_preferences = server.preferences
     old_plugin_mods = server.plugin_mods
@@ -26,6 +26,7 @@ def reset_server_globals():
     server.plugins = {}
     server.log = MagicMock()
     server.quorum.leader = True
+    monkeypatch.delenv("INVOCATION_ID", raising=False)
 
     yield
 
