@@ -2,29 +2,84 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/makerplane/FIX-Gateway/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                                             |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
-|------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
-| src/fixgw/\_\_init\_\_.py                        |        1 |        0 |        0 |        0 |    100% |           |
-| src/fixgw/cfg.py                                 |      205 |       15 |      112 |        9 |     89% |213-\>229, 221-223, 237-\>234, 240, 271-279, 288-\>261, 296, 310-316, 341 |
-| src/fixgw/database.py                            |      317 |        0 |       82 |        0 |    100% |           |
-| src/fixgw/netfix/\_\_init\_\_.py                 |      253 |      207 |       70 |        0 |     14% |26-27, 47-57, 60, 66-81, 84-89, 92-114, 117-177, 182, 185, 188, 192-200, 203-205, 209-229, 234-237, 240-241, 244, 248, 251, 254, 257, 260, 263-276, 279-289, 292-295, 298-304, 307-309, 312-314, 317-331, 334-337, 340-343, 346-348 |
-| src/fixgw/plugin.py                              |       46 |        4 |        0 |        0 |     91% |29-30, 69, 93 |
-| src/fixgw/plugins/\_\_init\_\_.py                |        0 |        0 |        0 |        0 |    100% |           |
-| src/fixgw/plugins/annunciate.py                  |      104 |       22 |       46 |       12 |     77% |42, 50, 61, 71-72, 86, 93, 100-101, 117-118, 122, 135-\>143, 138, 143-\>151, 146, 157-166 |
-| src/fixgw/plugins/canfix/\_\_init\_\_.py         |      115 |        9 |       30 |        4 |     91% |117-120, 135, 174-187, 197-\>204, 202-203, 205 |
-| src/fixgw/plugins/canfix/mapping.py              |      262 |       64 |      120 |       10 |     77% |47, 122-\>124, 215-231, 236-284, 291-292, 310-317, 327-345, 360-\>364, 364-\>371, 368-369, 372-378, 394-395, 411, 433, 451, 469 |
-| src/fixgw/plugins/compute.py                     |      574 |      177 |      310 |       49 |     66% |35-80, 88-134, 145, 149-154, 167, 188-202, 208-217, 228, 230, 244, 251-253, 274, 278-283, 299, 325, 329-334, 350, 377, 379, 392, 393-\>399, 400, 447, 451, 457, 491-492, 494-495, 497-498, 500-501, 503-504, 526, 528, 530, 532, 534, 540, 600-602, 625, 635, 637, 642, 644, 651, 653, 707, 709, 720, 722, 726, 744, 787-788, 793, 800, 815 |
-| src/fixgw/plugins/dynon/\_\_init\_\_.py          |       72 |       24 |       18 |        2 |     60% |39-56, 59, 96, 97-\>100, 108-110, 113, 116-120, 123 |
-| src/fixgw/plugins/garmin\_gnx375/\_\_init\_\_.py |      103 |       49 |       34 |        4 |     48% |79-117, 120, 127-135, 142-\>144, 144-\>exit, 154-\>exit, 163, 179-181, 184, 187-191, 194 |
-| src/fixgw/plugins/netfix/\_\_init\_\_.py         |      421 |       74 |      158 |       20 |     78% |28-29, 77, 87-88, 144-\>146, 240-\>273, 252-\>255, 258-\>261, 264-\>267, 270-\>273, 315-316, 321-322, 414, 428-430, 442-445, 477-492, 495-515, 518-528, 531-533, 536-547, 553-\>555, 556, 558, 561-\>563, 564, 567-\>571, 569-\>571, 572-574, 576-577, 580-583 |
-| src/fixgw/plugins/rtl\_433/\_\_init\_\_.py       |      166 |        0 |       80 |        0 |    100% |           |
-| src/fixgw/plugins/stratux/\_\_init\_\_.py        |       61 |       45 |       12 |        0 |     22% |12-19, 23-55, 58, 63-65, 69, 72-76, 79 |
-| src/fixgw/plugins/stratux/gdl90.py               |       33 |        1 |       14 |        1 |     96% |        36 |
-| src/fixgw/plugins/xplane/\_\_init\_\_.py         |       77 |       33 |       30 |        3 |     50% |49-\>48, 68-83, 86-110, 113, 127, 129 |
-| src/fixgw/quorum.py                              |        5 |        0 |        0 |        0 |    100% |           |
-| src/fixgw/server.py                              |      267 |      183 |      108 |        1 |     28% |143-376, 380-407, 411-460, 465-466 |
-| src/fixgw/status.py                              |       63 |       44 |       14 |        2 |     27% |24-25, 32-34, 37-53, 59-68, 72, 78-81, 86, 92-100, 104-106 |
-| **TOTAL**                                        | **3145** |  **951** | **1238** |  **117** | **68%** |           |
+| Name                                                             |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
+|----------------------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
+| src/fixgw/\_\_init\_\_.py                                        |        1 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/cfg.py                                                 |      205 |        0 |      112 |        0 |    100% |           |
+| src/fixgw/client/\_\_init\_\_.py                                 |       52 |        6 |       22 |        5 |     85% |35, 82, 94, 95-\>98, 99-101, 109 |
+| src/fixgw/client/command.py                                      |      167 |      118 |       52 |        4 |     27% |26-38, 52-83, 89, 93-98, 102-113, 121-148, 174-186, 191-204, 208-215, 219, 223, 226 |
+| src/fixgw/client/common.py                                       |       49 |       36 |       24 |        4 |     26% |28-52, 54-60, 63-\>75, 68-72 |
+| src/fixgw/client/connection.py                                   |        6 |        2 |        0 |        0 |     67% |     29-30 |
+| src/fixgw/client/dbItemDialog.py                                 |      149 |       75 |        6 |        2 |     49% |34-37, 47-58, 61-72, 92-108, 158-196 |
+| src/fixgw/client/gui.py                                          |       24 |        8 |        2 |        1 |     65% | 36-44, 51 |
+| src/fixgw/client/simulate.py                                     |        0 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/client/statusModel.py                                  |       44 |        9 |        4 |        1 |     79% |45-\>exit, 51-57, 70, 73 |
+| src/fixgw/client/table.py                                        |       66 |       56 |        4 |        0 |     14% |28-32, 37-96, 99-102 |
+| src/fixgw/client/ui/\_\_init\_\_.py                              |        0 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/client/ui/itemDialog\_ui.py                            |       40 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/client/ui/main\_ui.py                                  |       53 |       49 |        0 |        0 |      8% |14-60, 63-75 |
+| src/fixgw/database.py                                            |      316 |        0 |       82 |        0 |    100% |           |
+| src/fixgw/netfix/QtDb.py                                         |      147 |        0 |       10 |        0 |    100% |           |
+| src/fixgw/netfix/\_\_init\_\_.py                                 |      250 |        0 |       70 |        0 |    100% |           |
+| src/fixgw/netfix/db.py                                           |      434 |        0 |      110 |        0 |    100% |           |
+| src/fixgw/plugin.py                                              |       43 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/\_\_init\_\_.py                                |        0 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/annunciate.py                                  |      104 |        0 |       46 |        0 |    100% |           |
+| src/fixgw/plugins/canfix/\_\_init\_\_.py                         |      115 |        0 |       30 |        0 |    100% |           |
+| src/fixgw/plugins/canfix/mapping.py                              |      262 |        0 |      120 |        0 |    100% |           |
+| src/fixgw/plugins/command.py                                     |      125 |        0 |       30 |        0 |    100% |           |
+| src/fixgw/plugins/compute.py                                     |      571 |        0 |      308 |        0 |    100% |           |
+| src/fixgw/plugins/data\_playback/\_\_init\_\_.py                 |       68 |        0 |       22 |        0 |    100% |           |
+| src/fixgw/plugins/data\_recorder/\_\_init\_\_.py                 |       95 |        0 |       30 |        0 |    100% |           |
+| src/fixgw/plugins/db\_persister/\_\_init\_\_.py                  |       59 |        0 |        8 |        0 |    100% |           |
+| src/fixgw/plugins/demo/\_\_init\_\_.py                           |       66 |        0 |       32 |        2 |     98% |673-\>683, 676-\>674 |
+| src/fixgw/plugins/dimmer.py                                      |       10 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/dynon/\_\_init\_\_.py                          |       71 |        0 |       16 |        0 |    100% |           |
+| src/fixgw/plugins/fgfs/\_\_init\_\_.py                           |      151 |        0 |       44 |        3 |     98% |88-\>exit, 121-\>119, 127-\>125 |
+| src/fixgw/plugins/garmin\_gnx375/\_\_init\_\_.py                 |      103 |        0 |       34 |        0 |    100% |           |
+| src/fixgw/plugins/gpsd/\_\_init\_\_.py                           |       55 |        0 |       10 |        0 |    100% |           |
+| src/fixgw/plugins/grand\_rapids\_eis/\_\_init\_\_.py             |      154 |        0 |       20 |        1 |     99% |   94-\>43 |
+| src/fixgw/plugins/ifly/\_\_init\_\_.py                           |       64 |        0 |       24 |        0 |    100% |           |
+| src/fixgw/plugins/mavlink/Mav.py                                 |      310 |        0 |      160 |       32 |     93% |105-\>108, 108-\>115, 115-\>117, 117-\>120, 167-\>170, 177-\>183, 183-\>189, 189-\>exit, 206-\>exit, 211-\>exit, 230-\>237, 237-\>exit, 257-\>270, 270-\>exit, 276-\>exit, 373-\>exit, 394-\>exit, 418-\>exit, 459-\>461, 461-\>471, 468-\>471, 474-\>479, 488-\>exit, 506-\>517, 509-\>506, 517-\>exit, 524-\>exit, 542-\>549, 549-\>552, 557-\>560, 560-\>exit, 565-\>exit |
+| src/fixgw/plugins/mavlink/\_\_init\_\_.py                        |       84 |        0 |       12 |        0 |    100% |           |
+| src/fixgw/plugins/megasquirt/\_\_init\_\_.py                     |       35 |        0 |        6 |        0 |    100% |           |
+| src/fixgw/plugins/megasquirt/megasquirt.py                       |       49 |        0 |       18 |        1 |     99% |   18-\>20 |
+| src/fixgw/plugins/megasquirt/tables.py                           |        1 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/mgl/\_\_init\_\_.py                            |       39 |        0 |       18 |        2 |     96% |45-\>47, 49-\>53 |
+| src/fixgw/plugins/mgl/rdac.py                                    |      134 |        0 |       64 |        2 |     99% |91-\>100, 169-\>175 |
+| src/fixgw/plugins/mgl/tables.py                                  |        1 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/mgl\_serial/\_\_init\_\_.py                    |       89 |        0 |       28 |        0 |    100% |           |
+| src/fixgw/plugins/netfix/\_\_init\_\_.py                         |      418 |       10 |      158 |       11 |     96% |140-\>142, 236-\>269, 248-\>251, 254-\>257, 260-\>263, 266-\>269, 317-318, 410, 424-426, 438-441, 573, 577-\>exit, 578-\>exit |
+| src/fixgw/plugins/quorum/\_\_init\_\_.py                         |       52 |        0 |       14 |        0 |    100% |           |
+| src/fixgw/plugins/rais/\_\_init\_\_.py                           |       47 |        0 |        8 |        0 |    100% |           |
+| src/fixgw/plugins/rpi\_bmp085/Adafruit\_BMP/BMP085.py            |      139 |      139 |       12 |        0 |      0% |    22-215 |
+| src/fixgw/plugins/rpi\_bmp085/Adafruit\_BMP/\_\_init\_\_.py      |        0 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/rpi\_bmp085/\_\_init\_\_.py                    |       55 |       55 |        6 |        0 |      0% |    24-116 |
+| src/fixgw/plugins/rpi\_bno055/Adafruit\_BNO055/BNO055.py         |      351 |      351 |       48 |        0 |      0% |    23-726 |
+| src/fixgw/plugins/rpi\_bno055/Adafruit\_BNO055/\_\_init\_\_.py   |        0 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/rpi\_bno055/\_\_init\_\_.py                    |       79 |       79 |       16 |        0 |      0% |    24-138 |
+| src/fixgw/plugins/rpi\_button/\_\_init\_\_.py                    |       51 |       51 |       10 |        0 |      0% |    24-116 |
+| src/fixgw/plugins/rpi\_mcp3008/Adafruit\_MCP3008/MCP3008.py      |       33 |       33 |        6 |        0 |      0% |     22-96 |
+| src/fixgw/plugins/rpi\_mcp3008/Adafruit\_MCP3008/\_\_init\_\_.py |        1 |        1 |        0 |        0 |      0% |         1 |
+| src/fixgw/plugins/rpi\_mcp3008/\_\_init\_\_.py                   |       72 |       72 |        8 |        0 |      0% |    24-178 |
+| src/fixgw/plugins/rpi\_rotary\_encoder/\_\_init\_\_.py           |       66 |       66 |       16 |        0 |      0% |    24-162 |
+| src/fixgw/plugins/rpi\_virtualwire/\_\_init\_\_.py               |       75 |       75 |       12 |        0 |      0% |    24-139 |
+| src/fixgw/plugins/rpi\_virtualwire/virtualwire/\_\_init\_\_.py   |        0 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/rpi\_virtualwire/virtualwire/virtualwire.py    |      184 |      184 |       78 |        0 |      0% |    14-376 |
+| src/fixgw/plugins/rtl\_433/\_\_init\_\_.py                       |      166 |        0 |       80 |        0 |    100% |           |
+| src/fixgw/plugins/shadin/\_\_init\_\_.py                         |       73 |        0 |       20 |        0 |    100% |           |
+| src/fixgw/plugins/skel.py                                        |       35 |        0 |        6 |        0 |    100% |           |
+| src/fixgw/plugins/stratux/\_\_init\_\_.py                        |       61 |        0 |       12 |        1 |     99% |   48-\>23 |
+| src/fixgw/plugins/stratux/gdl90.py                               |       33 |        0 |       14 |        0 |    100% |           |
+| src/fixgw/plugins/strom\_pi/\_\_init\_\_.py                      |      116 |        0 |       16 |        3 |     98% |113-\>117, 117-\>131, 118-\>131 |
+| src/fixgw/plugins/system.py                                      |       93 |        0 |       48 |        0 |    100% |           |
+| src/fixgw/plugins/test.py                                        |       27 |        0 |        2 |        0 |    100% |           |
+| src/fixgw/plugins/xplane/\_\_init\_\_.py                         |       86 |        0 |       34 |        2 |     98% |50-\>49, 94-\>113 |
+| src/fixgw/quorum.py                                              |        5 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/server.py                                              |      265 |        2 |      108 |        1 |     99% |   169-170 |
+| src/fixgw/status.py                                              |       63 |        0 |       14 |        0 |    100% |           |
+| src/fixgw/version.py                                             |        2 |        0 |        0 |        0 |    100% |           |
+| **TOTAL**                                                        | **7509** | **1477** | **2324** |   **78** | **81%** |           |
 
 
 ## Setup coverage badge
