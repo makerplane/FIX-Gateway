@@ -75,7 +75,7 @@ class MainThread(threading.Thread):
                             else (
                                 tables.BoolCol()
                                 if entry["type"] == "bool"
-                                else tables.StringCol()
+                                else tables.StringCol(1024)
                             )
                         )
                     ),

@@ -1,9 +1,11 @@
-import pytest
-from unittest.mock import MagicMock, patch, call
-from fixgw.plugins.xplane import MainThread, Plugin
-import socket
 import struct
-import time
+from unittest.mock import MagicMock, call, patch
+
+import pytest
+
+import fixgw.plugin as plugin_base
+import fixgw.plugins.xplane as xplane
+from fixgw.plugins.xplane import MainThread, Plugin
 
 @pytest.fixture
 def mock_parent():
@@ -43,21 +45,72 @@ def test_writedata(mock_parent, main_thread):
     mock_parent.log.debug.assert_called_with("Dunno Index:99")
 
 
-def senddata(self):
-    """Function that sends data to X-Plane"""
-    for each in self.inputkeys:
-        data = b"DATA" + b"\x00"  # Start with bytes
-        data += struct.pack("i", int(each))
+def test_senddata_packs_configured_indexes(mock_parent, main_thread):
+    main_thread.parent.db_read.side_effect = lambda key: {
+        "IAS": (101.0, False, False, False, False, False),
+        "TAS": 202.0,
+        "LAT": 40.0,
+        "LONG": -83.0,
+        "ALT": 1234.0,
+    }[key]
 
-        for i in range(8):
-            if self.inputkeys[each][i].lower() == "x":
-                data += b"\x00\xc0\x79\xc4"  # Append fixed bytes
-            else:
-                value = float(self.parent.db_read(self.inputkeys[each][i].upper()))
-                data += struct.pack("f", value)  # Pack as float and append
-        
-        self.sock.sendto(data, ('127.0.0.1', 49200))
+    main_thread.senddata()
 
+    packets = [call_args.args[0] for call_args in main_thread.sock.sendto.call_args_list]
+    assert len(packets) == 2
+    assert packets[0].startswith(b"DATA\0" + struct.pack("i", 3))
+    assert struct.unpack("f", packets[0][9:13])[0] == pytest.approx(101.0)
+    assert packets[0][13:17] == b"\x00\xc0\x79\xc4"
+    assert packets[0][17:21] == b"\x00\xc0\x79\xc4"
+    assert struct.unpack("f", packets[0][21:25])[0] == pytest.approx(202.0)
+    assert packets[1].startswith(b"DATA\0" + struct.pack("i", 20))
+
+
+def build_packet(index, values):
+    packet = b"DATA\0" + struct.pack("i", index)
+    for value in values:
+        packet += struct.pack("f", value)
+    return packet
+
+
+def test_run_handles_bad_packets_and_decodes_data(monkeypatch, mock_parent, main_thread):
+    packets = [
+        b"NOPE\0",
+        b"DATA\0bad",
+        build_packet(3, [55.0, 0.0, 66.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+    ]
+
+    def fake_select(_read, _write, _error, _timeout):
+        return ([main_thread.sock], [], []) if packets else ([], [], [])
+
+    def fake_recvfrom(_size):
+        packet = packets.pop(0)
+        if not packets:
+            main_thread.getout = True
+        return packet, ("127.0.0.1", 1)
+
+    monkeypatch.setattr(xplane.select, "select", fake_select)
+    main_thread.sock.recvfrom.side_effect = fake_recvfrom
+    main_thread.senddata = lambda: None
+
+    main_thread.run()
+
+    mock_parent.log.error.assert_has_calls(
+        [call("Bad data packet"), call("Bad packet length")]
+    )
+    mock_parent.db_write.assert_has_calls(
+        [call("IAS", pytest.approx(55.0)), call("TAS", pytest.approx(66.0))]
+    )
+
+
+def test_thread_stop_and_close_are_idempotent(main_thread):
+    main_thread.stop()
+    main_thread.close()
+    main_thread.close()
+
+    assert main_thread.getout is True
+    assert main_thread.sock.close.call_count == 1
+    assert main_thread.sock_closed is True
 
 
 def test_plugin_lifecycle(mock_parent):
@@ -72,3 +125,10 @@ def test_plugin_lifecycle(mock_parent):
 
         plugin.stop()
         mock_stop.assert_called_once()
+
+    with patch("socket.socket"):
+        plugin = Plugin("test_plugin", mock_parent.config, MagicMock())
+        plugin.thread.is_alive = MagicMock(return_value=True)
+        plugin.thread.join = MagicMock()
+        with pytest.raises(plugin_base.PluginFail):
+            plugin.stop()
