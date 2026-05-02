@@ -134,6 +134,16 @@ def test_plugin_stop_joins_when_thread_stops_after_join():
     assert pl.thread.joined == 1.2
 
 
+def test_plugin_stop_returns_when_thread_is_already_stopped():
+    pl = canfix_plugin.Plugin.__new__(canfix_plugin.Plugin)
+    pl.thread = FakeThread([False])
+
+    pl.stop()
+
+    assert pl.thread.stopped is True
+    assert pl.thread.joined is False
+
+
 def test_plugin_run_adds_quorum_callback_and_starts_thread(monkeypatch):
     pl = canfix_plugin.Plugin.__new__(canfix_plugin.Plugin)
     pl.channel = "test"
@@ -346,6 +356,18 @@ def test_encoder_function_adds_values_and_sets_buttons(monkeypatch):
     assert items["BTN2"].value is False
 
 
+def test_encoder_function_handles_single_encoder(monkeypatch):
+    m = make_mapping()
+    item = FakeDBItem("ENC1", (5, False, False, False, False, False))
+    monkeypatch.setattr(mapping.database, "get_raw_item", lambda key: item)
+    func = m.getEncoderFunction("ENC1", add=True)
+    par = MagicMock(value=[2])
+
+    func(par)
+
+    assert item.value == 7
+
+
 def test_encoder_function_replaces_values_without_add(monkeypatch):
     m = make_mapping()
     items = {
@@ -450,3 +472,42 @@ def test_valid_helpers(monkeypatch):
 def test_mapping_rejects_missing_mapfile():
     with pytest.raises(ValueError, match="Unable to open mapfile"):
         mapping.Mapping("tests/config/canfix/does-not-exist.yaml")
+
+
+def test_mapping_switch_reuses_existing_input_bucket(monkeypatch):
+    maps = {
+        "meta replacements": {"Minimum": "Min"},
+        "outputs": [],
+        "inputs": [
+            {
+                "canid": 0x309,
+                "index": 1,
+                "fixid": "PLAIN",
+            }
+        ],
+        "encoders": [],
+        "switches": [
+            {
+                "canid": 0x309,
+                "index": 2,
+                "fixid": "SW1",
+            }
+        ],
+    }
+    meta = {
+        "inputs": [{"canid": {}, "index": {}, "fixid": {}}],
+    }
+    items = {
+        "PLAIN": FakeDBItem("PLAIN"),
+        "SW1": FakeDBItem("SW1"),
+    }
+
+    monkeypatch.setattr(mapping.os.path, "exists", lambda _path: True)
+    monkeypatch.setattr(mapping.cfg, "from_yaml", lambda *_args, **_kwargs: (maps, meta))
+    monkeypatch.setattr(mapping.database, "get_raw_item", lambda key: items[key])
+    monkeypatch.setattr(mapping.database, "listkeys", lambda: ["PLAIN", "SW1"])
+
+    m = mapping.Mapping("dummy-map.yaml", MagicMock())
+
+    assert m.input_mapping[0x209][1] is not None
+    assert m.input_mapping[0x209][2] is not None
