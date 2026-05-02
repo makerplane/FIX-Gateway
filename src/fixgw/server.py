@@ -257,13 +257,13 @@ def main_setup():
             filename = fn.format(CONFIG=config_path)
             log.info("Setting Initial Values - {}".format(filename))
             try:
-                f = open(filename, "r")
-                for line in f.readlines():
-                    l = line.strip()
-                    if l and l[0] != "#":
-                        x = l.split("=")
-                        if len(x) >= 2:
-                            database.write(x[0].strip(), x[1].strip())
+                with open(filename, "r") as f:
+                  for line in f.readlines():
+                      l = line.strip()
+                      if l and l[0] != "#":
+                          x = l.split("=")
+                          if len(x) >= 2:
+                              database.write(x[0].strip(), x[1].strip())
             except Exception as e:
                 log.error(
                     "Problem setting initial values from configuration - {0}".format(e)
