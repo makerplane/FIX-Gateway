@@ -487,11 +487,6 @@ def AOAFunction(inputs, output, require_leader):
             ve = vals[each]
             if not isinstance(ve, tuple):
                 continue
-            # Is this a typo or dead code?
-            # The tuple check ensures this None check will never be true
-            if ve is None:
-                AOA_hist_count = 0
-                break
             if ve[2]:
                 AOA_hist_count = 0
                 break

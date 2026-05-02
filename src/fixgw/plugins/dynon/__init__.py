@@ -94,8 +94,7 @@ class MainThread(threading.Thread):
             self._vario_values.append(vs)
             if len(self._vario_values) > 128:
                 self._vario_values.pop(0)
-            if len(self._vario_values):
-                vs = round(sum(self._vario_values) / len(self._vario_values))
+            vs = round(sum(self._vario_values) / len(self._vario_values))
 
             self.parent.db_write("VS", vs)
 
