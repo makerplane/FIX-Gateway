@@ -25,6 +25,8 @@ from PyQt6.QtCore import QObject, pyqtSignal
 import fixgw.netfix
 import fixgw.netfix.db
 
+log = logging.getLogger(__name__)
+
 
 # This class represents a single data point in the database.
 class QtDB_Item(QObject):
