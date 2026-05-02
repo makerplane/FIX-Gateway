@@ -84,6 +84,13 @@ items:
   max: 100
   initial: 100
 
+- key: BAT_VOLTAGE
+  description: System battery voltage
+  type: float
+  min: 0
+  max: 5
+  initial: 5
+
 - key: BAT_CHARGING
   description: System battery is charging
   type: bool
@@ -93,5 +100,3 @@ items:
   description: System power is disconnected
   type: bool
   initial: false
-
-

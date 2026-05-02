@@ -1,0 +1,16 @@
+=========================
+X728 Plugin for UPS board
+=========================
+
+X728 is an UPS board that provides enough current to drive Raspberry Pi 5 along with the display.
+
+Note that the plugin supports boards from V2.1 up. There's a minor change in GPIO pins in previous versions (see source code)
+
+The plugin introduces following parameters:
+
+* POWER_FAIL: true if is board is running from battery power
+* BAT_REMAINING: Remaining battery power in percentage (0-100)
+* BAT_VOLTAGE: Current battery voltage
+
+configuration file supports single parameter "shutdown_after". If power is failed, shut down the computer after specified minutes. Comment out to disable.
+
