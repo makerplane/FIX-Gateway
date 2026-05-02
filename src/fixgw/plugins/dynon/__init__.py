@@ -53,7 +53,7 @@ class MainThread(threading.Thread):
                     self._buffer = bytearray()
                     self._parse(message)
                 else:
-                    self._buffer.extend(c.to_bytes())
+                    self._buffer.append(c)
 
     def stop(self):
         self.getout = True
