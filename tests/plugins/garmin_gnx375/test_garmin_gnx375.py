@@ -19,7 +19,8 @@ from unittest.mock import MagicMock
 import pynmea2
 
 import fixgw.database as database
-from fixgw.plugins.garmin_gnx375 import MainThread
+import fixgw.plugins.garmin_gnx375 as garmin_gnx375
+from fixgw.plugins.garmin_gnx375 import MainThread, Plugin
 
 DB_CONFIG = """
 variables:
@@ -161,6 +162,21 @@ class TestRmcParsing(unittest.TestCase):
         self.thread._handle_rmc(msg)
         self.assertEqual(_db_value("LAT"), initial_lat)
 
+    def test_rmc_skips_missing_speed_and_track(self):
+        msg = MagicMock()
+        msg.status = "A"
+        msg.latitude = 12.5
+        msg.longitude = -45.25
+        msg.spd_over_grnd = None
+        msg.true_course = None
+
+        self.thread._handle_rmc(msg)
+
+        self.assertAlmostEqual(_db_value("LAT"), 12.5)
+        self.assertAlmostEqual(_db_value("LONG"), -45.25)
+        self.assertEqual(_db_value("GS"), 0.0)
+        self.assertEqual(_db_value("TRACK"), 0.0)
+
 
 class TestGgaParsing(unittest.TestCase):
     def setUp(self):
@@ -191,6 +207,18 @@ class TestGgaParsing(unittest.TestCase):
         msg = pynmea2.parse(sentence)
         self.thread._handle_gga(msg)
         self.assertEqual(_db_value("GPS_FIX_TYPE"), 2)
+
+    def test_gga_fix_without_altitude_skips_altitude(self):
+        msg = MagicMock()
+        msg.gps_qual = "1"
+        msg.latitude = 10.0
+        msg.longitude = 20.0
+        msg.altitude = None
+
+        self.thread._handle_gga(msg)
+
+        self.assertEqual(_db_value("GPS_FIX_TYPE"), 1)
+        self.assertEqual(_db_value("GPS_ELLIPSOID_ALT"), 0.0)
 
 
 class TestRmbParsing(unittest.TestCase):
@@ -253,6 +281,19 @@ class TestRmbParsing(unittest.TestCase):
         self.thread._handle_rmb(msg, _CDI_FULL_SCALE)
         self.assertEqual(_db_value("XTRACK"), 0.0)
 
+    def test_missing_or_bad_rmb_cross_track_inputs_do_not_update(self):
+        for cross_track_err, dir_steer in [(None, "L"), (1.0, "X")]:
+            database.init(io.StringIO(DB_CONFIG))
+            self.thread = _make_thread()
+            msg = MagicMock()
+            msg.status = "A"
+            msg.cross_track_err = cross_track_err
+            msg.dir_steer = dir_steer
+
+            self.thread._handle_rmb(msg, _CDI_FULL_SCALE)
+
+            self.assertEqual(_db_value("XTRACK"), 0.0)
+
     def test_nmea_sign_convention_north_of_eastbound_is_negative(self):
         """Consistency check: aircraft north of east-bound course should → negative XTRACK.
 
@@ -292,6 +333,240 @@ class TestApbParsing(unittest.TestCase):
         initial = _db_value("COURSE")
         self.thread._handle_apb(msg)
         self.assertEqual(_db_value("COURSE"), initial)
+
+
+class TestDispatch(unittest.TestCase):
+    def setUp(self):
+        database.init(io.StringIO(DB_CONFIG))
+        self.thread = _make_thread()
+
+    def test_dispatch_routes_known_sentence_types_and_ignores_unknown(self):
+        handlers = {
+            "_handle_rmc": MagicMock(),
+            "_handle_gga": MagicMock(),
+            "_handle_rmb": MagicMock(),
+            "_handle_apb": MagicMock(),
+        }
+        for name, handler in handlers.items():
+            setattr(self.thread, name, handler)
+
+        for sentence_type in ["RMC", "GGA", "RMB", "APB", "TXT"]:
+            msg = MagicMock()
+            msg.sentence_type = sentence_type
+            self.thread._dispatch(msg, _CDI_FULL_SCALE)
+
+        handlers["_handle_rmc"].assert_called_once()
+        handlers["_handle_gga"].assert_called_once()
+        handlers["_handle_rmb"].assert_called_once()
+        handlers["_handle_apb"].assert_called_once()
+
+
+class TestSerialRunLoop(unittest.TestCase):
+    def setUp(self):
+        self.parent = MagicMock()
+        self.parent.config = {"port": "/dev/null"}
+        self.parent.log = MagicMock()
+        self.thread = MainThread(self.parent)
+
+    def _patch_serial(self, factory):
+        original = garmin_gnx375.serial.Serial
+        garmin_gnx375.serial.Serial = factory
+        return original
+
+    def test_run_logs_open_failure(self):
+        def serial_factory(*args, **kwargs):
+            raise garmin_gnx375.serial.SerialException("no port")
+
+        original = self._patch_serial(serial_factory)
+        try:
+            self.thread.run()
+        finally:
+            garmin_gnx375.serial.Serial = original
+
+        self.parent.log.error.assert_called_once()
+        self.assertIn("cannot open /dev/null", self.parent.log.error.call_args.args[0])
+
+    def test_run_reads_parses_dispatches_and_closes_serial(self):
+        class FakeSerial:
+            def __init__(self):
+                self.is_open = True
+                self.closed = False
+                self.calls = 0
+
+            def readline(self):
+                self.calls += 1
+                if self.calls == 1:
+                    return b""
+                self.thread.getout = True
+                return b"$GPRMC,ignored*00\r\n"
+
+            def close(self):
+                self.closed = True
+                self.is_open = False
+
+        fake_serial = FakeSerial()
+        fake_serial.thread = self.thread
+        parsed = MagicMock()
+        parsed.sentence_type = "RMC"
+        self.thread._dispatch = MagicMock()
+        parse_mock = MagicMock(return_value=parsed)
+        original_serial = self._patch_serial(
+            lambda port, baud, timeout: fake_serial
+        )
+        original_parse = garmin_gnx375.pynmea2.parse
+        garmin_gnx375.pynmea2.parse = parse_mock
+        try:
+            self.thread.run()
+        finally:
+            garmin_gnx375.serial.Serial = original_serial
+            garmin_gnx375.pynmea2.parse = original_parse
+
+        parse_mock.assert_called_once_with("$GPRMC,ignored*00")
+        self.thread._dispatch.assert_called_once_with(parsed, 5.0)
+        self.assertTrue(fake_serial.closed)
+
+    def test_run_uses_configured_baud_and_cdi_scale(self):
+        self.parent.config = {
+            "port": "/dev/ttyS1",
+            "baud": "4800",
+            "cdi_full_scale_nm": "0.3",
+        }
+        self.thread = MainThread(self.parent)
+
+        class FakeSerial:
+            is_open = False
+
+            def readline(self):
+                self.thread.getout = True
+                return b"$GPRMC,ignored*00\n"
+
+        fake_serial = FakeSerial()
+        fake_serial.thread = self.thread
+        parsed = MagicMock()
+        self.thread._dispatch = MagicMock()
+        original_serial = self._patch_serial(
+            lambda port, baud, timeout: fake_serial
+        )
+        original_parse = garmin_gnx375.pynmea2.parse
+        garmin_gnx375.pynmea2.parse = MagicMock(return_value=parsed)
+        try:
+            self.thread.run()
+        finally:
+            garmin_gnx375.serial.Serial = original_serial
+            garmin_gnx375.pynmea2.parse = original_parse
+
+        self.thread._dispatch.assert_called_once_with(parsed, 0.3)
+
+    def test_run_skips_decode_and_parse_errors_and_logs_dispatch_errors(self):
+        class BadDecode:
+            def decode(self, *args, **kwargs):
+                raise UnicodeError("bad bytes")
+
+        class FakeSerial:
+            is_open = False
+
+            def __init__(self, thread):
+                self.thread = thread
+                self.items = [
+                    BadDecode(),
+                    b"$BAD\n",
+                    b"$GOOD\n",
+                ]
+
+            def readline(self):
+                item = self.items.pop(0)
+                if not self.items:
+                    self.thread.getout = True
+                return item
+
+        def parse(line):
+            if line == "$BAD":
+                raise pynmea2.ParseError("bad nmea", line)
+            return MagicMock()
+
+        fake_serial = FakeSerial(self.thread)
+        self.thread._dispatch = MagicMock(side_effect=RuntimeError("boom"))
+        original_serial = self._patch_serial(lambda *args, **kwargs: fake_serial)
+        original_parse = garmin_gnx375.pynmea2.parse
+        garmin_gnx375.pynmea2.parse = parse
+        try:
+            self.thread.run()
+        finally:
+            garmin_gnx375.serial.Serial = original_serial
+            garmin_gnx375.pynmea2.parse = original_parse
+
+        self.thread._dispatch.assert_called_once()
+        self.parent.log.debug.assert_called_once()
+        self.assertIn("dispatch error", self.parent.log.debug.call_args.args[0])
+
+    def test_run_logs_read_error_and_closes_serial(self):
+        class FakeSerial:
+            is_open = True
+
+            def __init__(self):
+                self.closed = False
+
+            def readline(self):
+                raise garmin_gnx375.serial.SerialException("read failed")
+
+            def close(self):
+                self.closed = True
+                self.is_open = False
+
+        fake_serial = FakeSerial()
+        original = self._patch_serial(lambda *args, **kwargs: fake_serial)
+        try:
+            self.thread.run()
+        finally:
+            garmin_gnx375.serial.Serial = original
+
+        self.parent.log.error.assert_called_once()
+        self.assertIn("serial read error", self.parent.log.error.call_args.args[0])
+        self.assertTrue(fake_serial.closed)
+
+    def test_stop_sets_getout(self):
+        self.assertFalse(self.thread.getout)
+
+        self.thread.stop()
+
+        self.assertTrue(self.thread.getout)
+
+
+class TestPluginLifecycle(unittest.TestCase):
+    def test_plugin_run_stop_and_status(self):
+        pl = Plugin("garmin-test", {"port": "/dev/null"}, {})
+        thread = MagicMock()
+        thread.is_alive.return_value = False
+        pl.thread = thread
+
+        pl.run()
+        thread.start.assert_called_once_with()
+
+        pl.stop()
+        thread.stop.assert_called_once_with()
+        thread.join.assert_not_called()
+        self.assertIs(pl.get_status(), pl.status)
+
+    def test_plugin_stop_joins_live_thread(self):
+        pl = Plugin("garmin-test", {"port": "/dev/null"}, {})
+        thread = MagicMock()
+        thread.is_alive.side_effect = [True, False]
+        pl.thread = thread
+
+        pl.stop()
+
+        thread.join.assert_called_once_with(2.0)
+
+    def test_plugin_stop_raises_when_thread_survives_join(self):
+        pl = Plugin("garmin-test", {"port": "/dev/null"}, {})
+        thread = MagicMock()
+        thread.is_alive.return_value = True
+        pl.thread = thread
+
+        with self.assertRaises(garmin_gnx375.plugin.PluginFail):
+            pl.stop()
+
+        thread.join.assert_called_once_with(2.0)
 
 
 if __name__ == "__main__":

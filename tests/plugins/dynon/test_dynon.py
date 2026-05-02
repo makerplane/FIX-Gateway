@@ -22,7 +22,8 @@ import unittest
 from unittest.mock import MagicMock
 
 import fixgw.database as database
-from fixgw.plugins.dynon import MainThread
+import fixgw.plugins.dynon as dynon
+from fixgw.plugins.dynon import MainThread, Plugin
 
 DB_CONFIG = """
 variables:
@@ -230,6 +231,110 @@ class TestDynonParser(unittest.TestCase):
             self.thread._parse(_build_msg(rot_vs_10=rot_vs, status_hex="000001"))
         expected = round((600 + 1200 + 1800) / 3)
         self.assertEqual(_db("VS"), expected)
+
+    def test_vario_history_is_limited_to_128_samples(self):
+        for i in range(130):
+            self.thread._parse(_build_msg(rot_vs_10=i, status_hex="000001"))
+
+        self.assertEqual(len(self.thread._vario_values), 128)
+
+    def test_thread_stop_sets_getout(self):
+        self.assertFalse(self.thread.getout)
+
+        self.thread.stop()
+
+        self.assertTrue(self.thread.getout)
+
+    def test_run_reads_serial_data_until_newline(self):
+        class FakeSerial:
+            def __init__(self, owner):
+                self.owner = owner
+                self.in_waiting = 53
+
+            def read(self, count):
+                self.owner.getout = True
+                return bytes(_build_msg(pitch_10=75)) + b"\n"
+
+        fake_serial = FakeSerial(self.thread)
+
+        def serial_factory(port, baudrate, timeout):
+            self.assertEqual(port, "/dev/null")
+            self.assertEqual(baudrate, 115200)
+            self.assertEqual(timeout, 0.5)
+            return fake_serial
+
+        original_serial = dynon.serial.Serial
+        try:
+            dynon.serial.Serial = serial_factory
+            self.thread.run()
+        finally:
+            dynon.serial.Serial = original_serial
+
+        self.assertIs(self.thread._c, fake_serial)
+        self.assertAlmostEqual(_db("PITCH"), 7.5, places=5)
+
+    def test_run_logs_serial_errors(self):
+        class FakeSerial:
+            def __init__(self, owner):
+                self.owner = owner
+                self.in_waiting = 0
+                self.calls = 0
+
+            def read(self, count):
+                self.calls += 1
+                if self.calls == 1:
+                    return b""
+                self.owner.getout = True
+                raise dynon.serial.SerialException()
+
+        fake_serial = FakeSerial(self.thread)
+        original_serial = dynon.serial.Serial
+        try:
+            dynon.serial.Serial = lambda *args, **kwargs: fake_serial
+            self.thread.run()
+        finally:
+            dynon.serial.Serial = original_serial
+
+        self.thread.parent.log.error.assert_called_once_with("Serial port error")
+
+
+class TestDynonPlugin(unittest.TestCase):
+    def test_plugin_lifecycle_and_status(self):
+        pl = Plugin("dynon-test", {"port": "/dev/null"}, {})
+
+        thread = MagicMock()
+        thread.is_alive.return_value = False
+        pl.thread = thread
+
+        pl.run()
+        thread.start.assert_called_once_with()
+
+        pl.stop()
+        thread.stop.assert_called_once_with()
+        thread.join.assert_not_called()
+        self.assertIs(pl.get_status(), pl.status)
+
+    def test_plugin_stop_joins_live_thread(self):
+        pl = Plugin("dynon-test", {"port": "/dev/null"}, {})
+        thread = MagicMock()
+        thread.is_alive.side_effect = [True, False]
+        pl.thread = thread
+
+        pl.stop()
+
+        thread.stop.assert_called_once_with()
+        thread.join.assert_called_once_with(1.0)
+
+    def test_plugin_stop_raises_when_thread_survives_join(self):
+        pl = Plugin("dynon-test", {"port": "/dev/null"}, {})
+        thread = MagicMock()
+        thread.is_alive.return_value = True
+        pl.thread = thread
+
+        with self.assertRaises(dynon.plugin.PluginFail):
+            pl.stop()
+
+        thread.join.assert_called_once_with(1.0)
 
 
 if __name__ == "__main__":

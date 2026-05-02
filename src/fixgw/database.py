@@ -21,8 +21,9 @@ import copy
 from fixgw import cfg
 
 __database = {}
-_update_thread = None
-_update_thread_stop = None
+_update_thread = globals().get("_update_thread")
+_update_thread_stop = globals().get("_update_thread_stop")
+
 
 
 class UpdateThread(threading.Thread):
@@ -442,8 +443,7 @@ def callback_del(name, key, function, udata):
 
 # Maintenance Functions
 def update():
-    for key in __database:
-        item = __database[key]
+    for key, item in list(__database.items()):
         if item.age > item.tol and item.tol != 0:
             log.debug(f"item.old set True for fixid {key}")
             item.old = True

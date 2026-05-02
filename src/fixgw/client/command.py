@@ -45,7 +45,10 @@ class Command(cmd.Cmd):
 
     def do_read(self, line):
         """read [key] [value]\nRead the value from the database given the key"""
-        args = line.split(" ")
+        args = line.split()
+        if not args:
+            print("Missing Argument")
+            return
         try:
             x = self.client.read(args[0])
             if isinstance(x, int):
@@ -76,12 +79,12 @@ class Command(cmd.Cmd):
                         flags += " SecFail"
 
                 print(x[1] + flags)
-        except:
+        except (IndexError, TypeError):
             print("Unknown Response {}".format(x[0]))
 
     def do_write(self, line):
         """write [key] [value]\nWrite Value into Database with given key"""
-        args = line.split(" ")
+        args = line.split(maxsplit=1)
         if len(args) < 2:
             print("Missing Argument")
         else:
@@ -97,7 +100,7 @@ class Command(cmd.Cmd):
     def do_list(self, line):
         """list\nList Database Keys"""
         try:
-            list = self.client.getList()
+            items = self.client.getList()
         except netfix.SendError as e:
             print("Problem Sending Request -", e)
             return
@@ -105,14 +108,14 @@ class Command(cmd.Cmd):
             print("Problem Receiving Response -", e)
             return
 
-        list.sort()
-        for each in list:
+        items.sort()
+        for each in items:
             print(each)
 
     def do_report(self, line):
         """Report [key]\nDetailed item information report"""
-        args = line.split(" ")
-        if len(args) < 1:
+        args = line.split()
+        if not args:
             print("Missing Argument")
         else:
             try:
@@ -146,19 +149,26 @@ class Command(cmd.Cmd):
 
     def do_poll(self, line):
         """Poll\nContinuously prints updates to the given key"""
-        args = line.split(" ")
+        args = line.split()
+        if not args:
+            print("Missing Argument")
+            return
         self.client.setDataCallback(printData)
-        for each in args:
-            self.client.subscribe(each)
-        input()
-        for each in args:
-            self.client.unsubscribe(each)
-        self.client.clearDataCallback()
+        try:
+            for each in args:
+                self.client.subscribe(each)
+            input()
+        except (KeyboardInterrupt, EOFError):
+            pass
+        finally:
+            for each in args:
+                self.client.unsubscribe(each)
+            self.client.clearDataCallback()
 
     def do_flag(self, line):
         """flag [key] [abfs] [true/false]\nSet or clear quality flags"""
-        args = line.split(" ")
-        if len(args) < 3:
+        args = line.split()
+        if len(args) < 3 or not args[1]:
             print("Missing Argument")
         else:
             bit = (

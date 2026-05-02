@@ -66,35 +66,44 @@ def main():
         "--gui", "-g", action="store_true", help="Run in graphical mode"
     )
 
-    args, unknown_args = parser.parse_known_args()
+    args, _unknown_args = parser.parse_known_args()
     log = logging.getLogger()
     if args.debug:
-        log.level = logging.DEBUG
+        log.setLevel(logging.DEBUG)
 
     c = netfix.Client(args.host, args.port)
     c.connect()
+    try:
+        cmd = command.Command(c)
+        # If commands are being redirected or piped we set the prompt to nothing
+        if sys.stdin.isatty():
+            cmd.prompt = args.prompt
+        else:
+            cmd.prompt = ""
+        if args.execute:
+            s = " ".join(args.execute)
+            if cmd.onecmd(s) and not args.interactive:
+                return 0
+            if not args.interactive:
+                return 0
+        if args.file:
+            with open(args.file[0], encoding="utf-8") as command_file:
+                for line in command_file:
+                    line = line.strip()
+                    if line and cmd.onecmd(line):
+                        break
+            if not args.interactive:
+                return 0
+        # Run in Graphical mode if set
+        if args.gui:
+            from . import gui
 
-    cmd = command.Command(c)
-    # If commands are beign redirected or piped we set the prompt to nothing
-    if sys.stdin.isatty():
-        cmd.prompt = args.prompt
-    else:
-        cmd.prompt = ""
-    if args.execute:
-        s = " ".join(args.execute)
-        cmd.onecmd(s)
-        if not args.interactive:
-            exit(0)
-    # Run in Graphical mode if set
-    if args.gui:
-        from . import gui
-
-        sys.exit(gui.main(c))
-    else:
+            return gui.main(c)
         cmd.cmdloop()
-
-    c.disconnect()
+        return 0
+    finally:
+        c.disconnect()
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

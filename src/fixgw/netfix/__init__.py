@@ -20,11 +20,7 @@ import threading
 import socket
 import logging
 import time
-
-try:
-    import queue
-except:
-    import Queue as queue
+import queue
 
 log = logging.getLogger(__name__)
 
@@ -185,7 +181,7 @@ class ClientThread(threading.Thread):
         return self.connectedEvent.wait(timeout)
 
     def isConnected(self):
-        return self.connectedEvent.isSet()
+        return self.connectedEvent.is_set()
 
     def getResponse(self, c, timeout=1.0):
         # TODO Check for errors and report those as well

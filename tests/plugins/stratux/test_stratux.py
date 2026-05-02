@@ -13,9 +13,13 @@ import struct
 import unittest
 from unittest.mock import MagicMock
 
+import pytest
+
 import fixgw.database as database
+import fixgw.plugin as plugin_base
+import fixgw.plugins.stratux as stratux
 from fixgw.plugins.stratux import gdl90 as gdl90mod
-from fixgw.plugins.stratux import MainThread
+from fixgw.plugins.stratux import MainThread, Plugin
 
 DB_CONFIG = """
 variables:
@@ -296,6 +300,102 @@ class TestStratuxOwnship(unittest.TestCase):
     def test_groundspeed_max_12bit(self):
         self._dispatch(_build_ownship(speed_raw=0xFFF))
         self.assertEqual(_db("IAS"), 0xFFF)
+
+
+class FakeSocket:
+    def __init__(self, packets=None):
+        self.packets = list(packets or [])
+        self.bound = None
+
+    def bind(self, address):
+        self.bound = address
+
+    def recvfrom(self, _size):
+        packet = self.packets.pop(0)
+        return packet, ("127.0.0.1", 12345)
+
+
+def test_main_thread_initializes_socket_and_stop(monkeypatch, capsys):
+    fake_socket = FakeSocket()
+    parent = MagicMock()
+    parent.log = MagicMock()
+    monkeypatch.setattr(stratux.socket, "socket", lambda *_args: fake_socket)
+
+    thread = MainThread(parent)
+    thread.stop()
+
+    assert "running stratux plugin" in capsys.readouterr().out
+    assert fake_socket.bound == ("", 4000)
+    assert thread.getout is True
+
+
+def test_run_decodes_ahrs_ownship_and_skips_invalid_frames(monkeypatch):
+    database.init(io.StringIO(DB_CONFIG))
+    fake_socket = FakeSocket(
+        [
+            b"not a frame",
+            _build_ahrs(roll_10=100, pitch_10=-50, heading_10=1234, slipskid_10=100, alt_offset=6000, vs=-123),
+            _build_ownship(speed_raw=321),
+        ]
+    )
+    parent = MagicMock()
+    parent.log = MagicMock()
+    parent.db_write = lambda key, value: database.write(key, value)
+    monkeypatch.setattr(stratux.socket, "socket", lambda *_args: fake_socket)
+    thread = MainThread(parent)
+    original_recvfrom = fake_socket.recvfrom
+
+    def stop_after_last_packet(size):
+        packet, address = original_recvfrom(size)
+        if not fake_socket.packets:
+            thread.getout = True
+        return packet, address
+
+    fake_socket.recvfrom = stop_after_last_packet
+    thread.run()
+
+    assert thread.running is False
+    assert _db("ROLL") == 10.0
+    assert _db("PITCH") == -5.0
+    assert _db("HEAD") == 123.4
+    assert _db("ALT") == 999.5
+    assert _db("VS") == -123
+    assert _db("IAS") == 321
+
+
+def test_plugin_lifecycle_status_and_failure(monkeypatch):
+    class DummyThread:
+        def __init__(self, _parent):
+            self.started = False
+            self.stopped = False
+            self.alive = False
+
+        def start(self):
+            self.started = True
+
+        def stop(self):
+            self.stopped = True
+
+        def is_alive(self):
+            return self.alive
+
+        def join(self, timeout):
+            self.joined = timeout
+
+    monkeypatch.setattr(stratux, "MainThread", DummyThread)
+    plugin = Plugin("stratux", {}, {})
+
+    plugin.run()
+    plugin.stop()
+
+    assert plugin.thread.started is True
+    assert plugin.thread.stopped is True
+    assert plugin.get_status() == stratux.OrderedDict()
+
+    failing = Plugin("stratux", {}, {})
+    failing.thread.alive = True
+    with pytest.raises(plugin_base.PluginFail):
+        failing.stop()
 
 
 if __name__ == "__main__":

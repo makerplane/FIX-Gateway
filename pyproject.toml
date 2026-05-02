@@ -77,19 +77,22 @@ env = [
 ]
 filterwarnings = [
     # I belive this is warning that pyqt needs updated if you update to python 3.12
-    "ignore:sipPyTypeDict.*:DeprecationWarning:.*:"
+    "ignore:sipPyTypeDict.*:DeprecationWarning:.*:",
+    "default"
 ]
 addopts = """
     --cov-report term-missing --cov-branch --cov-report html --cov-report term
-    --cov=fixgw --cov-context=test -vv --strict-markers -rfE
+    --cov=fixgw --cov-context=test -vv --strict-markers -ra
     --ignore=tests/end_to_end/repo
 """
 
 [tool.coverage.run]
 relative_files = true
-patch = ["subprocess"]
 
 [tool.coverage.paths]
 source = [
     "src/"
 ]
+
+[tool.black]
+target-version = ['py310']

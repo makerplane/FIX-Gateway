@@ -22,11 +22,7 @@
 
 import threading
 import socket
-
-try:
-    import queue
-except:
-    import Queue as queue
+import queue
 from collections import OrderedDict
 from collections import defaultdict
 from collections import deque

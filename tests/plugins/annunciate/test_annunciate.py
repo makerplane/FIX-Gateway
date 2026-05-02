@@ -16,6 +16,7 @@ Coverage:
 """
 import io
 import unittest
+from types import SimpleNamespace
 
 import fixgw.database as database
 from fixgw.plugins import annunciate
@@ -94,9 +95,30 @@ class TestAnnunciatePlugin(unittest.TestCase):
         database.write("OILP1", 60.0)
         self.assertFalse(p.items[0].item.annunciate)
 
+    def test_missing_aux_points_disable_that_side(self):
+        p = _make_plugin(
+            [
+                {
+                    "key": "OILP1",
+                    "low_aux_point": "missingLow",
+                    "high_aux_point": "missingHigh",
+                }
+            ]
+        )
+
+        self.assertIsNone(p.items[0].low_set_point)
+        self.assertIsNone(p.items[0].high_set_point)
+        database.write("OILP1", 105.0)
+        self.assertFalse(p.items[0].item.annunciate)
+
     # ------------------------------------------------------------------
     # Deadband hysteresis
     # ------------------------------------------------------------------
+
+    def test_percent_deadband_uses_item_range(self):
+        p = _make_plugin([{"key": "OILP1", "deadband": "10%"}])
+
+        self.assertEqual(p.items[0].deadband, 12.0)
 
     def test_deadband_prevents_rapid_clear_on_high(self):
         # highAlarm=100.0, deadband=1.0 → clears only when value <= 99.0
@@ -154,6 +176,33 @@ class TestAnnunciatePlugin(unittest.TestCase):
         database.write("OILP1", 105.0)
         self.assertTrue(p.items[0].item.annunciate)
 
+    def test_conditional_bypass_validation_errors(self):
+        with self.assertRaisesRegex(ValueError, "Wrong number of tokens"):
+            _make_plugin([{"key": "OILP1", "cond_bypass": "TACH1 <"}])
+
+        with self.assertRaisesRegex(ValueError, "Unknown operator"):
+            _make_plugin([{"key": "OILP1", "cond_bypass": "TACH1 <> 500"}])
+
+    def test_conditional_bypass_unknown_key_when_lookup_returns_none(self):
+        item = SimpleNamespace(
+            aux=[],
+            min=0.0,
+            max=100.0,
+            dtype=float,
+            value=(0.0, False, False, False, False, False),
+        )
+        fake_plugin = SimpleNamespace(
+            db_get_item=lambda key: item if key == "OILP1" else None,
+            db_callback_add=lambda *_args: None,
+        )
+
+        with self.assertRaisesRegex(ValueError, "Unknown Key MISSING"):
+            annunciate.AnnunciateItem(
+                fake_plugin,
+                dict(_DEFAULTS, cond_bypass="MISSING < 1"),
+                {"key": "OILP1"},
+            )
+
     # ------------------------------------------------------------------
     # Start bypass
     # ------------------------------------------------------------------
@@ -169,6 +218,62 @@ class TestAnnunciatePlugin(unittest.TestCase):
         database.write("OILP1", 60.0)          # above low → latch released
         database.write("OILP1", 5.0)           # now below low again
         self.assertTrue(p.items[0].item.annunciate)
+
+    def test_none_low_alarm_falls_back_to_minimum_for_start_bypass_and_low_latch(self):
+        database.get_raw_item("OILP1").aux["lowAlarm"] = None
+        p = _make_plugin([{"key": "OILP1", "start_bypass": True}])
+        p.stop()
+
+        p.items[0].evaluate("OILP1", (5.0, False, False, False, False, False), None)
+        self.assertFalse(p.items[0].start_bypass_latch)
+        self.assertFalse(p.items[0].item.annunciate)
+
+        p.items[0].evaluate("OILP1", (-1.0, False, False, False, False, False), None)
+        self.assertTrue(p.items[0].item.annunciate)
+
+    def test_none_high_alarm_falls_back_to_maximum(self):
+        database.get_raw_item("OILP1").aux["highAlarm"] = None
+        p = _make_plugin([{"key": "OILP1"}])
+        p.stop()
+
+        p.items[0].evaluate("OILP1", (121.0, False, False, False, False, False), None)
+
+        self.assertTrue(p.items[0].item.annunciate)
+
+    def test_aux_update_evaluates_current_base_value(self):
+        p = _make_plugin([{"key": "OILP1"}])
+        database.write("OILP1", 105.0)
+        p.items[0].item.annunciate = False
+
+        p.items[0].evaluate("OILP1.highAlarm", None, None)
+
+        self.assertTrue(p.items[0].item.annunciate)
+
+    def test_str_reports_configuration(self):
+        p = _make_plugin([{"key": "OILP1", "start_bypass": True}])
+
+        self.assertEqual(
+            str(p.items[0]),
+            "\n".join(
+                [
+                    "OILP1",
+                    "  Low Set Point: OILP1.lowAlarm",
+                    "  High Set Point: OILP1.highAlarm",
+                    "  Deadband: 1.0",
+                    "  Start Bypass Enabled: Yes",
+                    "  Conditional Bypass: None",
+                ]
+            ),
+        )
+
+    def test_null_item_lookup_raises_value_error(self):
+        fake_plugin = SimpleNamespace(
+            db_get_item=lambda _key: None,
+            db_callback_add=lambda *_args: None,
+        )
+
+        with self.assertRaisesRegex(ValueError, "Key MISSING not found"):
+            annunciate.AnnunciateItem(fake_plugin, _DEFAULTS, {"key": "MISSING"})
 
     # ------------------------------------------------------------------
     # stop() — callback removal

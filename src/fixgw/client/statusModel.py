@@ -55,7 +55,12 @@ class StatusView(QScrollArea):
                 self.textBox.setText("")
                 print("statusModel.update()", e)
                 return
-            d = json.loads(res, object_pairs_hook=OrderedDict)
+            try:
+                d = json.loads(res, object_pairs_hook=OrderedDict)
+            except json.JSONDecodeError as e:
+                self.textBox.setText("")
+                print("statusModel.update()", e)
+                return
             s = status.dict2string(d, spaces=8) + "\n"
             # for key in connection.db.get_item_list():
             #     s += "{} = {}\n".format(key, connection.db.get_value(key))

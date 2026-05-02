@@ -92,6 +92,7 @@ class MainThread(threading.Thread):
                 sp3_firmwareVersion = self._c.readline()  # noqa: F841
             except serial.SerialException:
                 self.parent.log.error("Serial port error")
+                continue
             except ValueError:
                 self.parent.log.error("Bad data")
                 return

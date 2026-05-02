@@ -36,7 +36,9 @@ class MainThread(threading.Thread):
         self.log = parent.log  # simplifies logging
 
         f_path = f"{parent.config['CONFIGPATH']}/{parent.config['db_schema']}"
-        db_desc = yaml.load(open(f_path, "r"), Loader=yaml.FullLoader)
+        with open(f_path, "r") as f:
+          db_desc = yaml.load(f, Loader=yaml.FullLoader)
+
         self.log.info(f"loaded db schema from {f_path}")
 
         f_path = f"{parent.config['CONFIGPATH']}/{parent.config['h5f_file']}"
@@ -73,7 +75,7 @@ class MainThread(threading.Thread):
                             else (
                                 tables.BoolCol()
                                 if entry["type"] == "bool"
-                                else tables.StringCol()
+                                else tables.StringCol(1024)
                             )
                         )
                     ),

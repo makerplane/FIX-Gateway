@@ -487,9 +487,6 @@ def AOAFunction(inputs, output, require_leader):
             ve = vals[each]
             if not isinstance(ve, tuple):
                 continue
-            if ve is None:
-                AOA_hist_count = 0
-                break
             if ve[2]:
                 AOA_hist_count = 0
                 break
