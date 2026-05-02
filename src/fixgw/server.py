@@ -17,11 +17,7 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 from fixgw import __version__
 import yaml
-
-try:
-    import queue
-except:
-    import Queue as queue
+import queue
 import importlib
 import logging
 import logging.config

@@ -23,11 +23,7 @@
 import fixgw.database as database
 import logging
 import fixgw.quorum as quorum
-
-try:
-    import queue
-except:
-    import Queue as queue
+import queue
 
 jobQueue = queue.Queue()
 

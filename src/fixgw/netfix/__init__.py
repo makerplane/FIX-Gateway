@@ -20,11 +20,7 @@ import threading
 import socket
 import logging
 import time
-
-try:
-    import queue
-except:
-    import Queue as queue
+import queue
 
 log = logging.getLogger(__name__)
 
