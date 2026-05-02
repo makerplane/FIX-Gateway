@@ -1,6 +1,12 @@
+import logging
+
 import pytest
 
 import fixgw.netfix as netfix
+
+
+class DoneRunning(Exception):
+    pass
 
 
 class FakeSocket:
@@ -9,6 +15,36 @@ class FakeSocket:
 
     def send(self, data):
         self.sent.append(data)
+
+
+class ScriptedSocket:
+    def __init__(self, recv_results=None, connect_error=None):
+        self.recv_results = list(recv_results or [])
+        self.connect_error = connect_error
+        self.closed = False
+        self.options = []
+        self.timeout = None
+        self.connected_to = None
+
+    def setsockopt(self, *args):
+        self.options.append(args)
+
+    def settimeout(self, timeout):
+        self.timeout = timeout
+
+    def connect(self, addr):
+        if self.connect_error is not None:
+            raise self.connect_error
+        self.connected_to = addr
+
+    def recv(self, _size):
+        result = self.recv_results.pop(0)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    def close(self):
+        self.closed = True
 
 
 class FakeClientThread:
@@ -67,10 +103,18 @@ def test_report_parses_metadata_and_aux_fields():
     assert str(report) == "Altitude:ft"
 
 
+def test_report_handles_empty_aux_fields():
+    report = netfix.Report(["ALT", "Altitude", "float", "0", "1", "ft", "100", ""])
+
+    assert report.aux == []
+
+
 @pytest.mark.parametrize(
     "message, expected",
     [
         ("ALT;1234;10101", ("ALT", "1234", "abs")),
+        ("ALT;1234;01010", ("ALT", "1234", "of")),
+        ("ALT;1234;11111", ("ALT", "1234", "aobfs")),
         ("IAS;98", ("IAS", "98")),
         ("ALT!001", 1),
     ],
@@ -96,6 +140,64 @@ def test_client_thread_routes_command_and_data_messages(caplog):
         ["bad", "sentence", "with", "extra"],
     ]
     assert "Bad Data Sentence Received" in caplog.text
+
+
+def test_client_thread_data_message_without_callback_is_ignored():
+    thread = netfix.ClientThread("example.test", 3490)
+
+    thread.handle_request("ALT;1200;11111")
+
+    assert thread.cmdqueue.empty()
+
+
+def test_client_thread_run_handles_receive_data_disconnect_and_reconnect(monkeypatch):
+    first_socket = ScriptedSocket([b"@rALT;1200;00000\nALT;99;11111\n", b""])
+    sockets = [first_socket]
+    data = []
+    thread = netfix.ClientThread("example.test", 3490)
+    thread.dataCallback = data.append
+
+    monkeypatch.setattr(netfix.socket, "socket", lambda *_args: sockets.pop(0))
+
+    def stop_after_disconnect(_seconds):
+        raise DoneRunning()
+
+    monkeypatch.setattr(netfix.time, "sleep", stop_after_disconnect)
+
+    with pytest.raises(DoneRunning):
+        thread.run()
+
+    assert first_socket.connected_to == ("example.test", 3490)
+    assert thread.cmdqueue.get_nowait() == ["r", "ALT;1200;00000"]
+    assert data == [["ALT", "99", "aobfs"]]
+    assert not thread.isConnected()
+
+
+def test_client_thread_run_exits_when_timeout_occurs_after_stop(monkeypatch):
+    fake_socket = ScriptedSocket([netfix.socket.timeout()])
+    thread = netfix.ClientThread("example.test", 3490)
+    thread.stop()
+
+    monkeypatch.setattr(netfix.socket, "socket", lambda *_args: fake_socket)
+
+    thread.run()
+
+    assert fake_socket.closed
+    assert not thread.isConnected()
+
+
+def test_client_thread_run_logs_connection_failures(monkeypatch, caplog):
+    fake_socket = ScriptedSocket(connect_error=OSError("refused"))
+    thread = netfix.ClientThread("example.test", 3490)
+    thread.stop()
+
+    caplog.set_level(logging.DEBUG, logger="fixgw.netfix")
+    monkeypatch.setattr(netfix.socket, "socket", lambda *_args: fake_socket)
+
+    thread.run()
+
+    assert "Failed to connect refused" in caplog.text
+    assert fake_socket.closed
 
 
 def test_client_thread_connection_state_callbacks_and_waits():

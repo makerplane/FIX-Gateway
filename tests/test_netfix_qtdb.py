@@ -71,6 +71,11 @@ def test_qt_item_forwards_core_properties_and_aux_values():
     assert qt_item.max == 50000
     assert qt_item.tol == 100
     assert qt_item.age == 12.5
+    assert qt_item.annunciate is False
+    assert qt_item.old is False
+    assert qt_item.bad is False
+    assert qt_item.fail is False
+    assert qt_item.secFail is False
     assert qt_item.get_aux_list() == ["low"]
     assert qt_item.get_aux_value("low") == 1.0
 
@@ -89,6 +94,13 @@ def test_qt_item_forwards_core_properties_and_aux_values():
     assert item.fail is True
     assert item.secFail is True
     assert item.aux["high"] == 99
+
+
+def test_qt_item_str_uses_cached_value_attribute():
+    qt_item = qtdb.QtDB_Item("ALT", PlainItem())
+    qt_item._value = 123
+
+    assert str(qt_item) == "ALT = 123"
 
 
 def test_qt_item_emits_signals_from_core_callbacks(qtbot):
@@ -147,6 +159,7 @@ def test_qt_database_initializes_and_forwards_value_access(monkeypatch):
     database = qtdb.Database(client=object())
 
     assert database.get_item_list() == ["ALT"]
+    assert database.get_item("ALT").key == "ALT"
     assert database.get_value("ALT") == 10
     database.set_value("ALT", 42)
     assert inner.item.value == 42
@@ -163,3 +176,27 @@ def test_qt_database_connect_function_rebuilds_after_disconnect(monkeypatch):
 
     database.connectFunction(True)
     assert database.get_item_list() == []
+
+
+def test_qt_database_initialize_warns_when_already_initialized(monkeypatch, caplog):
+    inner = FakeInnerDatabase(connected=True)
+    monkeypatch.setattr(qtdb.fixgw.netfix.db, "Database", lambda client: inner)
+    database = qtdb.Database(client=object())
+
+    database.initialize()
+
+    assert "Trying to initialize an already initialized database" in caplog.text
+
+
+def test_qt_database_initialize_logs_inner_database_errors(monkeypatch, caplog):
+    class FailingInnerDatabase(FakeInnerDatabase):
+        def get_item(self, key):
+            raise RuntimeError(f"{key} failed")
+
+    inner = FailingInnerDatabase(connected=False)
+    monkeypatch.setattr(qtdb.fixgw.netfix.db, "Database", lambda client: inner)
+    database = qtdb.Database(client=object())
+
+    database.initialize()
+
+    assert "ALT failed" in caplog.text
