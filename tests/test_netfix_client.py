@@ -196,6 +196,31 @@ def test_client_thread_run_exits_when_timeout_occurs_after_stop(monkeypatch):
     assert not thread.isConnected()
 
 
+def test_client_thread_run_continues_after_timeout_until_stopped(monkeypatch):
+    fake_socket = ScriptedSocket([netfix.socket.timeout(), netfix.socket.timeout()])
+    thread = netfix.ClientThread("example.test", 3490)
+
+    monkeypatch.setattr(netfix.socket, "socket", lambda *_args: fake_socket)
+
+    calls = 0
+    original_recv = fake_socket.recv
+
+    def stop_after_first_timeout(size):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            thread.stop()
+        return original_recv(size)
+
+    fake_socket.recv = stop_after_first_timeout
+
+    thread.run()
+
+    assert calls == 2
+    assert fake_socket.closed
+    assert not thread.isConnected()
+
+
 def test_client_thread_run_logs_connection_failures(monkeypatch, caplog):
     fake_socket = ScriptedSocket(connect_error=OSError("refused"))
     thread = netfix.ClientThread("example.test", 3490)
