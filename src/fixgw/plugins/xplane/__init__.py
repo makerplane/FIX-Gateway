@@ -67,16 +67,19 @@ class MainThread(threading.Thread):
     def senddata(self):
         """Function that sends data to X-Plane"""
         for each in self.inputkeys:
-            data = "DATA" + chr(0)
+            data = b"DATA" + b"\0"
             data += struct.pack("i", int(each))
 
             for i in range(8):
                 if self.inputkeys[each][i].lower() == "x":
-                    data += chr(0) + chr(192) + chr(121) + chr(196)
+                    data += b"\x00\xc0\x79\xc4"
                     # data += struct.pack("f", 0.0)
                 else:
+                    value = self.parent.db_read(self.inputkeys[each][i].upper())
+                    if isinstance(value, tuple):
+                        value = value[0]
                     data += struct.pack(
-                        "f", float(self.parent.db_read(self.inputkeys[each][i].upper()))
+                        "f", float(value)
                     )
             # for each in data:
             #    print hex(ord(each)),
@@ -92,16 +95,15 @@ class MainThread(threading.Thread):
                 data, addr = self.sock.recvfrom(4096)
                 # print data
                 header = data[:4]
-                if header != "DATA":
+                if header != b"DATA":
                     self.parent.log.error("Bad data packet")
                     continue
                 if (len(data) - 5) % 36 != 0:
                     self.parent.log.error("Bad packet length")
                     continue
-                for x in range((len(data) - 5) / 36):
+                for x in range((len(data) - 5) // 36):
                     start = x * 36 + 5
-                    # index = struct.unpack("i",data[start:start+4])[0]
-                    index = ord(data[start])
+                    index = struct.unpack("i", data[start : start + 4])[0]  # noqa: E203
                     udata = []
                     for i in range(8):
                         y = start + i * 4 + 4
