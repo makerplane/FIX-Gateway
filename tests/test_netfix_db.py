@@ -116,6 +116,13 @@ def test_db_item_aux_values_are_sorted_converted_written_and_reported():
         item.set_aux_value("low", "bad-float")
 
 
+def test_db_item_setting_missing_aux_raises_key_error():
+    item = netfixdb.DB_Item(FakeClient(), "ALT", "float")
+
+    with pytest.raises(KeyError):
+        item.set_aux_value("missing", "12")
+
+
 def test_db_item_aux_server_error_returns_after_callback():
     client = FakeClient()
     client.write_responses["ALT.low"] = "ALT.low!003"
@@ -183,6 +190,37 @@ def test_db_item_value_server_error_leaves_local_value():
     assert item.value == 44.0
 
 
+def test_db_item_invalid_value_conversion_logs_and_raises(caplog):
+    item = netfixdb.DB_Item(FakeClient(), "ALT", "float")
+    item.description = "Altitude"
+
+    with pytest.raises(UnboundLocalError):
+        item.value = "bad-float"
+
+    assert "Bad value 'bad-float' given for Altitude" in caplog.text
+
+
+def test_db_item_numeric_bounds_ignore_incomparable_limits():
+    item = netfixdb.DB_Item(FakeClient(), "ALT", "float")
+    item._min = object()
+    item._max = object()
+
+    item.supressWrite = True
+    item.value = "12.5"
+
+    assert item.value == 12.5
+
+
+def test_db_item_server_normalized_value_without_change_callback():
+    client = FakeClient()
+    client.write_responses["ALT"] = "ALT;75;00000"
+    item = netfixdb.DB_Item(client, "ALT", "float")
+
+    item.value = "70"
+
+    assert item.value == 75.0
+
+
 def test_db_item_bool_conversion_and_flag_writes():
     client = FakeClient()
     item = netfixdb.DB_Item(client, "SWITCH", "bool")
@@ -247,6 +285,16 @@ def test_db_item_invalid_property_inputs_are_logged(caplog):
     assert "Bad minimum value 'bad' given for Altitude" in caplog.text
     assert "Bad maximum value 'bad' given for Altitude" in caplog.text
     assert "Time to live should be an integer for Altitude" in caplog.text
+
+
+def test_db_item_metadata_property_getters():
+    item = netfixdb.DB_Item(FakeClient(), "ALT", "float")
+    item.min = "10"
+    item.max = "100"
+
+    assert item.typestring == "float"
+    assert item.min == 10.0
+    assert item.max == 100.0
 
 
 @pytest.mark.parametrize(
@@ -405,6 +453,15 @@ def test_database_connect_callback_and_idle_update(monkeypatch):
     assert states == [True]
 
 
+def test_database_idle_update_when_state_is_unchanged(monkeypatch):
+    monkeypatch.setattr(netfixdb, "UpdateThread", DummyTimer)
+    database = netfixdb.Database(FakeClient())
+
+    database.update()
+
+    assert database.get_item_list() == []
+
+
 def test_database_update_ignores_unsubscribe_errors(monkeypatch):
     monkeypatch.setattr(netfixdb, "UpdateThread", DummyTimer)
     client = FakeClient()
@@ -418,6 +475,19 @@ def test_database_update_ignores_unsubscribe_errors(monkeypatch):
     database.update()
 
     assert destroyed == [True]
+    assert database.get_item_list() == []
+
+
+def test_database_disconnect_without_destroy_callback(monkeypatch):
+    monkeypatch.setattr(netfixdb, "UpdateThread", DummyTimer)
+    client = FakeClient()
+    database = netfixdb.Database(client)
+    database.get_item("ALT", create=True, wait=False)
+
+    database.connectFunction(False)
+    database.update()
+
+    assert client.unsubscriptions == ["ALT"]
     assert database.get_item_list() == []
 
 

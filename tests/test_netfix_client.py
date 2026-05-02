@@ -142,6 +142,16 @@ def test_client_thread_routes_command_and_data_messages(caplog):
     assert "Bad Data Sentence Received" in caplog.text
 
 
+def test_client_thread_routes_each_data_flag_individually():
+    thread = netfix.ClientThread("example.test", 3490)
+    data = []
+    thread.dataCallback = data.append
+
+    thread.handle_request("ALT;1200;01010")
+
+    assert data == [["ALT", "1200", "of"]]
+
+
 def test_client_thread_data_message_without_callback_is_ignored():
     thread = netfix.ClientThread("example.test", 3490)
 
@@ -198,6 +208,56 @@ def test_client_thread_run_logs_connection_failures(monkeypatch, caplog):
 
     assert "Failed to connect refused" in caplog.text
     assert fake_socket.closed
+
+
+def test_client_thread_run_logs_receive_failure_and_reconnects(monkeypatch, caplog):
+    first_socket = ScriptedSocket([RuntimeError("receive failed")])
+    second_socket = ScriptedSocket([netfix.socket.timeout()])
+    sockets = [first_socket, second_socket]
+    thread = netfix.ClientThread("example.test", 3490)
+
+    caplog.set_level(logging.DEBUG, logger="fixgw.netfix")
+    monkeypatch.setattr(netfix.socket, "socket", lambda *_args: sockets.pop(0))
+
+    def stop_before_reconnect(_seconds):
+        thread.stop()
+
+    monkeypatch.setattr(netfix.time, "sleep", stop_before_reconnect)
+
+    thread.run()
+
+    assert "Receive Failure receive failed" in caplog.text
+    assert "Attempting to Reconnect to example.test:3490" in caplog.text
+    assert second_socket.closed
+
+
+def test_client_thread_run_bad_utf8_uses_legacy_error_path(monkeypatch):
+    fake_socket = ScriptedSocket([b"\xff\n"])
+    thread = netfix.ClientThread("example.test", 3490)
+
+    monkeypatch.setattr(netfix.socket, "socket", lambda *_args: fake_socket)
+
+    with pytest.raises(AttributeError, match="'ClientThread' object has no attribute 'log'"):
+        thread.run()
+
+
+def test_client_thread_run_logs_handle_request_errors(monkeypatch, caplog):
+    fake_socket = ScriptedSocket([b"ALT;1200\n", b""])
+    thread = netfix.ClientThread("example.test", 3490)
+    thread.dataCallback = lambda _data: (_ for _ in ()).throw(RuntimeError("callback failed"))
+
+    caplog.set_level(logging.ERROR, logger="fixgw.netfix")
+    monkeypatch.setattr(netfix.socket, "socket", lambda *_args: fake_socket)
+
+    def stop_after_disconnect(_seconds):
+        raise DoneRunning()
+
+    monkeypatch.setattr(netfix.time, "sleep", stop_after_disconnect)
+
+    with pytest.raises(DoneRunning):
+        thread.run()
+
+    assert "Error handling request ALT;1200 - callback failed" in caplog.text
 
 
 def test_client_thread_connection_state_callbacks_and_waits():

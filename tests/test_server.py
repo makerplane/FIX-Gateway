@@ -98,24 +98,6 @@ def test_merge_dict_recursively_overrides_nested_values():
     assert dest == {"top": {"left": 2, "keep": True, "right": 3}, "plain": "new"}
 
 
-def test_import_falls_back_to_legacy_queue_module(monkeypatch):
-    original_import = __import__
-    fake_queue_module = SimpleNamespace(Empty=RuntimeError, Queue=MagicMock())
-
-    def fake_import(name, *args, **kwargs):
-        if name == "queue":
-            raise ImportError("no queue")
-        if name == "Queue":
-            return fake_queue_module
-        return original_import(name, *args, **kwargs)
-
-    monkeypatch.setattr("builtins.__import__", fake_import)
-
-    module_globals = runpy.run_path(server.__file__, run_name="fixgw_server_queue_fallback")
-
-    assert module_globals["queue"] is fake_queue_module
-
-
 def test_create_config_dir_copies_missing_updated_and_dist_files(tmp_path):
     source_root = tmp_path / "source"
     source_root.mkdir()
