@@ -62,7 +62,7 @@ def getValueControl(item, parent, signals=True):
         control = QCheckBox(parent)
         if signals:
             control.setChecked(item.value)
-            control.stateChanged.connect(item.setValue)
+            control.toggled.connect(item.setValue)
             item.valueChanged.connect(control.setChecked)
     elif item.dtype is str:
         control = QLineEdit(parent)
@@ -70,4 +70,6 @@ def getValueControl(item, parent, signals=True):
             control.setText(item.value)
             control.textChanged.connect(item.setValue)
             item.valueChanged.connect(control.setText)
+    else:
+        raise TypeError("Unsupported item dtype: {!r}".format(item.dtype))
     return control

@@ -46,7 +46,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 def main(client):
     connection.initialize(client)
-    app = QApplication(sys.argv)
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication(sys.argv)
     app.setApplicationName("FIX Gateway Client")
 
     window = MainWindow()

@@ -41,7 +41,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
     def __init__(self, *args, **kwargs):
         super(ItemDialog, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.setAttribute(Qt.WindowType.WindowType.WidgetAttribute.WA_DeleteOnClose)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
     def auxAddClosure(self, auxname):
         def func():
@@ -116,7 +116,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
         l6.setText("Annunciate")
         r6 = QCheckBox(self.scrollAreaWidgetContents)
         r6.setChecked(self.item.annunciate)
-        r6.stateChanged.connect(self.item.setAnnunciate)
+        r6.toggled.connect(self.item.setAnnunciate)
         self.item.annunciateChanged.connect(r6.setChecked)
         self.formLayout.addRow(l6, r6)
 
@@ -124,7 +124,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
         l7.setText("Old")
         r7 = QCheckBox(self.scrollAreaWidgetContents)
         r7.setChecked(self.item.old)
-        r7.stateChanged.connect(self.item.setOld)
+        r7.toggled.connect(self.item.setOld)
         self.item.oldChanged.connect(r7.setChecked)
         self.formLayout.addRow(l7, r7)
 
@@ -132,14 +132,14 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
         l8.setText("Bad")
         r8 = QCheckBox(self.scrollAreaWidgetContents)
         r8.setChecked(self.item.bad)
-        r8.stateChanged.connect(self.item.setBad)
+        r8.toggled.connect(self.item.setBad)
         self.item.badChanged.connect(r8.setChecked)
         self.formLayout.addRow(l8, r8)
 
         l9 = QLabel(self.scrollAreaWidgetContents)
         l9.setText("Failed")
         r9 = QCheckBox(self.scrollAreaWidgetContents)
-        r9.stateChanged.connect(self.item.setFail)
+        r9.toggled.connect(self.item.setFail)
         r9.setChecked(self.item.fail)
         self.item.failChanged.connect(r9.setChecked)
         self.formLayout.addRow(l9, r9)
@@ -148,7 +148,7 @@ class ItemDialog(QDialog, itemDialog_ui.Ui_Dialog):
         l.setText("Sec Failed")
         r = QCheckBox(self.scrollAreaWidgetContents)
         r.setChecked(self.item.secFail)
-        r.stateChanged.connect(self.item.setSecFail)
+        r.toggled.connect(self.item.setSecFail)
         self.item.secFailChanged.connect(r.setChecked)
         self.formLayout.addRow(l, r)
 
