@@ -94,15 +94,6 @@ class QtDB_Item(QObject):
         s = "{} = {}".format(self.key, self._value)
         return s
 
-    def get_aux_list(self):
-        return list(self.aux.keys())
-
-    def set_aux_value(self, name, value):
-        self._item.set_aux_value(name, value)
-
-    def get_aux_value(self, name):
-        self._item.get_aux_value(name)
-
     # return the age of the item in milliseconds
     def getAge(self):
         return self._item.age
