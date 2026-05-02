@@ -39,6 +39,7 @@ class MainThread(threading.Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
         self.sock.bind((UDP_IP, UDP_PORT))
         self.sock.setblocking(0)
+        self.sock_closed = False
 
         # inputkeys is a dictionary that holds the data out indexes from X-Plane
         # and the keys to use for that data in FixGW to know what to send.  It's
@@ -112,6 +113,11 @@ class MainThread(threading.Thread):
     def stop(self):
         self.getout = True
 
+    def close(self):
+        if not self.sock_closed:
+            self.sock.close()
+            self.sock_closed = True
+
 
 class Plugin(plugin.PluginBase):
     def __init__(self, name, config, config_meta):
@@ -127,3 +133,4 @@ class Plugin(plugin.PluginBase):
             self.thread.join(2.0)
         if self.thread.is_alive():
             raise plugin.PluginFail
+        self.thread.close()

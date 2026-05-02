@@ -179,6 +179,7 @@ def main_setup():
     if args.config_file:
         cf = args.config_file
         config_file = cf.name
+        cf.close()
     else:
         # If all else fails copy or update the configuration from the package
         # to ~/makerplane/fixgw/config

@@ -61,7 +61,8 @@ def senddata(self):
 
 
 def test_plugin_lifecycle(mock_parent):
-    plugin = Plugin("test_plugin", mock_parent.config, MagicMock())
+    with patch("socket.socket"):
+        plugin = Plugin("test_plugin", mock_parent.config, MagicMock())
 
     with patch.object(plugin.thread, "start") as mock_start, \
          patch.object(plugin.thread, "stop") as mock_stop, \
@@ -71,4 +72,3 @@ def test_plugin_lifecycle(mock_parent):
 
         plugin.stop()
         mock_stop.assert_called_once()
-
