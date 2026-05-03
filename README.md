@@ -23,6 +23,7 @@
 | src/fixgw/netfix/\_\_init\_\_.py                                 |      250 |        0 |       70 |        0 |    100% |           |
 | src/fixgw/netfix/db.py                                           |      434 |        0 |      110 |        0 |    100% |           |
 | src/fixgw/plugin.py                                              |       43 |        0 |        0 |        0 |    100% |           |
+| src/fixgw/plugins/X728/\_\_init\_\_.py                           |       71 |       71 |       18 |        0 |      0% |    21-109 |
 | src/fixgw/plugins/\_\_init\_\_.py                                |        0 |        0 |        0 |        0 |    100% |           |
 | src/fixgw/plugins/annunciate.py                                  |      104 |        0 |       46 |        0 |    100% |           |
 | src/fixgw/plugins/canfix/\_\_init\_\_.py                         |      115 |        0 |       30 |        0 |    100% |           |
@@ -79,7 +80,7 @@
 | src/fixgw/server.py                                              |      265 |        2 |      108 |        1 |     99% |   169-170 |
 | src/fixgw/status.py                                              |       63 |        0 |       14 |        0 |    100% |           |
 | src/fixgw/version.py                                             |        2 |        0 |        0 |        0 |    100% |           |
-| **TOTAL**                                                        | **7509** | **1477** | **2324** |   **78** | **81%** |           |
+| **TOTAL**                                                        | **7580** | **1548** | **2342** |   **78** | **81%** |           |
 
 
 ## Setup coverage badge
