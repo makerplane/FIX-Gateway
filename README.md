@@ -5,8 +5,12 @@
 **Language:** Python 3  
 **Snap:** `fixgateway` on snapcraft.io
 
-[![snapcraft.io](https://snapcraft.io/fixgateway/badge.svg)](https://snapcraft.io/fixgateway)
 [![Coverage](https://raw.githubusercontent.com/makerplane/FIX-Gateway/python-coverage-comment-action-data/badge.svg)](https://htmlpreview.github.io/?https://github.com/makerplane/FIX-Gateway/blob/python-coverage-comment-action-data/htmlcov/index.html)
+[![snapcraft.io](https://snapcraft.io/fixgateway/badge.svg)](https://snapcraft.io/fixgateway)
+[![Snapcraft Version](https://img.shields.io/snapcraft/v/fixgateway/latest/edge?label=candidate&color=d5d90d)](https://snapcraft.io/fixgateway)
+[![Snapcraft Version](https://img.shields.io/snapcraft/v/fixgateway/latest/edge?label=beta&color=d9870d)](https://snapcraft.io/fixgateway)
+[![Snapcraft Version](https://img.shields.io/snapcraft/v/fixgateway/latest/edge?label=edge&color=d90d0d)](https://snapcraft.io/fixgateway)
+
 
 ---
 
